@@ -1,0 +1,5 @@
+#!/bin/bash
+EMACS=${EMACS:-emacs}
+$EMACS --batch --eval "(progn (find-file \"README.org\") (org-md-export-to-markdown))"
+test -L README || ln -s README.md README
+autoreconf -vfi

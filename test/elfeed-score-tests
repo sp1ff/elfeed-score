@@ -1,0 +1,3 @@
+#!/bin/bash
+EMACS=${EMACS:-emacs}
+${EMACS} -batch -L ${srcdir}/.. -L ${srcdir}/../../elfeed  -L ${srcdir}/../../elfeed/tests  -l ${srcdir}/elfeed-score-tests.el --eval '(ert-run-tests-batch-and-exit "^elfeed-score-test")'
