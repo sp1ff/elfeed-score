@@ -19,7 +19,7 @@
 
 ;;; Commentary:
 
-;; 
+;;
 
 ;;; Code:
 
@@ -29,7 +29,9 @@
 (require 'elfeed-db-tests)
 
 (defun elfeed-score-test-generate-feed (title &optional url)
-  "Generate a random feed. Warning: run this in `with-elfeed-test'.
+  "Generate a random feed with title TITLE.
+
+Warning: run this in `with-elfeed-test'.
 
 This function differs from `elfeed-test-generate-feed' in that it
 allows the caller to specify the feed title and, optionally,
@@ -43,7 +45,9 @@ URL (which is convenient for testing scoring)."
       (setf (elfeed-feed-url feed) url))))
 
 (cl-defun elfeed-score-test-generate-entry (feed title content &optional (within "1 year"))
-  "Generate a random entry. Warning: run this in `with-elfeed-test'.
+  "Generate a random entry with feed FEED, title TITLE & content CONTENT.
+
+Warning: run this in `with-elfeed-test'.
 
 This function differs from `elfeed-test-generate-entry' in that
 it allows the caller to specify the entry title & content (which
@@ -70,15 +74,14 @@ is convenient for testing scoring)."
          (elfeed-score--score-mark nil))
      (progn ,@body)))
 
-(ert-deftest elfeed-score-test/test-sort ()
-  "Test `elfeed-score/sort'.
+(ert-deftest elfeed-score-test-test-sort ()
+  "Test `elfeed-score-sort'.
 
-`elfeed-score/sort' sorts first on score, then on date. So we should test:
+`elfeed-score-sort' sorts first on score, then on date. So we should test:
 
     1. higher score sorts first
     2. lower score sorts later
-    3. equal scores, later date sort first
-"
+    3. equal scores, later date sort first"
 
   (let ((entry-a (elfeed-entry--create
 		              :date 1576368912.0
@@ -95,21 +98,21 @@ is convenient for testing scoring)."
 		              :date 1576368913.0
 		              :meta '(:authors ((:name "John Smith"))
 				                           :elfeed-score/score 1))))
-    
+
     ;; `entry-a': Saturday, December 14, 2019 4:15:12 PM GMT-08:00, no score
     ;; `entry-b': Saturday, December 14, 2019 4:15:12 PM GMT-08:00, score of 0
     ;; `entry-c': Saturday, December 14, 2019 4:15:12 PM GMT-08:00, score of 1
     ;; `entry-d': Saturday, December 14, 2019 4:15:13 PM GMT-08:00, score of 1
-    (should (elfeed-score/sort entry-c entry-a))
-    (should (not (elfeed-score/sort entry-a entry-c)))
-    (should (elfeed-score/sort entry-c entry-b))
-    (should (not (elfeed-score/sort entry-b entry-c)))
-    (should (not (elfeed-score/sort entry-a entry-b)))
-    (should (not (elfeed-score/sort entry-b entry-a)))
-    (should (elfeed-score/sort entry-d entry-c))
-    (should (not (elfeed-score/sort entry-c entry-d)))))
+    (should (elfeed-score-sort entry-c entry-a))
+    (should (not (elfeed-score-sort entry-a entry-c)))
+    (should (elfeed-score-sort entry-c entry-b))
+    (should (not (elfeed-score-sort entry-b entry-c)))
+    (should (not (elfeed-score-sort entry-a entry-b)))
+    (should (not (elfeed-score-sort entry-b entry-a)))
+    (should (elfeed-score-sort entry-d entry-c))
+    (should (not (elfeed-score-sort entry-c entry-d)))))
 
-(ert-deftest elfeed-score/test-score-files-0 ()
+(ert-deftest elfeed-score-test-score-files-0 ()
   "Smoke test reading/writing score files"
 
   (let* ((score-entries
@@ -126,7 +129,6 @@ is convenient for testing scoring)."
          (score-entries-2 (elfeed-score--parse-score-file score-file)))
     (should (equal score-entries-2
                    (list :mark -2500
-                         :content nil
                          :feeds '((:text "foo.com" :value 100 :type s
                                          :attr u :date nil)
                                   (:text "title" :value -100 :type s
@@ -134,9 +136,10 @@ is convenient for testing scoring)."
                          :titles '((:text "hoping" :value -1000 :type s
                                           :date nil)
                                    (:text "long way( home)?" :value 100
-                                          :type r :date nil)))))))
+                                          :type r :date nil))
+                         :content nil)))))
 
-(ert-deftest elfeed-score-test/test-scoring-on-title-0 ()
+(ert-deftest elfeed-score-test-test-scoring-on-title-0 ()
   "Test scoring against entry title-- substring matching."
 
   (let* ((lorem-ipsum "Lorem ipsum dolor sit amet")
@@ -159,7 +162,7 @@ is convenient for testing scoring)."
              (score (elfeed-score--score-entry entry)))
         (should (eq score 0))))))))
 
-(ert-deftest elfeed-score-test/test-scoring-on-title-1 ()
+(ert-deftest elfeed-score-test-test-scoring-on-title-1 ()
   "Test scoring against entry title-- regexp matching."
 
   (let* ((lorem-ipsum "Lorem ipsum dolor sit amet")
@@ -182,7 +185,7 @@ is convenient for testing scoring)."
                (score (elfeed-score--score-entry entry)))
           (should (eq score 0))))))))
 
-(ert-deftest elfeed-score-test/test-scoring-on-feed-title-0 ()
+(ert-deftest elfeed-score-test-test-scoring-on-feed-title-0 ()
   "Test scoring against entry feed title-- substring matching."
 
   (let* ((lorem-ipsum "Lorem ipsum dolor sit amet")
@@ -207,7 +210,7 @@ is convenient for testing scoring)."
                (score (elfeed-score--score-entry entry)))
           (should (eq score 0))))))))
 
-(ert-deftest elfeed-score-test/test-scoring-on-feed-title-1 ()
+(ert-deftest elfeed-score-test-test-scoring-on-feed-title-1 ()
   "Test scoring against entry feed title-- regepx matching."
 
   (let* ((lorem-ipsum "Lorem ipsum dolor sit amet")
@@ -232,7 +235,7 @@ is convenient for testing scoring)."
           (should (eq score 0))))
        ))))
 
-(ert-deftest elfeed-score-test/test-scoring-on-feed-url-0 ()
+(ert-deftest elfeed-score-test-test-scoring-on-feed-url-0 ()
   "Test scoring against entry feed URL-- substring matching."
 
   (let* ((lorem-ipsum "Lorem ipsum dolor sit amet")
@@ -256,7 +259,7 @@ is convenient for testing scoring)."
                (score (elfeed-score--score-entry entry)))
           (should (eq score 0))))))))
 
-(ert-deftest elfeed-score-test/test-scoring-on-feed-url-1 ()
+(ert-deftest elfeed-score-test-test-scoring-on-feed-url-1 ()
   "Test scoring against entry feed URL-- regexp matching."
 
   (let* ((lorem-ipsum "Lorem ipsum dolor sit amet")
@@ -280,7 +283,7 @@ is convenient for testing scoring)."
                (score (elfeed-score--score-entry entry)))
           (should (eq score 0))))))))
 
-(ert-deftest elfeed-score-test/test-scoring-on-content-0 ()
+(ert-deftest elfeed-score-test-test-scoring-on-content-0 ()
   "Test scoring based on content-- substring matching."
 
   (let* ((lorem-ipsum "Lorem ipsum dolor sit amet")
@@ -303,7 +306,7 @@ is convenient for testing scoring)."
                (score (elfeed-score--score-entry entry)))
           (should (eq score 0))))))))
 
-(ert-deftest elfeed-score-test/test-scoring-on-content-1 ()
+(ert-deftest elfeed-score-test-test-scoring-on-content-1 ()
   "Test scoring based on content-- regexp matching."
 
   (let* ((lorem-ipsum "Lorem ipsum dolor sit amet")
@@ -326,8 +329,7 @@ is convenient for testing scoring)."
                (score (elfeed-score--score-entry entry)))
           (should (eq score 0))))))))
 
-;; TODO(sp1ff): test "mark-as-read-if-score-below" functionality
-(ert-deftest elfeed-score-test/test-marking-as-read-0 ()
+(ert-deftest elfeed-score-test-test-marking-as-read-0 ()
   "Test marking entries as read if they score low enough."
 
   (let* ((lorem-ipsum "Lorem ipsum dolor sit amet")

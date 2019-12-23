@@ -1,5 +1,21 @@
 elfeed-score News -- history of user-visible changes -*- outline -*-
 
+* Changes in elfeed-score 0.2.0
+
+** New Features
+
+Loading the package no longer affects Elfeed; the package must be enabled via a call to `elfeed-score-enable', and may be unloaded via `elfeed-score-unload' (in accordance with the Emacs Lisp Coding Conventions).
+
+** Miscellaneous Changes
+
+*** Changed naming scheme for public symbols
+
+The naming scheme for public symbols changed from "elfeed-score/" to "elfeed-score-" (in accordance with the Emacs Lisp Coding Conventions. Aliases are defined for all 0.1 symbols.
+
 * elfeed-score 0.1.0
 
 Initial release of the `elfeed-score' package.
+
+Local Variables:
+eval: (visual-line-mode)
+End:

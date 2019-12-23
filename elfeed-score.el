@@ -3,9 +3,10 @@
 ;; Copyright (C) 2019 Michael Herstine <sp1ff@pobox.com>
 
 ;; Author: Michael Herstine <sp1ff@pobox.com>
-;; URL: https://github.com/sp1ff/emacs-score
+;; Version: 0.2.0
+;; Package-Requires: ((emacs "24") (elfeed "3.3.0"))
 ;; Keywords: news
-;; Version: 0.1.0
+;; URL: https://github.com/sp1ff/emacs-score
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -23,68 +24,100 @@
 ;;; Commentary:
 
 ;; `elfeed-score' is an add-on for `elfeed', an RSS reader for
-;; Emacs. It brings Gnus-style scoring to your RSS feeds. Elfeed, by
-;; default, displays feed entries by date. This package allows you to
+;; Emacs.  It brings Gnus-style scoring to your RSS feeds.  Elfeed, by
+;; default, displays feed entries by date.  This package allows you to
 ;; setup rules for assigning numeric scores to entries, and sorting
 ;; entries with higher scores ahead of those with lower, regardless of
-;; date. The idea is to prioritize content important to you.
+;; date.  The idea is to prioritize content important to you.
+
+;; After installing this file, enable scoring by invoking
+;; `elfeed-score-enable'.  This will setup the Elfeed new entry hook,
+;; the Elfeed sort function, and load the score file (if it exists).
+;; Turn off scoring by invoking `elfeed-score-unload'.
 
 ;;; Code:
 
 (require 'elfeed-search)
 
+(defconst elfeed-score-version "0.2.0")
 
 (defgroup elfeed-score nil
   "Gnus-sytle scoring for Elfeed entries."
   :group 'comm)
 
-(defcustom elfeed-score/default-score 0
+(define-obsolete-variable-alias 'elfeed-score/default-score
+  'elfeed-score-default-score "0.2.0" "Move to standard-compliant naming.")
+
+(defcustom elfeed-score-default-score 0
   "Default score for an Elfeed entry."
   :group 'elfeed-score
   :type 'int)
 
-(defcustom elfeed-score/meta-keyw :elfeed-score/score
+(define-obsolete-variable-alias 'elfeed-score/meta-kw
+  'elfeed-score-meta-keyword "0.2.0" "Move to standard-compliant naming.")
+
+(defcustom elfeed-score-meta-keyword :elfeed-score/score
   "Default keyword for storing scores in Elfeed entry metadata."
   :group 'elfeed-score
   :type 'symbol)
 
-(defcustom elfeed-score/score-file
+(define-obsolete-variable-alias 'elfeed-score/score-file
+  'elfeed-score-score-file "0.2.0" "Move to standard-compliant naming.")
+
+(defcustom elfeed-score-score-file
   (concat (expand-file-name user-emacs-directory) "elfeed.score")
-  "Location in which to persist scoring rules. Set this to nil to
-disable automatic serde for scoring rules."
+  "Location at which to persist scoring rules.
+
+Set this to nil to disable automatic serialization &
+de-serialization of scoring rules."
   :group 'elfeed-score
   :type 'file)
 
-(defvar elfeed-score/debug nil
-  "Setting this to a non-nil value will produce copious debugging
-  information.")
+(define-obsolete-variable-alias 'elfeed-score/debug
+  'elfeed-score-debug "0.2.0" "Move to standard-compliant naming.")
+
+(defvar elfeed-score-debug nil
+  "Control debug output.
+
+Setting this to a non-nil value will produce copious debugging
+information to the \"*Messages*\" buffer.")
 
 (defun elfeed-score--debug (fmt &rest params)
-  "Print a formatted message if `elfeed-score/debug is non-nil."
-  (if elfeed-score/debug (apply 'message fmt params)))
+  "Produce a formattted (FMT) message based on PARAMS at debug level.
 
-(defun elfeed-score/sort (a b)
-  "Elfeed sort function.
+Print a formatted message if `elfeed-score-debug' is non-nil."
+  (if elfeed-score-debug (apply 'message fmt params)))
 
-Return non-nil if A should sort before B."
+(define-obsolete-function-alias 'elfeed-score/sort
+  'elfeed-score-sort "0.2.0" "Move to standard-compliant naming.")
 
-  (let ((a-score (elfeed-meta a elfeed-score/meta-keyw elfeed-score/default-score))
-        (b-score (elfeed-meta b elfeed-score/meta-keyw elfeed-score/default-score)))
+(defun elfeed-score-sort (a b)
+  "Return non-nil if A should sort before B.
+
+`elfeed-score' will substitute this for the Elfeed scoring function."
+
+  (let ((a-score (elfeed-meta a elfeed-score-meta-keyword
+                              elfeed-score-default-score))
+        (b-score (elfeed-meta b elfeed-score-meta-keyword
+                              elfeed-score-default-score)))
     (if (> a-score b-score)
         t
       (let ((a-date  (elfeed-entry-date a))
             (b-date  (elfeed-entry-date b)))
         (and (eq a-score b-score) (> a-date b-date))))))
 
-(setq elfeed-search-sort-function 'elfeed-score/sort)
+(define-obsolete-function-alias 'elfeed-score/set-score
+  'elfeed-score-set-score "0.2.0" "Move to standard-compliant naming.")
 
-(defun elfeed-score/set-score (&optional score ignore-region)
-  "Re-set the score(s) of one or more entries to
-SCORE (`elfeed-score/default-score' by default).
+(defun elfeed-score-set-score (&optional score ignore-region)
+  "Set the score of one or more Elfeed entries to SCORE.
+
+Their scores will be set to `elfeed-score-default-score' by
+default.
 
 If IGNORE-REGION is nil (as it will be when called
 interactively), then all entries in the current region will have
-their scores re-set. If the region is not active, then only the
+their scores re-set.  If the region is not active, then only the
 entry under point will be affected.  If IGNORE-REGION is t, then
 only the entry under point will be affected, regardless of the
 region's state."
@@ -94,21 +127,25 @@ region's state."
   (let ((score
          (if score
              (prefix-numeric-value score)
-           elfeed-score/default-score))
+           elfeed-score-default-score))
         (entries (elfeed-search-selected ignore-region)))
     (dolist (entry entries)
       (elfeed-score--debug "entry '%s' => %d" (elfeed-entry-title entry) score)
-      (setf (elfeed-meta entry elfeed-score/meta-keyw) score))))
+      (setf (elfeed-meta entry elfeed-score-meta-keyword) score))))
 
-(defun elfeed-score/get-score ()
-  "Retrieve the score of the current entry. If called
-intractively, print a message."
+(define-obsolete-function-alias 'elfeed-score/get-score
+  'elfeed-score-get-score "0.2.0" "Move to standard-compliant naming.")
+
+(defun elfeed-score-get-score ()
+  "Return the score of the entry under point.
+
+If called intractively, print a message."
 
   (interactive)
 
   (let* ((entry (elfeed-search-selected t))
-         (score (elfeed-meta entry elfeed-score/meta-keyw
-                             elfeed-score/default-score)))
+         (score (elfeed-meta entry elfeed-score-meta-keyword
+                             elfeed-score-default-score)))
     (if (called-interactively-p 'any)
         (message "%s has a score of %d." (elfeed-entry-title entry) score))
     score))
@@ -116,7 +153,7 @@ intractively, print a message."
 (defun elfeed-score--parse-score-file (score-file)
   "Parse SCORE-FILE.
 
-Internal. Score file parsing routine. Opens
+Internal.  This is the core score file parsing routine.  Opens
 SCORE-FILE, reads the contents as a Lisp form, and parses that
 into a property list with the following properties:
 
@@ -192,10 +229,9 @@ The properties are:
                 an entry's score if this rule matches
     - :type :: (optional) One of the symbols s S r R; s/r denotes
                substring/regexp match; lower-case means case-insensitive
-               and upper case sensitive. Defaults to r (case-insensitive
+               and upper case sensitive.  Defaults to r (case-insensitive
                regexp match)
-    - :date :: time (in seconds since epoch) when this rule last matched
-")
+    - :date :: time (in seconds since epoch) when this rule last matched")
 
 (defvar elfeed-score--score-feeds nil
   "List of property lists each defining a scoring rule for entry feeds.
@@ -208,7 +244,7 @@ The properties are:
                 an entry's score if this rule matches
     - :type :: (optional) One of the symbols s S r R; s/r denotes
                substring/regexp match; lower-case means case-insensitive
-               and upper case sensitive. Defaults to r (case-insensitive
+               and upper case sensitive.  Defaults to r (case-insensitive
                regexp match)
     - :attr :: Defines the feed attribute against which matching shall be
                performed: 't for title & 'u for URL.
@@ -225,10 +261,9 @@ The properties are:
                 an entry's score if this rule matches
     - :type :: (optional) One of the symbols s S r R; s/r denotes
                substring/regexp match; lower-case means case-insensitive
-               and upper case sensitive. Defaults to r (case-insensitive
+               and upper case sensitive.  Defaults to r (case-insensitive
                regexp match)
-    - :date :: time (in seconds since epoch) when this rule last matched
-")
+    - :date :: time (in seconds since epoch) when this rule last matched")
 
 (defvar elfeed-score--score-mark nil
   "Score at or below which entries shall be marked as read.")
@@ -236,7 +271,7 @@ The properties are:
 (defun elfeed-score--load-score-file (score-file)
   "Load SCORE-FILE into our internal scoring rules.
 
-Internal. Read SCORE-FILE, store scoring rules in our internal datastructures,"
+Internal.  Read SCORE-FILE, store scoring rules in our internal datastructures,"
 
   (let ((score-entries (elfeed-score--parse-score-file score-file)))
     (setq elfeed-score--score-titles  (plist-get score-entries :titles)
@@ -245,8 +280,8 @@ Internal. Read SCORE-FILE, store scoring rules in our internal datastructures,"
           elfeed-score--score-mark    (plist-get score-entries :mark))))
 
 (defun elfeed-score--match-text (match-text search-text match-type)
-  "Test SEARCH-TEXT against MATCH-TEXT accaording to
-MATCH-TYPE. Return nil on failure, t on match."
+  "Test SEARCH-TEXT against MATCH-TEXT according to MATCH-TYPE.
+Return nil on failure, t on match."
   (cond
    ((or (eq match-type 's)
         (eq match-type 'S))
@@ -269,7 +304,7 @@ udpate the \"last matched\" time of the salient rules."
   (let ((title   (elfeed-entry-title entry))
         (feed    (elfeed-entry-feed  entry))
         (content (elfeed-deref (elfeed-entry-content entry)))
-	      (score   elfeed-score/default-score))
+	      (score   elfeed-score-default-score))
     ;; score on the entry title
 	  (dolist (score-title elfeed-score--score-titles)
 	    (let* ((match-text (plist-get score-title :text))
@@ -315,35 +350,34 @@ udpate the \"last matched\" time of the salient rules."
                   (elfeed-score--debug "%s + %d (content)" title value)
 		              (setq score (+ score value))
 		              (plist-put score-content :date (float-time)))))))
-    (setf (elfeed-meta entry elfeed-score/meta-keyw) score)
+    (setf (elfeed-meta entry elfeed-score-meta-keyword) score)
 	  (if (and elfeed-score--score-mark
 		         (< score elfeed-score--score-mark))
 	      (elfeed-untag entry 'unread))
     score))
 
-(add-hook 'elfeed-new-entry-hook 'elfeed-score--score-entry)
+(define-obsolete-function-alias 'elfeed-score/load-score-file
+  'elfeed-score-load-score-file "0.2.0" "Move to standard-compliant naming.")
 
-(defun elfeed-score/load-score-file (score-file)
-  "Read a score file."
+(defun elfeed-score-load-score-file (score-file)
+  "Load SCORE-FILE into the current scoring rules."
 
   (interactive
    (list
-    (read-file-name "score file: " nil elfeed-score/score-file t
-                    elfeed-score/score-file)))
+    (read-file-name "score file: " nil elfeed-score-score-file t
+                    elfeed-score-score-file)))
   (elfeed-score--load-score-file score-file))
 
-;; Load the default score file, if it's defined & exists
-(if (and elfeed-score/score-file
-         (file-exists-p elfeed-score/score-file))
-    (elfeed-score/load-score-file elfeed-score/score-file))
+(define-obsolete-function-alias 'elfeed-score/write-score-file
+  'elfeed-score-write-score-file "0.2.0" "Move to standard-compliant naming.")
 
-(defun elfeed-score/write-score-file (score-file)
-  "Write the current scoring rules to file."
+(defun elfeed-score-write-score-file (score-file)
+  "Write the current scoring rules to SCORE-FILE."
   (interactive
    (list
-    (read-file-name "score file: " nil elfeed-score/score-file t
-                    elfeed-score/score-file)))
-  
+    (read-file-name "score file: " nil elfeed-score-score-file t
+                    elfeed-score-score-file)))
+
   (write-region
    (format
     ";;; Elfeed score file                                     -*- lisp -*-\n%s"
@@ -384,11 +418,14 @@ udpate the \"last matched\" time of the salient rules."
       (list 'mark elfeed-score--score-mark))))
    nil score-file))
 
-(defun elfeed-score/score (&optional ignore-region)
+(define-obsolete-function-alias 'elfeed-score/score
+  'elfeed-score-score "0.2.0" "Move to standard-compliant naming.")
+
+(defun elfeed-score-score (&optional ignore-region)
   "Score some entries.
 
 Score all selected entries, unless IGNORE-REGION is non-nil, in
-which case only the entry under point will be scored. If the
+which case only the entry under point will be scored.  If the
 region is not active, only the entry under point will be scored."
 
   (interactive "P")
@@ -397,34 +434,66 @@ region is not active, only the entry under point will be scored."
     (dolist (entry entries)
       (let ((score (elfeed-score--score-entry entry)))
         (elfeed-score--debug "entry '%s' => %d" (elfeed-entry-title entry) score)))
-    (if elfeed-score/score-file
-       (elfeed-score/write-score-file elfeed-score/score-file))
+    (if elfeed-score-score-file
+       (elfeed-score-write-score-file elfeed-score-score-file))
     (elfeed-search-update t)))
 
-(defun elfeed-score/score-search ()
+(define-obsolete-function-alias 'elfeed-score/score-search
+  'elfeed-score-score-search "0.2.0" "Move to standard-compliant naming.")
+
+(defun elfeed-score-score-search ()
   "Score the current set of search results."
 
   (interactive)
-  
+
   (dolist (entry elfeed-search-entries)
     (let ((score (elfeed-score--score-entry entry)))
       (elfeed-score--debug "entry %s => %s" (elfeed-entry-title entry) score)))
-  (if elfeed-score/score-file
-	    (elfeed-score/write-score-file elfeed-score/score-file))
+  (if elfeed-score-score-file
+	    (elfeed-score-write-score-file elfeed-score-score-file))
   (elfeed-search-update t))
 
 (defvar elfeed-score-map
   (let ((map (make-sparse-keymap)))
     (prog1 map
       (suppress-keymap map)
-      (define-key map "e" #'elfeed-score/set-score)
-      (define-key map "g" #'elfeed-score/get-score)
-      (define-key map "l" #'elfeed-score/load-score-file)
-      (define-key map "s" #'elfeed-score/score)
-      (define-key map "v" #'elfeed-score/score-search)
-      (define-key map "w" #'elfeed-score/write-score-file)))
-  "Kemap for `elfeed-score' commands.")
+      (define-key map "e" #'elfeed-score-set-score)
+      (define-key map "g" #'elfeed-score-get-score)
+      (define-key map "l" #'elfeed-score-load-score-file)
+      (define-key map "s" #'elfeed-score-score)
+      (define-key map "v" #'elfeed-score-score-search)
+      (define-key map "w" #'elfeed-score-write-score-file)))
+  "Keymap for `elfeed-score' commands.")
+
+(defvar elfeed-score--old-sort-function nil
+  "Original value of `elfeed-search-sort-function'.")
+
+;;;###autoload
+(defun elfeed-score-enable ()
+  "Enable `elfeed-score'."
+
+  (interactive)
+
+  ;; Begin scoring on every new entry...
+  (add-hook 'elfeed-new-entry-hook #'elfeed-score--score-entry)
+  ;; sort based on score...
+  (setq elfeed-score--old-sort-function elfeed-search-sort-function)
+  (setq elfeed-search-sort-function #'elfeed-score-sort)
+  ;; & load the default score file, if it's defined & exists.
+  (if (and elfeed-score-score-file
+           (file-exists-p elfeed-score-score-file))
+      (elfeed-score-load-score-file elfeed-score-score-file)))
+
+(defun elfeed-score-unload ()
+  "Unload `elfeed-score'."
+
+  (interactive)
+
+  (if elfeed-score-score-file
+	    (elfeed-score-write-score-file elfeed-score-score-file))
+  (setq elfeed-search-sort-function elfeed-score--old-sort-function)
+  (remove-hook 'elfeed-new-entry-hook #'elfeed-score--score-entry))
+
 
 (provide 'elfeed-score)
-
 ;;; elfeed-score.el ends here

@@ -4,7 +4,7 @@
 
 [Elfeed](https://github.com/skeeto/elfeed) is an extensible web feed reader for Emacs. By default, it will display entries in reverse chronological order. This package defines a bit of metadata for each of your feed entries: a "score". A score is an integer (negative or positive), and higher scores denote entries of greater interest to you. This package also installs a new sort function, so that Elfeed will display entries with higher scores before entries with lower scores (entries with the same scores will still be sorted in reverse chronological order).
 
-While you can manually assign a score to an entry, you will likely find it more convenient to  rules for scoring that will be automatically applied to each new entry every time you update Elfeed. You can currently score against title, feed & content by defining strings that will be matched against those attributes by either substring or regexp match. Each rule defines an integral value, and the rules are applied in order of derfinition. The new entry's score begins at zero, and is adjusted by the value defined by each matching scoring rule.
+While you can manually assign a score to an entry, you will likely find it more convenient to create rules for scoring that will be automatically applied to each new entry every time you update Elfeed. You can currently score against title, feed & content by defining strings that will be matched against those attributes by either substring or regexp match. Each rule defines an integral value, and the rules are applied in order of definition. The new entry's score begins at zero, and is adjusted by the value defined by each matching scoring rule.
 
 For instance, here's a subset of my scoring file at the moment:
 
@@ -37,26 +37,26 @@ This package was developed against [Elfeed](https://github.com/skeeto/elfeed) 3.
 While I plan on submitting this to MELPA, at this time it is only available as a source distribution:
 
     cd /tmp
-    curl -L --output=elfeed-score-0.1.0.tar.gz https://github.com/sp1ff/elfeed-score/archive/v0.1.0.tar.gz
-    tar xvf elfeed-score-0.1.0.tar.gz && cd elfeed-score-0.1.0
+    curl -L --output=elfeed-score-0.2.0.tar.gz https://github.com/sp1ff/elfeed-score/archive/0.2.0.tar.gz
+    tar xvf elfeed-score-0.2.0.tar.gz && cd elfeed-score-0.2.0
     ./configure
     make
     make install
 
 ## Running the Unit Tests
 
-The unit tests require some macros defined by the Elfeed test suite, which is not distributed with the MELPA package. Therefore, you'll need to clone the Elfeed git repo & develop against that:
+The unit tests require some macros defined by the [Elfeed](https://github.com/skeeto/elfeed) test suite, which is not distributed with the MELPA package. Therefore, you'll need to clone the Elfeed git repo & develop against that:
 
     cd /tmp
     git clone https://github.com/skeeto/elfeed.git
-    curl -L --output=elfeed-score-0.1.0.tar.gz https://github.com/sp1ff/elfeed-score/archive/v0.1.0.tar.gz
-    tar xvf elfeed-score-0.1.0.tar.gz && cd elfeed-score-0.1.0
-    export EMACSLOADPATH=/tmp/elfeed-score-0.1.0:/tmp/elfeed/tests:$EMACSLOADPATH
+    curl -L --output=elfeed-score-0.2.0.tar.gz https://github.com/sp1ff/elfeed-score/archive/0.2.0.tar.gz
+    tar xvf elfeed-score-0.2.0.tar.gz && cd elfeed-score-0.2.0
+    export EMACSLOADPATH=/tmp/elfeed-score-0.2.0:/tmp/elfeed/tests:$EMACSLOADPATH
     ./configure
     make
     make check
 
-Unless you already use `EMACSLOADPATH`, this likely won't work&#x2013; you'll need to work out exactly how to tell Emacs to pickup Elfeed from your git repo instead of wherever you've got it installed. If you're running the unit tests, I assume you can get this working.
+Unless you already use `EMACSLOADPATH`, this likely won't work as written&#x2013; you'll need to work out exactly how to tell Emacs to pickup Elfeed from your git repo instead of wherever you've got it installed. If you're running the unit tests, I assume you can get this working.
 
 # Getting Started
 
@@ -74,7 +74,7 @@ Title & content rules are defined by a list of length four:
 1.  the match text
 2.  the match value: this is an integer specifying the amount by which the entry's score should be adjusted, should the text match
 3.  the match type: this may be one of `s`, `S`, `r` or `R` for substring match, case-sensitive substring match, regexp match or case-sensitive regexp match, respectively
-4.  the last time this rule matched an entry, in seconds since Unix epoch. This element is optional, need not be supplied by the score file author, and will be automatically kept up-to-date by the package
+4.  the last time this rule matched an entry, in seconds since Unix epoch. This element is optional, need not be supplied by the score file author, and will be automatically kept up-to-date by the package.
 
 So, when first setting up your score file, saying:
 
@@ -100,15 +100,21 @@ Once your score file is setup, load elfeed-score.
 
     (require 'elfeed-score)
 
+Just loading the library will **not** modify [Elfeed](https://gitub.com/skeeto/elfeed); you need to explicitly enable the package for that:
+
+    (elfeed-score-enable)
+
+This will install the new sort function & new entry hook, as well as read your score file. NB. `elfeed-score-enable` is autoloaded, so if you've installed this package in the usual ways, you should be able to just invoke the function & have the package loaded & enabled automatically.
+
 The package defines a keymap, but does not bind it to any key. I like to set it to the `=` key in `elfeed-search-mode-map`:
 
     (define-key elfeed-search-mode-map "=" elfeed-score-map)
 
-At this point, your score file has been loaded, and any new entries will be scored automatically, but the entries already in your database have not yet been scored. Scoring is idempotent (scoring an entry more than once will always result in it having the same score assigned). So, you can load up an Elfeed search, and then, in the Elfeed search buffer (`*elfeed-search*`), you can score all the search results with "= v" (`elfeed-score/score-search`). When the command completes, the view will be re-sorted by score. Your score file will also have been updated on disk (to record the last time that each rule matched).  If you want to see the scoring actions as they're happening, set `elfeed-score/debug` to `t`.
+At this point, any <span class="underline">new</span> entries will be scored automatically, but the entries already in your database have not yet been scored. Scoring is idempotent (scoring an entry more than once will always result in it having the same score assigned). So, you can load up an Elfeed search, and then, in the Elfeed search buffer (`*elfeed-search*`), you can score all the search results with "= v" (`elfeed-score/score-search`). When the command completes, the view will be re-sorted by score. Your score file will also have been updated on disk (to record the last time that each rule matched).  If you want to see the scoring actions as they're happening, set `elfeed-score/debug` to `t`.
 
 # Status and Roadmap
 
-I'm using `elfeed-score` day in & day out for my RSS reading, but this is its first release (the version number, 0.1.0, was chosen to suggest this).
+I'm using `elfeed-score` day in & day out for my RSS reading, but this is a preliminary release (the version number, 0.2.0, was chosen to suggest this).
 
 Things I want to do next:
 
