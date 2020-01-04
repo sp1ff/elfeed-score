@@ -1,3 +1,6 @@
+[![img](https://melpa.org/packages/elfeed-score-badge.svg)](https://melpa.org/#/elfeed-score)
+[![img](https://stable.melpa.org/packages/elfeed-score-badge.svg)](https://stable.melpa.org/#/elfeed-score)
+
 # Introduction
 
 [elfeed-score](https://github.com/sp1ff/elfeed-score) brings Gnus-style [scoring](https://www.gnu.org/software/emacs/manual/html_node/gnus/Scoring.html#Scoring) to [Elfeed](https://github.com/skeeto/elfeed).
@@ -34,7 +37,16 @@ This package was developed against [Elfeed](https://github.com/skeeto/elfeed) 3.
 
 # Installing
 
-While I plan on submitting this to MELPA, at this time it is only available as a source distribution:
+The easiest way to install elfeed-score is [MELPA](https://github.com/melpa/melpa); assuming you've got MELPA in your ='package-archives=, just say:
+
+    (use-package elfeed-score
+      :ensure t
+      :config
+      (progn
+        (elfeed-score-enable)
+        (define-key elfeed-search-mode-map "=" elfeed-score-map)))
+
+You can, if you wish, install from source as well:
 
     cd /tmp
     curl -L --output=elfeed-score-0.2.0.tar.gz https://github.com/sp1ff/elfeed-score/archive/0.2.0.tar.gz
@@ -118,7 +130,6 @@ I'm using `elfeed-score` day in & day out for my RSS reading, but this is a prel
 
 Things I want to do next:
 
--   submit this to MELPA
 -   support adding tags based on score (e.g. "if the score is greater than <span class="underline">n</span>, add tag 'foo'")
 -   add tag-specific rules (e.g. "only run this scoring rule if the entry is already tagged 'bar'")
 -   add whole-word matching

@@ -1,6 +1,6 @@
 ;;; elfeed-score-tests.el --- ERT tests for elfeed-score  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2019  Michael Herstine
+;; Copyright (C) 2019, 2020  Michael Herstine
 
 ;; Author: Michael Herstine <sp1ff@pobox.com>
 

@@ -1,9 +1,13 @@
 #+TITLE: elfeed-score
 #+DESCRIPTION: Gnus-style scoring for Elfeed
-#+AUTHOR: sp1ff
+#+AUTHOR: Sp1ff
 #+EMAIL: sp1ff@pobox.com
-#+DATE: <2019-12-23 Mon 17:17>
+#+DATE: <2020-01-04 Sat 14:37>
+#+AUTODATE: t
 #+OPTIONS: toc:nil org-md-headline-style:setext *:t ^:nil
+
+[[https://melpa.org/#/elfeed-score][file:https://melpa.org/packages/elfeed-score-badge.svg]]
+[[https://stable.melpa.org/#/elfeed-score][file:https://stable.melpa.org/packages/elfeed-score-badge.svg]]
 
 * Introduction
 
@@ -43,7 +47,18 @@ This package was developed against [[https://github.com/skeeto/elfeed][Elfeed]] 
 
 * Installing
 
-While I plan on submitting this to MELPA, at this time it is only available as a source distribution:
+The easiest way to install elfeed-score is [[https://github.com/melpa/melpa][MELPA]]; assuming you've got MELPA in your =package-archives=, just say:
+
+#+BEGIN_SRC elisp :tangle yes :comments no
+  (use-package elfeed-score
+    :ensure t
+    :config
+    (progn
+      (elfeed-score-enable)
+      (define-key elfeed-search-mode-map "=" elfeed-score-map)))
+#+END_SRC
+
+You can, if you wish, install from source as well:
 
 #+BEGIN_EXAMPLE
 cd /tmp
@@ -141,7 +156,6 @@ I'm using =elfeed-score= day in & day out for my RSS reading, but this is a prel
 
 Things I want to do next:
 
-    - submit this to MELPA
     - support adding tags based on score (e.g. "if the score is greater than _n_, add tag 'foo'")
     - add tag-specific rules (e.g. "only run this scoring rule if the entry is already tagged 'bar'")
     - add whole-word matching
