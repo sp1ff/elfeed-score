@@ -6,7 +6,7 @@
 ;; Version: 0.2.0
 ;; Package-Requires: ((emacs "24") (elfeed "3.3.0"))
 ;; Keywords: news
-;; URL: https://github.com/sp1ff/emacs-score
+;; URL: https://github.com/sp1ff/elfeed-score
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
