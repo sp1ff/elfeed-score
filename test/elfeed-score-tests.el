@@ -1,6 +1,6 @@
 ;;; elfeed-score-tests.el --- ERT tests for elfeed-score  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2019, 2020  Michael Herstine
+;; Copyright (C) 2019-2020 Michael Herstine <sp1ff@pobox.com>
 
 ;; Author: Michael Herstine <sp1ff@pobox.com>
 
@@ -19,7 +19,7 @@
 
 ;;; Commentary:
 
-;;
+;; These tests require 'elfeed-db-tests.
 
 ;;; Code:
 
@@ -46,6 +46,7 @@ URL (which is convenient for testing scoring)."
 
 (cl-defun elfeed-score-test-generate-entry (feed title content &optional (within "1 year"))
   "Generate a random entry with feed FEED, title TITLE & content CONTENT.
+Use WITHIN to scope the date.
 
 Warning: run this in `with-elfeed-test'.
 
@@ -111,6 +112,12 @@ is convenient for testing scoring)."
     (should (not (elfeed-score-sort entry-b entry-a)))
     (should (elfeed-score-sort entry-d entry-c))
     (should (not (elfeed-score-sort entry-c entry-d)))))
+
+(ert-deftest elfeed-score-test-format-score ()
+  "Unit tests for `elfeed-score-format-score'."
+
+  (let ((elfeed-score-score-format '("%d " 6 :right)))
+    (should (equal (elfeed-score-format-score 11) "   11 "))))
 
 (ert-deftest elfeed-score-test-score-files-0 ()
   "Smoke test reading/writing score files"

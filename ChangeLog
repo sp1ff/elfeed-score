@@ -1,3 +1,40 @@
+2020-01-19  Michael Herstine  <mherstin@linkedin.com>
+
+	Add the option to display entry scores in *elfeed-search*.
+	This commit:
+
+	    1. provides a new function, `elfeed-score-print-entry', which
+	       can be used as the value of `elfeed-search-print-entry-function`;
+	       when this is done, the entry score will be printed in the
+	       first column of the search buffer
+
+	    2. the format of the score is determined by a new customization
+	       variable `elfeed-score-score-format'
+
+	Note that the print function will not be substituted when
+	`elfeed-score-enable` is invoked; you must do this explicitly in
+	your configuration if you want this feature. However,
+	`elfeed-score-unload` will remove it, if found.
+
+2020-01-15  Michael  <sp1ff@pobox.com>
+
+	Merge pull request #1 from Miciah/fix-package-URL-in-commentary
+	Fix package URL in commentary
+
+2020-01-14  Miciah Masters  <miciah.masters@gmail.com>
+
+	Fix package URL in commentary
+	Replace "emacs-score" with "elfeed-score" in the package URL.
+
+	* elfeed-score.el: Fix package URL in commentary.
+
+2020-01-04  Michael Herstine  <sp1ff@pobox.com>
+
+	Minor textual changes:
+	    1. Updated README to reflect the fact that this package has been accepted into MELPA
+
+	    2. Updated copyright statements in source
+
 2019-12-23  Michael Herstine  <sp1ff@pobox.com>
 
 	Preparation for submission to MELPA.

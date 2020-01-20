@@ -1,9 +1,9 @@
 ;;; elfeed-score.el --- Gnus-style scoring for Elfeed  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2019, 2020 Michael Herstine <sp1ff@pobox.com>
+;; Copyright (C) 2019-2020 Michael Herstine <sp1ff@pobox.com>
 
 ;; Author: Michael Herstine <sp1ff@pobox.com>
-;; Version: 0.2.0
+;; Version: 0.3.0
 ;; Package-Requires: ((emacs "24") (elfeed "3.3.0"))
 ;; Keywords: news
 ;; URL: https://github.com/sp1ff/elfeed-score
@@ -39,7 +39,7 @@
 
 (require 'elfeed-search)
 
-(defconst elfeed-score-version "0.2.0")
+(defconst elfeed-score-version "0.3.0")
 
 (defgroup elfeed-score nil
   "Gnus-sytle scoring for Elfeed entries."
@@ -72,6 +72,15 @@ Set this to nil to disable automatic serialization &
 de-serialization of scoring rules."
   :group 'elfeed-score
   :type 'file)
+
+(defcustom elfeed-score-score-format '("%d " 6 :right)
+  "Format for scores when displayed in the Elfeed search buffer.
+This is a three-tuple: the `format' format string, target width,
+and alignment.  This should be (string integer keyword)
+for (format width alignment).  Possible alignments are :left and
+:right."
+  :group 'elfeed-score
+  :type '(list string integer (choice (const :left) (const :right))))
 
 (define-obsolete-variable-alias 'elfeed-score/debug
   'elfeed-score-debug "0.2.0" "Move to standard-compliant naming.")
@@ -149,6 +158,26 @@ If called intractively, print a message."
     (if (called-interactively-p 'any)
         (message "%s has a score of %d." (elfeed-entry-title entry) score))
     score))
+
+(defun elfeed-score-format-score (score)
+  "Format SCORE for printing in `elfeed-search-mode'.
+The customization `elfeed-score-score-format' sets the
+formatting.  This implementation is based on that of
+`elfeed-search-format-date'."
+  (cl-destructuring-bind (format target alignment) elfeed-score-score-format
+    (let* ((string (format format score))
+           (width (string-width string)))
+      (cond
+       ((> width target)
+        (if (eq alignment :left)
+            (substring string 0 target)
+          (substring string (- width target) width)))
+       ((< width target)
+        (let ((pad (make-string (- target width) ?\s)))
+          (if (eq alignment :left)
+              (concat string pad)
+            (concat pad string))))
+       (string)))))
 
 (defun elfeed-score--parse-score-file (score-file)
   "Parse SCORE-FILE.
@@ -468,6 +497,41 @@ region is not active, only the entry under point will be scored."
 (defvar elfeed-score--old-sort-function nil
   "Original value of `elfeed-search-sort-function'.")
 
+(defvar elfeed-score--old-print-entry-function nil
+  "Original value of `elfed-search-print-entry-function'.")
+
+(defun elfeed-score-print-entry (entry)
+  "Print ENTRY to the Elfeed search buffer.
+This implementation is derived from `elfeed-search-print-entry--default'."
+  (let* ((date (elfeed-search-format-date (elfeed-entry-date entry)))
+         (title (or (elfeed-meta entry :title) (elfeed-entry-title entry) ""))
+         (title-faces (elfeed-search--faces (elfeed-entry-tags entry)))
+         (feed (elfeed-entry-feed entry))
+         (feed-title
+          (when feed
+            (or (elfeed-meta feed :title) (elfeed-feed-title feed))))
+         (tags (mapcar #'symbol-name (elfeed-entry-tags entry)))
+         (tags-str (mapconcat
+                    (lambda (s) (propertize s 'face 'elfeed-search-tag-face))
+                    tags ","))
+         (title-width (- (window-width) 10 elfeed-search-trailing-width))
+         (title-column (elfeed-format-column
+                        title (elfeed-clamp
+                               elfeed-search-title-min-width
+                               title-width
+                               elfeed-search-title-max-width)
+                        :left))
+	 (score (elfeed-score-format-score
+		 (elfeed-meta entry elfeed-score-meta-keyword
+                              elfeed-score-default-score))))
+    (insert score)
+    (insert (propertize date 'face 'elfeed-search-date-face) " ")
+    (insert (propertize title-column 'face title-faces 'kbd-help title) " ")
+    (when feed-title
+      (insert (propertize feed-title 'face 'elfeed-search-feed-face) " "))
+    (when tags
+      (insert "(" tags-str ")"))))
+
 ;;;###autoload
 (defun elfeed-score-enable ()
   "Enable `elfeed-score'."
@@ -477,22 +541,24 @@ region is not active, only the entry under point will be scored."
   ;; Begin scoring on every new entry...
   (add-hook 'elfeed-new-entry-hook #'elfeed-score--score-entry)
   ;; sort based on score...
-  (setq elfeed-score--old-sort-function elfeed-search-sort-function)
-  (setq elfeed-search-sort-function #'elfeed-score-sort)
+  (setq elfeed-score--old-sort-function elfeed-search-sort-function
+        elfeed-search-sort-function #'elfeed-score-sort
+        elfeed-score--old-print-entry-function elfeed-search-print-entry-function)
   ;; & load the default score file, if it's defined & exists.
   (if (and elfeed-score-score-file
            (file-exists-p elfeed-score-score-file))
-      (elfeed-score-load-score-file elfeed-score-score-file)))
+      (elfeed-score-load-score-file elfeed-score-score-file))
 
-(defun elfeed-score-unload ()
-  "Unload `elfeed-score'."
+  (defun elfeed-score-unload ()
+    "Unload `elfeed-score'."
 
-  (interactive)
+    (interactive)
 
-  (if elfeed-score-score-file
-	    (elfeed-score-write-score-file elfeed-score-score-file))
-  (setq elfeed-search-sort-function elfeed-score--old-sort-function)
-  (remove-hook 'elfeed-new-entry-hook #'elfeed-score--score-entry))
+    (if elfeed-score-score-file
+	      (elfeed-score-write-score-file elfeed-score-score-file))
+    (setq elfeed-search-sort-function elfeed-score--old-sort-function
+          elfeed-search-print-entry-function elfeed-score--old-print-entry-function)
+    (remove-hook 'elfeed-new-entry-hook #'elfeed-score--score-entry)))
 
 
 (provide 'elfeed-score)

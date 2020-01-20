@@ -1,5 +1,17 @@
 elfeed-score News -- history of user-visible changes -*- outline -*-
 
+* Changes in elfeed-score 0.3.0
+
+** New Features
+
+*** Displaying Entry Scores in the Search Buffer
+
+`elfeed-score' now provides an `elfeed-search-print-entry-function'
+compliant function that will display each entry's score in the first
+column of the search view. The score format can be controlled by
+the customization variable `elfeed-score-score-format'.  See the
+README for instructions.
+
 * Changes in elfeed-score 0.2.0
 
 ** New Features

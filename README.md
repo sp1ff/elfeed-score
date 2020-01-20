@@ -1,6 +1,7 @@
 [![img](https://melpa.org/packages/elfeed-score-badge.svg)](https://melpa.org/#/elfeed-score)
 [![img](https://stable.melpa.org/packages/elfeed-score-badge.svg)](https://stable.melpa.org/#/elfeed-score)
 
+
 # Introduction
 
 [elfeed-score](https://github.com/sp1ff/elfeed-score) brings Gnus-style [scoring](https://www.gnu.org/software/emacs/manual/html_node/gnus/Scoring.html#Scoring) to [Elfeed](https://github.com/skeeto/elfeed).
@@ -31,13 +32,15 @@ For instance, here's a subset of my scoring file at the moment:
 
 Like Gnus scoring, this may look like Lisp code, but it is not directly eval'd. It will be read by the Lisp reader, so it must at least be a valid Lisp s-expression. You can find details below.
 
+
 # Prerequisites
 
 This package was developed against [Elfeed](https://github.com/skeeto/elfeed) 3.3.0, which itself requires Emacs 24.3 and cURL.
 
+
 # Installing
 
-The easiest way to install elfeed-score is [MELPA](https://github.com/melpa/melpa); assuming you've got MELPA in your ='package-archives=, just say:
+The easiest way to install elfeed-score is [MELPA](https://github.com/melpa/melpa); assuming you've got MELPA in your `package-archives`, just say:
 
     (use-package elfeed-score
       :ensure t
@@ -55,6 +58,7 @@ You can, if you wish, install from source as well:
     make
     make install
 
+
 ## Running the Unit Tests
 
 The unit tests require some macros defined by the [Elfeed](https://github.com/skeeto/elfeed) test suite, which is not distributed with the MELPA package. Therefore, you'll need to clone the Elfeed git repo & develop against that:
@@ -70,7 +74,9 @@ The unit tests require some macros defined by the [Elfeed](https://github.com/sk
 
 Unless you already use `EMACSLOADPATH`, this likely won't work as written&#x2013; you'll need to work out exactly how to tell Emacs to pickup Elfeed from your git repo instead of wherever you've got it installed. If you're running the unit tests, I assume you can get this working.
 
+
 # Getting Started
+
 
 ## Score File Format
 
@@ -106,6 +112,7 @@ Finally, if you've decided that an entry's score is low enough, you may not even
 
 when the entry's final score is below `N`, the package will remove the `unread` tag from the entry, marking it as "read".
 
+
 ## Using elfeed-score
 
 Once your score file is setup, load elfeed-score. 
@@ -124,6 +131,13 @@ The package defines a keymap, but does not bind it to any key. I like to set it 
 
 At this point, any <span class="underline">new</span> entries will be scored automatically, but the entries already in your database have not yet been scored. Scoring is idempotent (scoring an entry more than once will always result in it having the same score assigned). So, you can load up an Elfeed search, and then, in the Elfeed search buffer (`*elfeed-search*`), you can score all the search results with "= v" (`elfeed-score/score-search`). When the command completes, the view will be re-sorted by score. Your score file will also have been updated on disk (to record the last time that each rule matched).  If you want to see the scoring actions as they're happening, set `elfeed-score/debug` to `t`.
 
+You can optionally arrange to have the scores displayed in the search buffer:
+
+    (setq elfeed-search-print-entry-function #'elfeed-score-print-entry)
+
+This is not turned on by `elfeed-score-enable`; you will need to configure this manually. However, `elfeed-score-unload` will remove it, if it's there.
+
+
 # Status and Roadmap
 
 I'm using `elfeed-score` day in & day out for my RSS reading, but this is a preliminary release (the version number, 0.2.0, was chosen to suggest this).
@@ -135,4 +149,5 @@ Things I want to do next:
 -   add whole-word matching
 -   add some kind of feature to age out rules that haven't matched in a long time
 
-Bugs, comments, feature requests &c welcome at [sp1ff@pobox.com](sp1ff@pobox.com).
+Bugs, comments, feature requests &c welcome at [sp1ff@pobox.com](mailto:sp1ff@pobox.com).
+

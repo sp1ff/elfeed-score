@@ -2,7 +2,7 @@
 #+DESCRIPTION: Gnus-style scoring for Elfeed
 #+AUTHOR: Sp1ff
 #+EMAIL: sp1ff@pobox.com
-#+DATE: <2020-01-04 Sat 14:37>
+#+DATE: <2020-01-18 Sat 19:31>
 #+AUTODATE: t
 #+OPTIONS: toc:nil org-md-headline-style:setext *:t ^:nil
 
@@ -149,6 +149,14 @@ The package defines a keymap, but does not bind it to any key. I like to set it 
 #+END_SRC
 
 At this point, any _new_ entries will be scored automatically, but the entries already in your database have not yet been scored. Scoring is idempotent (scoring an entry more than once will always result in it having the same score assigned). So, you can load up an Elfeed search, and then, in the Elfeed search buffer (=*elfeed-search*=), you can score all the search results with "= v" (=elfeed-score/score-search=). When the command completes, the view will be re-sorted by score. Your score file will also have been updated on disk (to record the last time that each rule matched).  If you want to see the scoring actions as they're happening, set =elfeed-score/debug= to =t=.
+
+You can optionally arrange to have the scores displayed in the search buffer:
+
+#+BEGIN_SRC elisp :tangle yes :comments no
+(setq elfeed-search-print-entry-function #'elfeed-score-print-entry)
+#+END_SRC
+
+This is not turned on by =elfeed-score-enable=; you will need to configure this manually. However, =elfeed-score-unload= will remove it, if it's there.
 
 * Status and Roadmap
 
