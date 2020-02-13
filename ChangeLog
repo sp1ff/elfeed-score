@@ -1,3 +1,24 @@
+2020-02-12  Michael Herstine  <sp1ff@pobox.com>
+
+	Score file version 2.
+	This commit does the following:
+
+	    1. re-implements the scoring rules in terms of structs (instead)
+	       of property lists
+
+	    2. re-wrote the score file parsing logic to separate the file
+	       I/O from the parsing of the score sexp.
+
+	    3. bumps the score file format version to 2
+
+	       - adds a new rule type "title-or-content"
+
+	       - permits the version element of the sexp to be keyed either
+	         string or symbol
+
+	NB. Whenever the score file is written out, it will be in version
+	2 format.
+
 2020-01-19  Michael Herstine  <mherstin@linkedin.com>
 
 	Add the option to display entry scores in *elfeed-search*.

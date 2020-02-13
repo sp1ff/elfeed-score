@@ -4,6 +4,10 @@ elfeed-score News -- history of user-visible changes -*- outline -*-
 
 ** New Features
 
+*** title-or-content rules
+
+A new type of scoring rule is introduced: `title-or-content'. Such a rule performs a text match against both the title & content for each entry while allowing two different values to be added to entry's core for each sort of match.
+
 *** Displaying Entry Scores in the Search Buffer
 
 `elfeed-score' now provides an `elfeed-search-print-entry-function'

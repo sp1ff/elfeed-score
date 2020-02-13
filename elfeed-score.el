@@ -161,6 +161,7 @@ If called intractively, print a message."
 
 (defun elfeed-score-format-score (score)
   "Format SCORE for printing in `elfeed-search-mode'.
+
 The customization `elfeed-score-score-format' sets the
 formatting.  This implementation is based on that of
 `elfeed-search-format-date'."
@@ -179,26 +180,63 @@ formatting.  This implementation is based on that of
             (concat pad string))))
        (string)))))
 
-(defun elfeed-score--parse-score-file (score-file)
-  "Parse SCORE-FILE.
+(defun elfeed-score--parse-title-rule-sexps (sexps)
+  "Parse a list of lists SEXPS into a list of title rules.
 
-Internal.  This is the core score file parsing routine.  Opens
-SCORE-FILE, reads the contents as a Lisp form, and parses that
-into a property list with the following properties:
+Each sub-list shall have the form '(TEXT VALUE TYPE DATE)."
+  (let (title-rules)
+    (dolist (item sexps)
+      (let ((struct (elfeed-score-title-rule--create
+                     :text  (nth 0 item)
+                     :value (nth 1 item)
+                     :type  (nth 2 item)
+                     :date  (nth 3 item))))
+        (unless (member struct title-rules)
+          (setq title-rules (append title-rules (list struct))))))
+    title-rules))
 
-    - :content
-    - :feeds
-    - :mark
-    - :titles"
+(defun elfeed-score--parse-content-rule-sexps (sexps)
+  "Parse a lsit of lists SEXPS into a list of content rules."
+  (let (content-rules)
+    (dolist (item sexps)
+      (let ((struct (elfeed-score-content-rule--create
+                     :text  (nth 0 item)
+                     :value (nth 1 item)
+                     :type  (nth 2 item)
+                     :date  (nth 3 item))))
+        (unless (member struct content-rules)
+          (setq content-rules (append content-rules (list struct))))))
+    content-rules))
 
-  (let ((raw-entries
-         (car
-		      (read-from-string
-		       (with-temp-buffer
-			       (insert-file-contents score-file)
-			       (buffer-string)))))
-	      mark titles feeds content)
-    (dolist (raw-item raw-entries)
+(defun elfeed-score--parse-feed-rule-sexps (sexps)
+  "Parse a list of lists SEXPS into a list of feed rules."
+  (let (feed-rules)
+    (dolist (item sexps)
+      (let ((struct (elfeed-score-feed-rule--create
+                     :text  (nth 0 item)
+                     :value (nth 1 item)
+                     :type  (nth 2 item)
+                     :attr  (nth 3 item)
+                     :date  (nth 4 item))))
+        (unless (member struct feed-rules)
+          (setq feed-rules (append feed-rules (list struct))))))
+    feed-rules))
+
+(defun elfeed-score--parse-scoring-sexp-1 (sexp)
+  "Interpret the S-expression SEXP as scoring rules version 1.
+
+Parse version 1 of the scoring S-expression.  This function will
+fail if SEXP has a \"version\" key with a value other than 1 (the
+caller may want to remove it via `assoc-delete-all').  Return a
+property list with the following keys:
+
+    - :title : list of elfeed-score-title-rule structs
+    - :content : list of elfeed-score-content-rule structs
+    - :feed : list of elfeed-score-feed-rule structs
+    - :mark : score below which entries shall be marked read"
+
+  (let (mark titles feeds content)
+    (dolist (raw-item sexp)
       (let ((key  (car raw-item))
 	          (rest (cdr raw-item)))
 	      (cond
@@ -206,33 +244,11 @@ into a property list with the following properties:
           (unless (eq 1 (car rest))
             (error "Unsupported score file version %s" (car rest))))
 	       ((string= key "title")
-          (dolist (item rest)
-            (let ((item-plist (list
-                               :text  (nth 0 item)
-                               :value (nth 1 item)
-                               :type  (nth 2 item)
-                               :date  (nth 3 item))))
-              (unless (member item-plist titles)
-                (setq titles (append titles (list item-plist)))))))
+          (setq titles (elfeed-score--parse-title-rule-sexps rest)))
          ((string= key "content")
-          (dolist (item rest)
-            (let ((item-plist (list
-                               :text  (nth 0 item)
-                               :value (nth 1 item)
-                               :type  (nth 2 item)
-                               :date  (nth 3 item))))
-              (unless (member item-plist titles)
-                (setq content (append content (list item-plist)))))))
+          (setq content (elfeed-score--parse-content-rule-sexps rest)))
          ((string= key "feed")
-          (dolist (item rest)
-            (let ((item-plist (list
-                               :text  (nth 0 item)
-                               :value (nth 1 item)
-                               :type  (nth 2 item)
-                               :attr  (nth 3 item)
-                               :date  (nth 4 item))))
-              (unless (member item-plist feeds)
-                (setq feeds (append feeds (list item-plist)))))))
+          (setq feeds (elfeed-score--parse-feed-rule-sexps rest)))
 	       ((eq key 'mark)
           ;; set `mark' to (cdr rest) if (not mark) or (< mark (cdr rest))
           (let ((rest (car rest)))
@@ -247,10 +263,109 @@ into a property list with the following properties:
 	   :titles titles
      :content content)))
 
-(defvar elfeed-score--score-titles nil
-  "List of property lists each defining a scoring rule for entry titles.
+(defun elfeed-score--parse-title-or-content-rule-sexps (sexps)
+  "Parse a list of lists SEXPS into a list of title-or-content rules.
 
-The properties are:
+Each sub-list shall have the form '(TEXT TITLE-VALUE
+CONTENT-VALUE TYPE DATE)."
+  (let (toc-rules)
+    (dolist (item sexps)
+      (let ((struct (elfeed-score-title-or-content-rule--create
+                     :text          (nth 0 item)
+                     :title-value   (nth 1 item)
+                     :content-value (nth 1 item)
+                     :type          (nth 2 item)
+                     :date          (nth 3 item))))
+        (unless (member struct toc-rules)
+          (setq toc-rules (append toc-rules (list struct))))))
+    toc-rules))
+
+(defun elfeed-score--parse-scoring-sexp-2 (sexp)
+  "Interpret the S-expression SEXP as scoring rules version 2.
+
+Parse version 2 of the scoring S-expression.  Return a property list
+with the following keys:
+
+    - :title : list of elfeed-score-title-rule structs
+    - :content : list of elfeed-score-content-rule structs
+    - :title-or-content: list of elfeed-score-title-or-content-rule
+                         structs
+    - :feed : list of elfeed-score-feed-rule structs
+    - :mark : score below which entries shall be marked read"
+
+  (let (mark titles feeds content tocs)
+    (dolist (raw-item sexp)
+      (let ((key  (car raw-item))
+	          (rest (cdr raw-item)))
+	      (cond
+         ((string= key "version")
+          (unless (eq 2 (car rest))
+            (error "Unsupported score file version %s" (car rest))))
+	       ((string= key "title")
+          (setq titles (elfeed-score--parse-title-rule-sexps rest)))
+         ((string= key "content")
+          (setq content (elfeed-score--parse-content-rule-sexps rest)))
+         ((string= key "feed")
+          (setq feeds (elfeed-score--parse-feed-rule-sexps rest)))
+         ((string= key "title-or-content")
+          (setq tocs (elfeed-score--parse-title-or-content-rule-sexps rest)))
+	       ((eq key 'mark)
+          ;; set `mark' to (cdr rest) if (not mark) or (< mark (cdr rest))
+          (let ((rest (car rest)))
+            (if (or (not mark)
+                    (< mark rest))
+                (setq mark rest))))
+	       (t
+	        (error "Unknown score file key %s" key)))))
+    (list
+     :mark mark
+	   :feeds feeds
+	   :titles titles
+     :content content
+     :title-or-content tocs)))
+
+(defun elfeed-score--parse-scoring-sexp (sexps)
+  "Parse raw S-expressions (SEXPS) into scoring rules."
+  (let ((version
+         (cond
+          ((assoc 'version sexps)
+           (cadr (assoc 'version sexps)))
+          ((assoc "version" sexps)
+           (cadr (assoc "version" sexps)))
+          (t
+           (error "Couldn't deduce score file version")))))
+    (assoc-delete-all "version" sexps)
+    (assoc-delete-all 'version sexps)
+    (cond
+     ((eq version 1)
+      (elfeed-score--parse-scoring-sexp-1 sexps))
+     ((eq version 2)
+      (elfeed-score--parse-scoring-sexp-2 sexps))
+     (t
+      (error "Unknown version %s" version)))))
+
+(defun elfeed-score--parse-score-file (score-file)
+  "Parse SCORE-FILE.
+
+Internal.  This is the core score file parsing routine.  Opens
+SCORE-FILE, reads the contents as a Lisp form, and parses that
+into a property list with the following properties:
+
+    - :content
+    - :feeds
+    - :mark
+    - :titles"
+
+  (let ((sexp
+         (car
+		      (read-from-string
+		       (with-temp-buffer
+			       (insert-file-contents score-file)
+			       (buffer-string))))))
+    (elfeed-score--parse-scoring-sexp sexp)))
+
+(cl-defstruct (elfeed-score-title-rule (:constructor elfeed-score-title-rule--create))
+  "Rule for scoring against entry titles.
 
     - :text :: The rule's match text; either a string or a regular
                expression (on which more below)
@@ -260,15 +375,14 @@ The properties are:
                substring/regexp match; lower-case means case-insensitive
                and upper case sensitive.  Defaults to r (case-insensitive
                regexp match)
-    - :date :: time (in seconds since epoch) when this rule last matched")
+    - :date :: time (in seconds since epoch) when this rule last matched"
+  text value type date)
 
-(defvar elfeed-score--score-feeds nil
-  "List of property lists each defining a scoring rule for entry feeds.
-
-The properties are:
+(cl-defstruct (elfeed-score-feed-rule (:constructor elfeed-score-feed-rule--create))
+  "Rule for scoring against entry feeds.
 
     - :text :: The rule's match text; either astring or a regular
-      expression (on which more below)
+               expression (on which more below)
     - :value :: Integral value (positive or negative) to be added to
                 an entry's score if this rule matches
     - :type :: (optional) One of the symbols s S r R; s/r denotes
@@ -277,12 +391,11 @@ The properties are:
                regexp match)
     - :attr :: Defines the feed attribute against which matching shall be
                performed: 't for title & 'u for URL.
-    - :date :: time (in seconds since epoch) when this rule last matched")
+    - :date :: time (in seconds since epoch) when this rule last matched"
+  text value type attr date)
 
-(defvar elfeed-score--score-content nil
-    "List of property lists each defining a scoring rule for entry content.
-
-The properties are:
+(cl-defstruct (elfeed-score-content-rule (:constructor elfeed-score-content-rule--create))
+  "Rule for scoring against entry content
 
     - :text :: The rule's match text; either a string or a regular
                expression (on which more below)
@@ -292,7 +405,43 @@ The properties are:
                substring/regexp match; lower-case means case-insensitive
                and upper case sensitive.  Defaults to r (case-insensitive
                regexp match)
-    - :date :: time (in seconds since epoch) when this rule last matched")
+    - :date :: time (in seconds since epoch) when this rule last matched"
+  text value type date)
+
+(cl-defstruct (elfeed-score-title-or-content-rule
+               (:constructor elfeed-score-title-or-content-rule--create))
+  "Rule for scoring the same text against both entry title & content.
+
+I found myself replicating the same rule for both title &
+content, with a higher score for title.  This rule permits
+defining a single rule for both.
+
+    - :text :: The rule's match text; either a string or a
+               regular expression (on which more below)
+    - :title-value :: Integral value (positive or negative) to be
+                      added to an entry's score should this rule match the
+                      entry's title
+    - :content-value :: Integral value (positive or negative) to be
+                      added to an entry's score should this rule match the
+                      entry's value
+    - :type :: (optional) One of the symbols s S r R; s/r denotes
+               substring/regexp match; lower-case means case-insensitive
+               and upper case sensitive.  Defaults to r (case-insensitive
+               regexp match)
+    - :date :: time (in seconds since epoch) when this rule last matched"
+  text title-value content-value type date)
+
+(defvar elfeed-score--title-rules nil
+  "List of structs each defining a scoring rule for entry titles.")
+
+(defvar elfeed-score--feed-rules nil
+  "List of structs each defining a scoring rule for entry feeds.")
+
+(defvar elfeed-score--content-rules nil
+  "List of structs each defining a scoring rule for entry content.")
+
+(defvar elfeed-score--title-or-content-rules nil
+  "List of structs each defining a scoring rule for entry title or content.")
 
 (defvar elfeed-score--score-mark nil
   "Score at or below which entries shall be marked as read.")
@@ -303,10 +452,11 @@ The properties are:
 Internal.  Read SCORE-FILE, store scoring rules in our internal datastructures,"
 
   (let ((score-entries (elfeed-score--parse-score-file score-file)))
-    (setq elfeed-score--score-titles  (plist-get score-entries :titles)
-          elfeed-score--score-feeds   (plist-get score-entries :feeds)
-          elfeed-score--score-content (plist-get score-entries :content)
-          elfeed-score--score-mark    (plist-get score-entries :mark))))
+    (setq elfeed-score--title-rules            (plist-get score-entries :titles)
+          elfeed-score--feed-rules             (plist-get score-entries :feeds)
+          elfeed-score--content-rules          (plist-get score-entries :content)
+          elfeed-score--title-or-content-rules (plist-get score-entries :title-or-content)
+          elfeed-score--score-mark             (plist-get score-entries :mark))))
 
 (defun elfeed-score--match-text (match-text search-text match-type)
   "Test SEARCH-TEXT against MATCH-TEXT according to MATCH-TYPE.
@@ -324,33 +474,31 @@ Return nil on failure, t on match."
    (t
     (error "Unknown match type %s" match-type))))
 
-(defun elfeed-score--score-entry (entry)
-  "Score an Elfeed ENTRY.
-
-This function will return the entry's score, udpate it's meta-data, and
-udpate the \"last matched\" time of the salient rules."
-
-  (let ((title   (elfeed-entry-title entry))
-        (feed    (elfeed-entry-feed  entry))
-        (content (elfeed-deref (elfeed-entry-content entry)))
-	      (score   elfeed-score-default-score))
-    ;; score on the entry title
-	  (dolist (score-title elfeed-score--score-titles)
-	    (let* ((match-text (plist-get score-title :text))
-		         (value      (plist-get score-title :value))
-		         (match-type (plist-get score-title :type))
+(defun elfeed-score--score-on-title (entry)
+  "Run all title scoring rules against ENTRY; return the summed values."
+  (let ((title (elfeed-entry-title entry))
+        (score 0))
+    (dolist (score-title elfeed-score--title-rules)
+	    (let* ((match-text (elfeed-score-title-rule-text  score-title))
+		         (value      (elfeed-score-title-rule-value score-title))
+		         (match-type (elfeed-score-title-rule-type  score-title))
              (got-match (elfeed-score--match-text match-text title match-type)))
         (if got-match
             (progn
               (elfeed-score--debug "'%s' + %d (title)" title value)
 		          (setq score (+ score value))
-		          (plist-put score-title :date (float-time))))))
-    ;; score on the entry feed
-    (dolist (score-feed elfeed-score--score-feeds)
-	    (let* ((match-text (plist-get score-feed :text))
-		         (value      (plist-get score-feed :value))
-		         (match-type (plist-get score-feed :type))
-             (attr       (plist-get score-feed :attr))
+              (setf (elfeed-score-title-rule-date score-title) (float-time))))))
+    score))
+
+(defun elfeed-score--score-on-feed (entry)
+  "Run all feed scoring rules against ENTRY; return the summed values."
+  (let ((feed (elfeed-entry-feed  entry))
+        (score 0))
+    (dolist (score-feed elfeed-score--feed-rules)
+	    (let* ((match-text (elfeed-score-feed-rule-text  score-feed))
+		         (value      (elfeed-score-feed-rule-value score-feed))
+		         (match-type (elfeed-score-feed-rule-type  score-feed))
+             (attr       (elfeed-score-feed-rule-attr  score-feed))
              (feed-text (cond
                          ((eq attr 't)
                           (elfeed-feed-title feed))
@@ -363,22 +511,69 @@ udpate the \"last matched\" time of the salient rules."
              (got-match (elfeed-score--match-text match-text feed-text match-type)))
         (if got-match
             (progn
-              (elfeed-score--debug "%s + %d (feed)" title value)
+              (elfeed-score--debug "%s + %d (feed)" (elfeed-entry-title entry) value)
 		          (setq score (+ score value))
-		          (plist-put score-feed :date (float-time))))))
-    ;; score on the entry content
+		          (setf (elfeed-score-feed-rule-date score-feed) (float-time))))))
+    score))
+
+(defun elfeed-score--score-on-content (entry)
+  "Run all content scoring rules against ENTRY; return the summed values."
+  (let ((content (elfeed-deref (elfeed-entry-content entry)))
+        (score 0))
     (if content
-        (dolist (score-content elfeed-score--score-content)
-	        (let* ((match-text   (plist-get score-content :text))
-		             (value        (plist-get score-content :value))
-		             (match-type   (plist-get score-content :type))
+        (dolist (score-content elfeed-score--content-rules)
+	        (let* ((match-text   (elfeed-score-content-rule-text  score-content))
+		             (value        (elfeed-score-content-rule-value score-content))
+		             (match-type   (elfeed-score-content-rule-type  score-content))
                  (got-match    (elfeed-score--match-text match-text
                                                          content match-type)))
             (if got-match
                 (progn
-                  (elfeed-score--debug "%s + %d (content)" title value)
+                  (elfeed-score--debug "%s + %d (content)" (elfeed-entry-title entry) value)
 		              (setq score (+ score value))
-		              (plist-put score-content :date (float-time)))))))
+		              (setf (elfeed-score-content-rule-date score-content) (float-time)))))))
+    score))
+
+(defun elfeed-score--score-on-title-or-content (entry)
+  "Run all title-or-content rules against ENTRY; return the summed values."
+  (let ((title (elfeed-entry-title entry))
+        (content (elfeed-deref (elfeed-entry-content entry)))
+        (score 0))
+    (dolist (score-title elfeed-score--title-or-content-rules)
+	    (let* ((match-text (elfeed-score-title-or-content-rule-text        score-title))
+		         (value      (elfeed-score-title-or-content-rule-title-value score-title))
+		         (match-type (elfeed-score-title-or-content-rule-type        score-title))
+             (got-match (elfeed-score--match-text match-text title match-type)))
+        (if got-match
+            (progn
+              (elfeed-score--debug "'%s' + %d (title)" title value)
+		          (setq score (+ score value))
+              (setf (elfeed-score-title-or-content-rule-date score-title) (float-time))))))
+    (if content
+        (dolist (score-content elfeed-score--title-or-content-rules)
+	        (let* ((match-text   (elfeed-score-title-or-content-rule-text          score-content))
+		             (value        (elfeed-score-title-or-content-rule-content-value score-content))
+		             (match-type   (elfeed-score-title-or-content-rule-type          score-content))
+                 (got-match    (elfeed-score--match-text match-text
+                                                         content match-type)))
+            (if got-match
+                (progn
+                  (elfeed-score--debug "%s + %d (content)" (elfeed-entry-title entry) value)
+		              (setq score (+ score value))
+		              (setf (elfeed-score-title-or-content-rule-date score-content) (float-time)))))))
+    score))
+
+(defun elfeed-score--score-entry (entry)
+  "Score an Elfeed ENTRY.
+
+This function will return the entry's score, udpate it's meta-data, and
+udpate the \"last matched\" time of the salient rules."
+
+  (let ((score (+ elfeed-score-default-score
+                  (elfeed-score--score-on-title entry)
+                  (elfeed-score--score-on-feed entry)
+                  (elfeed-score--score-on-content entry)
+                  (elfeed-score--score-on-title-or-content entry))))
     (setf (elfeed-meta entry elfeed-score-meta-keyword) score)
 	  (if (and elfeed-score--score-mark
 		         (< score elfeed-score--score-mark))
@@ -412,38 +607,49 @@ udpate the \"last matched\" time of the salient rules."
     ";;; Elfeed score file                                     -*- lisp -*-\n%s"
 	  (pp-to-string
 	   (list
-	    (list "version" 1)
+	    (list 'version 2)
       (append
        '("title")
 	     (mapcar
 	      (lambda (x)
 		      (list
-		       (plist-get x :text)
-		       (plist-get x :value)
-		       (plist-get x :type)
-		       (plist-get x :date)))
-	      elfeed-score--score-titles))
+		       (elfeed-score-title-rule-text  x)
+		       (elfeed-score-title-rule-value x)
+		       (elfeed-score-title-rule-type  x)
+		       (elfeed-score-title-rule-date  x)))
+	      elfeed-score--title-rules))
       (append
        '("content")
 	     (mapcar
 	      (lambda (x)
 		      (list
-		       (plist-get x :text)
-		       (plist-get x :value)
-		       (plist-get x :type)
-		       (plist-get x :date)))
-	      elfeed-score--score-content))
+		       (elfeed-score-content-rule-text  x)
+		       (elfeed-score-content-rule-value x)
+		       (elfeed-score-content-rule-type  x)
+		       (elfeed-score-content-rule-date  x)))
+	      elfeed-score--content-rules))
+      (append
+       '("title-or-content")
+       (mapcar
+        (lambda (x)
+          (list
+           (elfeed-score-title-or-content-rule-text x)
+           (elfeed-score-title-or-content-rule-title-value x)
+           (elfeed-score-title-or-content-rule-content-value x)
+           (elfeed-score-title-or-content-rule-type x)
+           (elfeed-score-title-or-content-rule-date x)))
+        elfeed-score--title-or-content-rules))
       (append
        '("feed")
 	     (mapcar
 	      (lambda (x)
 		      (list
-		       (plist-get x :text)
-		       (plist-get x :value)
-		       (plist-get x :type)
-           (plist-get x :attr)
-		       (plist-get x :date)))
-	      elfeed-score--score-feeds))
+		       (elfeed-score-feed-rule-text  x)
+		       (elfeed-score-feed-rule-value x)
+		       (elfeed-score-feed-rule-type  x)
+           (elfeed-score-feed-rule-attr  x)
+		       (elfeed-score-feed-rule-date  x)))
+	      elfeed-score--feed-rules))
       (list 'mark elfeed-score--score-mark))))
    nil score-file))
 
