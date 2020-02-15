@@ -4,6 +4,14 @@ elfeed-score News -- history of user-visible changes -*- outline -*-
 
 ** New Features
 
+*** scoping rules by tag
+
+You can now scope rules by entry tags; rules can be setup to run only on entries that have one or more tags, or that have none of a given set of tags. See the README for syntax details.
+
+*** whole-word matching
+
+Specying a match type of 'w or 'W will perform case-insensitive or case-sensitive (resp.) whole-word regexp matching.
+
 *** title-or-content rules
 
 A new type of scoring rule is introduced: `title-or-content'. Such a rule performs a text match against both the title & content for each entry while allowing two different values to be added to entry's core for each sort of match.

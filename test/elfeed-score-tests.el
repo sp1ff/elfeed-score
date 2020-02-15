@@ -44,9 +44,11 @@ URL (which is convenient for testing scoring)."
       (setf (elfeed-feed-title feed) title)
       (setf (elfeed-feed-url feed) url))))
 
-(cl-defun elfeed-score-test-generate-entry (feed title content &optional (within "1 year"))
+(cl-defun elfeed-score-test-generate-entry (feed title content
+                                                 &key (within "1 year") tags)
   "Generate a random entry with feed FEED, title TITLE & content CONTENT.
-Use WITHIN to scope the date.
+Use WITHIN to scope the date.  TAGS specifies tags to be applied in addition
+to 'unread.
 
 Warning: run this in `with-elfeed-test'.
 
@@ -62,7 +64,7 @@ is convenient for testing scoring)."
      :title title
      :link link
      :date (elfeed-test-generate-date within)
-     :tags (list 'unread)
+     :tags (append tags (list 'unread))
      :feed-id feed-id
      :content (elfeed-ref content))))
 
@@ -174,7 +176,43 @@ is convenient for testing scoring)."
                                         :text "long way( home)?" :value 100
                                         :type 'r))
                          :content nil
-                         :title-or-content nil)))))
+                         :title-or-content nil))))
+  (let* ((score-entries
+          '((version 2)
+            ("title"
+             ("hoping" -1000 s nil (t . (foo bar)))
+             ("long way( home)?" +100 r))
+            ("feed"
+             ("foo.com" +100 s u)
+             ("title" -100 s t))
+            (mark -2500)))
+         (score-text (pp-to-string score-entries))
+         (score-file (make-temp-file "elfeed-score-test-" nil nil score-text))
+         (score-entries-2 (elfeed-score--parse-score-file score-file)))
+       (should (equal score-entries-2
+                      (list :mark -2500
+                            :feeds (list (elfeed-score-feed-rule--create
+                                          :text "foo.com" :value 100 :type 's
+                                          :attr 'u)
+                                         (elfeed-score-feed-rule--create
+                                          :text "title" :value -100 :type 's
+                                          :attr 't))
+                            :titles (list (elfeed-score-title-rule--create
+                                           :text "hoping" :value -1000 :type 's
+                                           :tags (list t 'foo 'bar))
+                                          (elfeed-score-title-rule--create
+                                           :text "long way( home)?" :value 100
+                                           :type 'r))
+                            :content nil
+                            :title-or-content nil)))))
+
+(ert-deftest elfeed-score-test-match-tags ()
+  "Test `elfeed-score--match-tags'."
+
+  (should (eq t   (elfeed-score--match-tags '(foo bar) '(t . (foo)))))
+  (should (eq t   (elfeed-score--match-tags '(foo bar) nil)))
+  (should (eq nil (elfeed-score--match-tags '(foo bar) '(t . (splat)))))
+  (should (eq nil (elfeed-score--match-tags '(foo bar) '(nil . (foo))))))
 
 (ert-deftest elfeed-score-test-test-scoring-on-title-0 ()
   "Test scoring against entry title-- substring matching."
@@ -184,7 +222,8 @@ is convenient for testing scoring)."
     (with-elfeed-test
      (let* ((feed (elfeed-test-generate-feed))
             (entry (elfeed-score-test-generate-entry
-                    feed entry-title lorem-ipsum)))
+                    feed entry-title lorem-ipsum
+                    :tags '(foo splat))))
        (elfeed-db-add entry)
        ;; case-insensitive
      (with-elfeed-score-test
@@ -196,6 +235,19 @@ is convenient for testing scoring)."
      (with-elfeed-score-test
       (let* ((elfeed-score--title-rules
               (list (elfeed-score-title-rule--create :text "Bar" :value 1 :type 'S)))
+             (score (elfeed-score--score-entry entry)))
+        (should (eq score 0))))
+     ;; case-insensitive, scoped by tags
+     (with-elfeed-score-test
+      (let* ((elfeed-score--title-rules
+              (list (elfeed-score-title-rule--create :text "bar" :value 1 :type 's
+                                                     :tags '(t . (foo bar)))))
+             (score (elfeed-score--score-entry entry)))
+        (should (eq score 1))))
+     (with-elfeed-score-test
+      (let* ((elfeed-score--title-rules
+              (list (elfeed-score-title-rule--create :text "bar" :value 1 :type 's
+                                                     :tags '(nil . (foo bar)))))
              (score (elfeed-score--score-entry entry)))
         (should (eq score 0))))))))
 
@@ -218,9 +270,52 @@ is convenient for testing scoring)."
        ;; case-sensitive
        (with-elfeed-score-test
         (let* ((elfeed-score--title-rules
-                (list (elfeed-score-title-rule--create :text "Ba\\(\\|z\\)r" :value 1 :type 'R)))
+                (list (elfeed-score-title-rule--create :text "Ba\\(r\\|z\\)" :value 1 :type 'R)))
                (score (elfeed-score--score-entry entry)))
           (should (eq score 0))))))))
+
+(ert-deftest elfeed-score-test-test-scoring-on-title-2 ()
+  "Test scoring against entry title-- whole-word matching."
+
+  (let* ((lorem-ipsum "Lorem ipsum dolor sit amet")
+         (entry-title "foo bar splat"))
+    (with-elfeed-test
+     (let* ((feed (elfeed-test-generate-feed))
+            (entry (elfeed-score-test-generate-entry
+                    feed entry-title lorem-ipsum)))
+       (elfeed-db-add entry)
+       ;; case-insensitive
+       (with-elfeed-score-test
+        (let* ((elfeed-score--title-rules
+                (list (elfeed-score-title-rule--create :text "Ba\\(r\\|z\\)" :value 1 :type 'w)))
+               (score (elfeed-score--score-entry entry)))
+          (should (eq score 0))))
+       ;; case-sensitive
+       (with-elfeed-score-test
+        (let* ((elfeed-score--title-rules
+                (list (elfeed-score-title-rule--create :text "Ba\\(r\\|z\\)" :value 1 :type 'W)))
+               (score (elfeed-score--score-entry entry)))
+          (should (eq score 0)))))))
+  (let* ((lorem-ipsum "Lorem ipsum dolor sit amet")
+         (entry-title "foo barsplat"))
+    (with-elfeed-test
+     (let* ((feed (elfeed-test-generate-feed))
+            (entry (elfeed-score-test-generate-entry
+                    feed entry-title lorem-ipsum)))
+       (elfeed-db-add entry)
+       ;; case-insensitive
+       (with-elfeed-score-test
+        (let* ((elfeed-score--title-rules
+                (list (elfeed-score-title-rule--create :text "Ba\\(r\\|z\\)" :value 1 :type 'w)))
+               (score (elfeed-score--score-entry entry)))
+          (should (eq score 0))))
+       ;; case-sensitive
+       (with-elfeed-score-test
+        (let* ((elfeed-score--title-rules
+                (list (elfeed-score-title-rule--create :text "Ba\\(\\|z\\)r" :value 1 :type 'W)))
+               (score (elfeed-score--score-entry entry)))
+          (should (eq score 0))))
+       ))))
 
 (ert-deftest elfeed-score-test-test-scoring-on-feed-title-0 ()
   "Test scoring against entry feed title-- substring matching."
@@ -248,7 +343,7 @@ is convenient for testing scoring)."
           (should (eq score 0))))))))
 
 (ert-deftest elfeed-score-test-test-scoring-on-feed-title-1 ()
-  "Test scoring against entry feed title-- regepx matching."
+  "Test scoring against entry feed title-- regexp matching."
 
   (let* ((lorem-ipsum "Lorem ipsum dolor sit amet")
          (entry-title "foo bar splat"))

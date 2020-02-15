@@ -1,3 +1,15 @@
+2020-02-15  Michael Herstine  <sp1ff@pobox.com>
+
+	This commit some additional, new scoring features for score file version 2:
+	    1. tag-specific rules: any rule can now be made to apply only when
+
+	       - any of one or more tags are present in the entry being scored
+
+	       - none of one or more tags are present in the entry being scored
+
+	    2. whole-word matching: in addition to string & regex matching, rules
+	       can be matched using whole-word regex matching
+
 2020-02-12  Michael Herstine  <sp1ff@pobox.com>
 
 	Score file version 2.
