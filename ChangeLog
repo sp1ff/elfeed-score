@@ -1,3 +1,20 @@
+2020-02-21  Michael Herstine  <sp1ff@pobox.com>
+
+	This commit squashes a few bugs:
+	    1. if `version' isn't mentioned in a score file, just assume it's
+	       in the latest format
+
+	    2. feed rules without tag scoping were being serializsed with a
+	       needless trailing `nil'
+
+	    3. all rules other than titles were failing to read tag-scoping
+	       rules on creation
+
+	    4. fixed a typo in the unit test names
+
+	    5. log more detailed information when `elfeed-score-debug' is t
+	       and a rule matches
+
 2020-02-15  Michael Herstine  <sp1ff@pobox.com>
 
 	This commit some additional, new scoring features for score file version 2:

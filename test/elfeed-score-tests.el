@@ -182,6 +182,42 @@ is convenient for testing scoring)."
             ("title"
              ("hoping" -1000 s nil (t . (foo bar)))
              ("long way( home)?" +100 r))
+            ("content"
+             ("now is the time..." +100 s nil (t . (foo bar))))
+            ("title-or-content"
+             ("now is the time..." 150 100 s nil (t . (foo bar))))
+            ("feed"
+             ("foo.com" +100 s u)
+             ("title" -100 s t nil (t . (foo bar))))
+            (mark -2500)))
+         (score-text (pp-to-string score-entries))
+         (score-file (make-temp-file "elfeed-score-test-" nil nil score-text))
+         (score-entries-2 (elfeed-score--parse-score-file score-file)))
+       (should (equal score-entries-2
+                      (list :mark -2500
+                            :feeds (list (elfeed-score-feed-rule--create
+                                          :text "foo.com" :value 100 :type 's
+                                          :attr 'u)
+                                         (elfeed-score-feed-rule--create
+                                          :text "title" :value -100 :type 's
+                                          :attr 't :tags '(t . (foo bar))))
+                            :titles (list (elfeed-score-title-rule--create
+                                           :text "hoping" :value -1000 :type 's
+                                           :tags (list t 'foo 'bar))
+                                          (elfeed-score-title-rule--create
+                                           :text "long way( home)?" :value 100
+                                           :type 'r))
+                            :content (list (elfeed-score-content-rule--create
+                                            :text "now is the time..." :value 100
+                                            :type 's :tags (list t 'foo 'bar)))
+                            :title-or-content
+                            (list (elfeed-score-title-or-content-rule--create
+                                   :text "now is the time..." :title-value 150
+                                   :content-value 100 :type 's :tags '(t . (foo bar))))))))
+  (let* ((score-entries
+          '(("title"
+             ("hoping" -1000 s nil (t . (foo bar)))
+             ("long way( home)?" +100 r))
             ("feed"
              ("foo.com" +100 s u)
              ("title" -100 s t))
@@ -487,6 +523,56 @@ is convenient for testing scoring)."
                        :type 'S)))
                (score (elfeed-score--score-entry entry)))
           (should (eq score 0))))))))
+
+(ert-deftest elfeed-score-test-test-scoring-on-title-or-content-1 ()
+  "Test scoring based on title-or-content-- substring matching,
+tags scoping."
+
+  (let* ((lorem-ipsum "Lorem ipsum dolor sit amet")
+         (entry-title "Lorem ipsum"))
+    (with-elfeed-test
+     (let* ((feed (elfeed-test-generate-feed))
+            (entry (elfeed-score-test-generate-entry
+                    feed entry-title lorem-ipsum
+                    :tags '(foo bar))))
+       (elfeed-db-add entry)
+       ;; case-insensitive
+       (with-elfeed-score-test
+        (let* ((elfeed-score--title-or-content-rules
+                (list (elfeed-score-title-or-content-rule--create
+                       :text "lorem ipsum" :title-value 1 :content-value 0
+                       :type 's)
+                      (elfeed-score-title-or-content-rule--create
+                       :text "lorem ipsum" :title-value 1 :content-value 0
+                       :type 's :tags '(t . (foo splat)))
+                      (elfeed-score-title-or-content-rule--create
+                       :text "lorem ipsum" :title-value 1 :content-value 0
+                       :type 's :tags '(t . (splat)))))
+               (score (elfeed-score--score-entry entry)))
+          (should (eq score 2))))))))
+
+(ert-deftest elfeed-score-test-missed-match-20200217 ()
+  "Test whole-word scoring.
+
+Thought I had a bug; turns out I didn't understand `word-search-regexp'"
+
+  (let ((test-title "AR/VR engineers 1400% rise! Hired: AR/VR engineers replace blockchain programmers as hottest commodity! Thanks God I`m AR engineer"))
+    (with-elfeed-test
+     (let* ((feed (elfeed-test-generate-feed))
+            (entry (elfeed-score-test-generate-entry
+                    feed test-title "blah")))
+       (elfeed-db-add entry)
+       (with-elfeed-score-test
+        (let* ((elfeed-score--title-or-content-rules
+                (list
+                 (elfeed-score-title-or-content-rule--create
+                  :text "b\\(lockchain\\|itcoin\\|tc\\)"
+                  :title-value 1 :content-value 1 :type 'r)
+                 (elfeed-score-title-or-content-rule--create
+                  :text "blockchain"
+                  :title-value 1 :content-value 1 :type 'w)))
+               (score (elfeed-score--score-entry entry)))
+          (should (eq score 2))))))))
 
 (ert-deftest elfeed-score-test-test-marking-as-read-0 ()
   "Test marking entries as read if they score low enough."

@@ -2,7 +2,7 @@
 #+DESCRIPTION: Gnus-style scoring for Elfeed
 #+AUTHOR: Sp1ff
 #+EMAIL: sp1ff@pobox.com
-#+DATE: <2020-02-15 Sat 11:02>
+#+DATE: <2020-02-21 Fri 15:16>
 #+AUTODATE: t
 #+OPTIONS: toc:nil org-md-headline-style:setext *:t ^:nil
 
@@ -15,7 +15,7 @@
 
 [[https://github.com/skeeto/elfeed][Elfeed]] is an extensible web feed reader for Emacs. By default, it will display entries in reverse chronological order. This package defines a bit of metadata for each of your feed entries: a "score". A score is an integer (negative or positive), and higher scores denote entries of greater interest to you. This package also installs a new sort function, so that Elfeed will display entries with higher scores before entries with lower scores (entries with the same scores will still be sorted in reverse chronological order).  It also provides an entry display function for the search buffer that displays each entry's score, should you choose to install it.
 
-While you can manually assign a score to an entry, you will likely find it more convenient to create rules for scoring that will be automatically applied to each new entry every time you update Elfeed. You can currently score against title, feed & content by defining strings that will be matched against those attributes by substring, regexp or whole-word regexp match. Rules can be scoped by Elfeed entry tags, so that a rule will only be applied if an entry has certain tags (or does not have certain tags). Each rule defines an integral value, and the rules are applied in order of definition. The new entry's score begins at zero, and is adjusted by the value defined by each matching scoring rule.
+While you can manually assign a score to an entry, you will likely find it more convenient to create rules for scoring that will be automatically applied to each new entry every time you update Elfeed. You can currently score against title, feed & content by defining strings that will be matched against those attributes by substring, regexp or whole-word match. Rules can be scoped by Elfeed entry tags, so that a rule will only be applied if an entry has certain tags (or does not have certain tags). Each rule defines an integral value, and the rules are applied in order of definition. The new entry's score begins at zero, and is adjusted by the value defined by each matching scoring rule.
 
 For instance, here's a subset of my scoring file at the moment:
 
@@ -61,8 +61,8 @@ You can, if you wish, install from source as well:
 
 #+BEGIN_EXAMPLE
 cd /tmp
-curl -L --output=elfeed-score-0.2.0.tar.gz https://github.com/sp1ff/elfeed-score/archive/0.2.0.tar.gz
-tar xvf elfeed-score-0.2.0.tar.gz && cd elfeed-score-0.2.0
+curl -L --output=elfeed-score-0.3.0.tar.gz https://github.com/sp1ff/elfeed-score/archive/0.3.0.tar.gz
+tar xvf elfeed-score-0.3.0.tar.gz && cd elfeed-score-0.3.0
 ./configure
 make
 make install
@@ -75,9 +75,9 @@ The unit tests require some macros defined by the [[https://github.com/skeeto/el
 #+BEGIN_EXAMPLE
 cd /tmp
 git clone https://github.com/skeeto/elfeed.git
-curl -L --output=elfeed-score-0.2.0.tar.gz https://github.com/sp1ff/elfeed-score/archive/0.2.0.tar.gz
-tar xvf elfeed-score-0.2.0.tar.gz && cd elfeed-score-0.2.0
-export EMACSLOADPATH=/tmp/elfeed-score-0.2.0:/tmp/elfeed/tests:$EMACSLOADPATH
+curl -L --output=elfeed-score-0.3.0.tar.gz https://github.com/sp1ff/elfeed-score/archive/0.3.0.tar.gz
+tar xvf elfeed-score-0.3.0.tar.gz && cd elfeed-score-0.3.0
+export EMACSLOADPATH=/tmp/elfeed-score-0.3.0:/tmp/elfeed/tests:$EMACSLOADPATH
 ./configure
 make
 make check
@@ -101,9 +101,9 @@ Title & content rules are defined by a list of length five:
 
     1. the match text
     2. the match value: this is an integer specifying the amount by which the entry's score should be adjusted, should the text match
-    3. the match type: this may be one of =s=, =S=, =r= or =R= for substring match, case-sensitive substring match, regexp match or case-sensitive regexp match, respectively
+    3. the match type: this may be one of =s=, =S=, =r=, =R=, =w= or =W= for substring match, case-sensitive substring match, regexp match or case-sensitive regexp match, and case-insensitive or case-sensitive whole word match, respectively. Whole word matching just feeds the match text to =word-search-regexp= before doing a regexp search.
     4. the last time this rule matched an entry, in seconds since Unix epoch. This element is optional, need not be supplied by the score file author, and will be automatically kept up-to-date by the package.
-    5. tag scoping rules (on which more below); this is optional
+    5. tag scoping rules (on which more below); this is optional, and won't be written out when the scoring rules are serialized unless it is non-nil.
 
 So, when first setting up your score file, saying:
 
@@ -130,7 +130,7 @@ to entries whose tags contain =@daily=, =@politics= or both.
 
 Scoring against the entry's feed is done similarly, but may be done against either the feed title or the feed URL. This is indicated by adding a new element at index 3 which may be one of =t= or =u= (for title or URL, respectively).
 
-Finally, if you've decided that an entry's score is low enough, you may not even want to see it. In that casse, add a rule like:
+Finally, if you've decided that an entry's score is low enough, you may not even want to see it. In that case, add a rule like:
 
 #+BEGIN_EXAMPLE
 (mark N)
@@ -162,7 +162,7 @@ Just loading the library will *not* modify [[https://gitub.com/skeeto/elfeed][El
 (elfeed-score-enable)
 #+END_SRC
 
-This will install the new sort function & new entry hook, as well as read your score file. NB. =elfeed-score-enable= is autoloaded, so if you've installed this package in the usual ways, you should be able to just invoke the function & have the package loaded & enabled automatically.
+This will install the new sort function & new entry hook, as well as read your score file. NB. =elfeed-score-enable= is autoloaded, so if you've installed this package in the usual way, you should be able to just invoke the function & have the package loaded & enabled automatically.
 
 The package defines a keymap, but does not bind it to any key. I like to set it to the === key in =elfeed-search-mode-map=:
 
@@ -178,7 +178,7 @@ You can optionally arrange to have the scores displayed in the search buffer:
 (setq elfeed-search-print-entry-function #'elfeed-score-print-entry)
 #+END_SRC
 
-This is not turned on by =elfeed-score-enable=; you will need to configure this manually. However, =elfeed-score-unload= will remove it, if it's there.
+This is not turned on by =elfeed-score-enable=; you will need to set this manually. However, =elfeed-score-unload= will remove it, if it's there.
 
 * Status and Roadmap
 
@@ -188,5 +188,6 @@ Things I want to do next:
 
     - support adding tags based on score (e.g. "if the score is greater than _n_, add tag 'foo'")
     - add some kind of feature to age out rules that haven't matched in a long time
+    - capture which entries are actually opened & which ones are manually marked read without bothering to read them; see if I can "learn" from that information (something like Gnus Adaptive Scoring)
 
 Bugs, comments, feature requests &c welcome at [[mailto:sp1ff@pobox.com][sp1ff@pobox.com]].

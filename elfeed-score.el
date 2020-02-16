@@ -204,7 +204,8 @@ Each sub-list shall have the form '(TEXT VALUE TYPE DATE)."
                      :text  (nth 0 item)
                      :value (nth 1 item)
                      :type  (nth 2 item)
-                     :date  (nth 3 item))))
+                     :date  (nth 3 item)
+                     :tags  (nth 4 item))))
         (unless (member struct content-rules)
           (setq content-rules (append content-rules (list struct))))))
     content-rules))
@@ -218,7 +219,8 @@ Each sub-list shall have the form '(TEXT VALUE TYPE DATE)."
                      :value (nth 1 item)
                      :type  (nth 2 item)
                      :attr  (nth 3 item)
-                     :date  (nth 4 item))))
+                     :date  (nth 4 item)
+                     :tags  (nth 5 item))))
         (unless (member struct feed-rules)
           (setq feed-rules (append feed-rules (list struct))))))
     feed-rules))
@@ -276,7 +278,8 @@ CONTENT-VALUE TYPE DATE)."
                      :title-value   (nth 1 item)
                      :content-value (nth 2 item)
                      :type          (nth 3 item)
-                     :date          (nth 4 item))))
+                     :date          (nth 4 item)
+                     :tags          (nth 5 item))))
         (unless (member struct toc-rules)
           (setq toc-rules (append toc-rules (list struct))))))
     toc-rules))
@@ -334,7 +337,10 @@ with the following keys:
           ((assoc "version" sexps)
            (cadr (assoc "version" sexps)))
           (t
-           (error "Couldn't deduce score file version")))))
+           ;; I'm going to assume this is a new, hand-authored scoring
+           ;; file, and attempt to parse it according to the latest
+           ;; version spec.
+           2))))
     (assoc-delete-all "version" sexps)
     (assoc-delete-all 'version sexps)
     (cond
@@ -413,7 +419,9 @@ into a property list with the following properties:
                are present\"."
   text value type attr date tags)
 
-(cl-defstruct (elfeed-score-content-rule (:constructor elfeed-score-content-rule--create))
+(cl-defstruct (elfeed-score-content-rule
+               (:constructor nil)
+               (:constructor elfeed-score-content-rule--create))
   "Rule for scoring against entry content
 
     - :text :: The rule's match text; either a string or a regular
@@ -435,6 +443,7 @@ into a property list with the following properties:
   text value type date tags)
 
 (cl-defstruct (elfeed-score-title-or-content-rule
+               (:constructor nil)
                (:constructor elfeed-score-title-or-content-rule--create))
   "Rule for scoring the same text against both entry title & content.
 
@@ -618,7 +627,7 @@ or nil, and is presumably a tag scoping for a scoring rule."
                          (elfeed-score--match-text match-text title match-type))))
         (if got-match
             (progn
-              (elfeed-score--debug "'%s' + %d (ToC/title)" title value)
+              (elfeed-score--debug "'%s' + %d (ToC/title: rule %s)" title value match-text)
 		          (setq score (+ score value))
               (setf (elfeed-score-title-or-content-rule-date score-title)
                     (float-time))))))
@@ -636,8 +645,8 @@ or nil, and is presumably a tag scoping for a scoring rule."
                              (elfeed-score--match-text match-text content match-type))))
             (if got-match
                 (progn
-                  (elfeed-score--debug "%s + %d (ToC/content)"
-                                       (elfeed-entry-title entry) value)
+                  (elfeed-score--debug "%s + %d (ToC/content: rule %s)"
+                                       (elfeed-entry-title entry) value match-text)
 		              (setq score (+ score value))
 		              (setf (elfeed-score-title-or-content-rule-date score-content)
                         (float-time)))))))
@@ -737,13 +746,17 @@ udpate the \"last matched\" time of the salient rules."
        '("feed")
 	     (mapcar
 	      (lambda (x)
-		      (list
-		       (elfeed-score-feed-rule-text  x)
-		       (elfeed-score-feed-rule-value x)
-		       (elfeed-score-feed-rule-type  x)
-           (elfeed-score-feed-rule-attr  x)
-		       (elfeed-score-feed-rule-date  x)
-           (elfeed-score-feed-rule-tags  x)))
+          (let ((body
+		             (list
+		              (elfeed-score-feed-rule-text  x)
+		              (elfeed-score-feed-rule-value x)
+		              (elfeed-score-feed-rule-type  x)
+                  (elfeed-score-feed-rule-attr  x)
+		              (elfeed-score-feed-rule-date  x)))
+                (tags (elfeed-score-feed-rule-tags x)))
+            (if tags
+                (append body (list tags))
+              body)))
 	      elfeed-score--feed-rules))
       (list 'mark elfeed-score--score-mark))))
    nil score-file))
