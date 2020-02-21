@@ -1,5 +1,9 @@
 2020-02-21  Michael Herstine  <sp1ff@pobox.com>
 
+	Change `assoc-delete-all' to `cl-delete' to avoid having to depend on a later version of Emacs.
+
+2020-02-21  Michael Herstine  <sp1ff@pobox.com>
+
 	This commit squashes a few bugs:
 	    1. if `version' isn't mentioned in a score file, just assume it's
 	       in the latest format

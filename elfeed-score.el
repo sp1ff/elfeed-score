@@ -4,7 +4,7 @@
 
 ;; Author: Michael Herstine <sp1ff@pobox.com>
 ;; Version: 0.3.0
-;; Package-Requires: ((emacs "24") (elfeed "3.3.0"))
+;; Package-Requires: ((emacs "24.1") (elfeed "3.3.0") (cl-lib "0.6.1"))
 ;; Keywords: news
 ;; URL: https://github.com/sp1ff/elfeed-score
 
@@ -180,6 +180,108 @@ formatting.  This implementation is based on that of
             (concat pad string))))
        (string)))))
 
+(cl-defstruct (elfeed-score-title-rule
+               (:constructor nil)
+               (:constructor elfeed-score-title-rule--create))
+  "Rule for scoring against entry titles.
+
+    - text :: The rule's match text; either a string or a regular
+              expression (on which more below)
+    - value :: Integral value (positive or negative) to be added to
+               an entry's score if this rule matches
+    - type :: (optional) One of the symbols s S r R; s/r denotes
+              substring/regexp match; lower-case means case-insensitive
+              and upper case sensitive.  Defaults to r (case-insensitive
+              regexp match)
+    - date :: time (in seconds since epoch) when this rule last matched
+    - tags :: cons cell of the form (a . b) where A is either #t or #f and
+              B is a list of symbols. The latter is interpreted as a list
+              of tags scoping the rule and the former as a bolean switch
+              possibly negating the scoping. E.g. (#t . (a b)) means \"apply
+              this rule if either of tags a & b are present\". Making the
+              first element means \"do not apply this rule if any of a and b
+              are present\"."
+  text value type date tags)
+
+(cl-defstruct (elfeed-score-feed-rule
+               (:constructor nil)
+               (:constructor elfeed-score-feed-rule--create))
+  "Rule for scoring against entry feeds.
+
+    - :text :: The rule's match text; either astring or a regular
+               expression (on which more below)
+    - :value :: Integral value (positive or negative) to be added to
+                an entry's score if this rule matches
+    - :type :: (optional) One of the symbols s S r R; s/r denotes
+               substring/regexp match; lower-case means case-insensitive
+               and upper case sensitive.  Defaults to r (case-insensitive
+               regexp match)
+    - :attr :: Defines the feed attribute against which matching shall be
+               performed: 't for title & 'u for URL.
+    - :date :: time (in seconds since epoch) when this rule last matched
+    - :tags :: cons cell of the form (a . b) where A is either #t or #f and
+               B is a list of symbols. The latter is interpreted as a list
+               of tags scoping the rule and the former as a bolean switch
+               possibly negating the scoping. E.g. (#t . (a b)) means \"apply
+               this rule if either of tags a & b are present\". Making the
+               first element means \"do not apply this rule if any of a and b
+               are present\"."
+  text value type attr date tags)
+
+(cl-defstruct (elfeed-score-content-rule
+               (:constructor nil)
+               (:constructor elfeed-score-content-rule--create))
+  "Rule for scoring against entry content
+
+    - :text :: The rule's match text; either a string or a regular
+               expression (on which more below)
+    - :value :: Integral value (positive or negative) to be added to
+                an entry's score if this rule matches
+    - :type :: (optional) One of the symbols s S r R; s/r denotes
+               substring/regexp match; lower-case means case-insensitive
+               and upper case sensitive.  Defaults to r (case-insensitive
+               regexp match)
+    - :date :: time (in seconds since epoch) when this rule last matched
+    - tags :: cons cell of the form (a . b) where A is either #t or #f and
+              B is a list of symbols. The latter is interpreted as a list
+              of tags scoping the rule and the former as a bolean switch
+              possibly negating the scoping. E.g. (#t . (a b)) means \"apply
+              this rule if either of tags a & b are present\". Making the
+              first element means \"do not apply this rule if any of a and b
+              are present\"."
+  text value type date tags)
+
+(cl-defstruct (elfeed-score-title-or-content-rule
+               (:constructor nil)
+               (:constructor elfeed-score-title-or-content-rule--create))
+  "Rule for scoring the same text against both entry title & content.
+
+I found myself replicating the same rule for both title &
+content, with a higher score for title.  This rule permits
+defining a single rule for both.
+
+    - :text :: The rule's match text; either a string or a
+               regular expression (on which more below)
+    - :title-value :: Integral value (positive or negative) to be
+                      added to an entry's score should this rule match the
+                      entry's title
+    - :content-value :: Integral value (positive or negative) to be
+                      added to an entry's score should this rule match the
+                      entry's value
+    - :type :: (optional) One of the symbols s S r R; s/r denotes
+               substring/regexp match; lower-case means case-insensitive
+               and upper case sensitive.  Defaults to r (case-insensitive
+               regexp match)
+    - :date :: time (in seconds since epoch) when this rule last matched
+    - tags :: cons cell of the form (a . b) where A is either #t or #f and
+              B is a list of symbols. The latter is interpreted as a list
+              of tags scoping the rule and the former as a bolean switch
+              possibly negating the scoping. E.g. (#t . (a b)) means \"apply
+              this rule if either of tags a & b are present\". Making the
+              first element means \"do not apply this rule if any of a and b
+              are present\"."
+  text title-value content-value type date tags)
+
 (defun elfeed-score--parse-title-rule-sexps (sexps)
   "Parse a list of lists SEXPS into a list of title rules.
 
@@ -230,8 +332,8 @@ Each sub-list shall have the form '(TEXT VALUE TYPE DATE)."
 
 Parse version 1 of the scoring S-expression.  This function will
 fail if SEXP has a \"version\" key with a value other than 1 (the
-caller may want to remove it via `assoc-delete-all').  Return a
-property list with the following keys:
+caller may want to remove it via `assoc-delete-all' or some
+such).  Return a property list with the following keys:
 
     - :title : list of elfeed-score-title-rule structs
     - :content : list of elfeed-score-content-rule structs
@@ -341,8 +443,11 @@ with the following keys:
            ;; file, and attempt to parse it according to the latest
            ;; version spec.
            2))))
-    (assoc-delete-all "version" sexps)
-    (assoc-delete-all 'version sexps)
+    ;; I use `cl-delete' instead of `assoc-delete-all' because the
+    ;; latter would entail a dependency on Emacs 26.2, which I would
+    ;; prefer not to do.
+    (cl-delete "version" sexps :test 'equal :key 'car)
+    (cl-delete 'version sexps :test 'equal :key 'car)
     (cond
      ((eq version 1)
       (elfeed-score--parse-scoring-sexp-1 sexps))
@@ -370,108 +475,6 @@ into a property list with the following properties:
 			       (insert-file-contents score-file)
 			       (buffer-string))))))
     (elfeed-score--parse-scoring-sexp sexp)))
-
-(cl-defstruct (elfeed-score-title-rule
-               (:constructor nil)
-               (:constructor elfeed-score-title-rule--create))
-  "Rule for scoring against entry titles.
-
-    - text :: The rule's match text; either a string or a regular
-              expression (on which more below)
-    - value :: Integral value (positive or negative) to be added to
-               an entry's score if this rule matches
-    - type :: (optional) One of the symbols s S r R; s/r denotes
-              substring/regexp match; lower-case means case-insensitive
-              and upper case sensitive.  Defaults to r (case-insensitive
-              regexp match)
-    - date :: time (in seconds since epoch) when this rule last matched
-    - tags :: cons cell of the form (a . b) where A is either #t or #f and
-              B is a list of symbols. The latter is interpreted as a list
-              of tags scoping the rule and the former as a bolean switch
-              possibly negating the scoping. E.g. (#t . (a b)) means \"apply
-              this rule if either of tags a & b are present\". Making the
-              first element means \"do not apply this rule if any of a and b
-              are present\"."
-  text value type date tags)
-
-(cl-defstruct (elfeed-score-feed-rule
-               (:constructor nil)
-               (:constructor elfeed-score-feed-rule--create))
-  "Rule for scoring against entry feeds.
-
-    - :text :: The rule's match text; either astring or a regular
-               expression (on which more below)
-    - :value :: Integral value (positive or negative) to be added to
-                an entry's score if this rule matches
-    - :type :: (optional) One of the symbols s S r R; s/r denotes
-               substring/regexp match; lower-case means case-insensitive
-               and upper case sensitive.  Defaults to r (case-insensitive
-               regexp match)
-    - :attr :: Defines the feed attribute against which matching shall be
-               performed: 't for title & 'u for URL.
-    - :date :: time (in seconds since epoch) when this rule last matched
-    - :tags :: cons cell of the form (a . b) where A is either #t or #f and
-               B is a list of symbols. The latter is interpreted as a list
-               of tags scoping the rule and the former as a bolean switch
-               possibly negating the scoping. E.g. (#t . (a b)) means \"apply
-               this rule if either of tags a & b are present\". Making the
-               first element means \"do not apply this rule if any of a and b
-               are present\"."
-  text value type attr date tags)
-
-(cl-defstruct (elfeed-score-content-rule
-               (:constructor nil)
-               (:constructor elfeed-score-content-rule--create))
-  "Rule for scoring against entry content
-
-    - :text :: The rule's match text; either a string or a regular
-               expression (on which more below)
-    - :value :: Integral value (positive or negative) to be added to
-                an entry's score if this rule matches
-    - :type :: (optional) One of the symbols s S r R; s/r denotes
-               substring/regexp match; lower-case means case-insensitive
-               and upper case sensitive.  Defaults to r (case-insensitive
-               regexp match)
-    - :date :: time (in seconds since epoch) when this rule last matched
-    - tags :: cons cell of the form (a . b) where A is either #t or #f and
-              B is a list of symbols. The latter is interpreted as a list
-              of tags scoping the rule and the former as a bolean switch
-              possibly negating the scoping. E.g. (#t . (a b)) means \"apply
-              this rule if either of tags a & b are present\". Making the
-              first element means \"do not apply this rule if any of a and b
-              are present\"."
-  text value type date tags)
-
-(cl-defstruct (elfeed-score-title-or-content-rule
-               (:constructor nil)
-               (:constructor elfeed-score-title-or-content-rule--create))
-  "Rule for scoring the same text against both entry title & content.
-
-I found myself replicating the same rule for both title &
-content, with a higher score for title.  This rule permits
-defining a single rule for both.
-
-    - :text :: The rule's match text; either a string or a
-               regular expression (on which more below)
-    - :title-value :: Integral value (positive or negative) to be
-                      added to an entry's score should this rule match the
-                      entry's title
-    - :content-value :: Integral value (positive or negative) to be
-                      added to an entry's score should this rule match the
-                      entry's value
-    - :type :: (optional) One of the symbols s S r R; s/r denotes
-               substring/regexp match; lower-case means case-insensitive
-               and upper case sensitive.  Defaults to r (case-insensitive
-               regexp match)
-    - :date :: time (in seconds since epoch) when this rule last matched
-    - tags :: cons cell of the form (a . b) where A is either #t or #f and
-              B is a list of symbols. The latter is interpreted as a list
-              of tags scoping the rule and the former as a bolean switch
-              possibly negating the scoping. E.g. (#t . (a b)) means \"apply
-              this rule if either of tags a & b are present\". Making the
-              first element means \"do not apply this rule if any of a and b
-              are present\"."
-  text title-value content-value type date tags)
 
 (defvar elfeed-score--title-rules nil
   "List of structs each defining a scoring rule for entry titles.")
