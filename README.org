@@ -2,7 +2,7 @@
 #+DESCRIPTION: Gnus-style scoring for Elfeed
 #+AUTHOR: Sp1ff
 #+EMAIL: sp1ff@pobox.com
-#+DATE: <2020-02-21 Fri 15:16>
+#+DATE: <2020-03-14 Sat 18:59>
 #+AUTODATE: t
 #+OPTIONS: toc:nil org-md-headline-style:setext *:t ^:nil
 
@@ -61,8 +61,8 @@ You can, if you wish, install from source as well:
 
 #+BEGIN_EXAMPLE
 cd /tmp
-curl -L --output=elfeed-score-0.3.0.tar.gz https://github.com/sp1ff/elfeed-score/archive/0.3.0.tar.gz
-tar xvf elfeed-score-0.3.0.tar.gz && cd elfeed-score-0.3.0
+curl -L --output=elfeed-score-0.4.0.tar.gz https://github.com/sp1ff/elfeed-score/archive/0.4.0.tar.gz
+tar xvf elfeed-score-0.4.0.tar.gz && cd elfeed-score-0.4.0
 ./configure
 make
 make install
@@ -75,9 +75,9 @@ The unit tests require some macros defined by the [[https://github.com/skeeto/el
 #+BEGIN_EXAMPLE
 cd /tmp
 git clone https://github.com/skeeto/elfeed.git
-curl -L --output=elfeed-score-0.3.0.tar.gz https://github.com/sp1ff/elfeed-score/archive/0.3.0.tar.gz
-tar xvf elfeed-score-0.3.0.tar.gz && cd elfeed-score-0.3.0
-export EMACSLOADPATH=/tmp/elfeed-score-0.3.0:/tmp/elfeed/tests:$EMACSLOADPATH
+curl -L --output=elfeed-score-0.4.0.tar.gz https://github.com/sp1ff/elfeed-score/archive/0.4.0.tar.gz
+tar xvf elfeed-score-0.4.0.tar.gz && cd elfeed-score-0.4.0
+export EMACSLOADPATH=/tmp/elfeed-score-0.4.0:/tmp/elfeed/tests:$EMACSLOADPATH
 ./configure
 make
 make check
@@ -180,9 +180,10 @@ You can optionally arrange to have the scores displayed in the search buffer:
 
 This is not turned on by =elfeed-score-enable=; you will need to set this manually. However, =elfeed-score-unload= will remove it, if it's there.
 
+Finally, you can configure score logging by setting the variable =elfeed-score-log-level=. By default it will be ='warn= (which will produce very little output). Other possible settings are ='debug=, ='info=, and ='error=.  To trouble-shoot a balky rule, type =(setq elfeed-score-log-level 'debug)=, re-score your current view, and switch to buffer =*elfeed-score*=.
 * Status and Roadmap
 
-I'm using =elfeed-score= day in & day out for my RSS reading, but this is a preliminary release (the version number, 0.3.0, was chosen to suggest this).
+I'm using =elfeed-score= day in & day out for my RSS reading, but this is a preliminary release (the version number, 0.4.0, was chosen to suggest this).
 
 Things I want to do next:
 

@@ -3,7 +3,7 @@
 ;; Copyright (C) 2019-2020 Michael Herstine <sp1ff@pobox.com>
 
 ;; Author: Michael Herstine <sp1ff@pobox.com>
-;; Version: 0.3.0
+;; Version: 0.4.0
 ;; Package-Requires: ((emacs "24.1") (elfeed "3.3.0") (cl-lib "0.6.1"))
 ;; Keywords: news
 ;; URL: https://github.com/sp1ff/elfeed-score
@@ -39,7 +39,7 @@
 
 (require 'elfeed-search)
 
-(defconst elfeed-score-version "0.3.0")
+(defconst elfeed-score-version "0.4.0")
 
 (defgroup elfeed-score nil
   "Gnus-sytle scoring for Elfeed entries."
@@ -82,6 +82,31 @@ for (format width alignment).  Possible alignments are :left and
   :group 'elfeed-score
   :type '(list string integer (choice (const :left) (const :right))))
 
+(defface elfeed-score-date-face
+  '((t :inherit font-lock-type-face))
+  "Face for showing the date in the elfeed score buffer."
+  :group 'elfeed-score)
+
+(defface elfeed-score-error-level-face
+  '((t :foreground "red"))
+  "Face for showing the `error' log level in the elfeed score buffer."
+  :group 'elfeed-score)
+
+(defface elfeed-score-warn-level-face
+  '((t :foreground "goldenrod"))
+  "Face for showing the `warn' log level in the elfeed score buffer."
+  :group 'elfeed-score)
+
+(defface elfeed-score-info-level-face
+  '((t :foreground "deep sky blue"))
+  "Face for showing the `info' log level in the elfeed score buffer."
+  :group 'elfeed-score)
+
+(defface elfeed-score-debug-level-face
+  '((t :foreground "magenta2"))
+  "Face for showing the `debug' log level in the elfeed score buffer."
+  :group 'elfeed-score)
+
 (define-obsolete-variable-alias 'elfeed-score/debug
   'elfeed-score-debug "0.2.0" "Move to standard-compliant naming.")
 
@@ -91,11 +116,62 @@ for (format width alignment).  Possible alignments are :left and
 Setting this to a non-nil value will produce copious debugging
 information to the \"*Messages*\" buffer.")
 
+(make-obsolete-variable 'elfeed-score-debug 'elfeed-score-log-level "0.4")
+
+(defvar elfeed-score-log-buffer-name "*elfeed-score*"
+  "Name of buffer used for logging `elfeed-score' events.")
+
+(defvar elfeed-score-log-level (if elfeed-score-debug 'info 'warn)
+  "Level at which `elfeed-score' shall log; may be one of 'debug, 'info, 'warn, or 'error.")
+
+(defun elfeed-score--log-level-number (level)
+  "Return a numeric value for log level LEVEL."
+  (cl-case level
+    (debug -10)
+    (info 0)
+    (warn 10)
+    (error 20)
+    (otherwise 0)))
+
+(defun elfeed-score-log-buffer ()
+  "Return the `elfeed-score' log buffer, creating it if needed."
+  (let ((buffer (get-buffer elfeed-score-log-buffer-name)))
+    (if buffer
+        buffer
+      (with-current-buffer (generate-new-buffer elfeed-score-log-buffer-name)
+        (special-mode)
+        (current-buffer)))))
+
+(defun elfeed-score-log (level fmt &rest objects)
+  "Write a log message FMT at level LEVEL to the `elfeed-score' log buffer."
+  (when (>= (elfeed-score--log-level-number level)
+            (elfeed-score--log-level-number elfeed-score-log-level))
+    (let ((inhibit-read-only t)
+          (log-level-face
+           (cl-case level
+             (debug 'elfeed-score-debug-level-face)
+             (info 'elfeed-score-info-level-face)
+             (warn 'elfeed-score-warn-level-face)
+             (error 'elfeed-score-error-level-face)
+             (otherwise 'elfeed-score-debug-level-face))))
+      (with-current-buffer (elfeed-score-log-buffer)
+        (goto-char (point-max))
+        (insert
+         (format
+          (concat "[" (propertize "%s" 'face 'elfeed-score-log-date-face) "] "
+                  "[" (propertize "%s" 'face log-level-face) "]: "
+                  "%s\n")
+          (format-time-string "%Y-%m-%d %H:%M:%S")
+          level
+          (apply #'format fmt objects)))))))
+
 (defun elfeed-score--debug (fmt &rest params)
   "Produce a formattted (FMT) message based on PARAMS at debug level.
 
 Print a formatted message if `elfeed-score-debug' is non-nil."
-  (if elfeed-score-debug (apply 'message fmt params)))
+  (elfeed-score-log 'debug fmt params))
+
+(make-obsolete 'elfeed-score--debug 'elfeed-score-log "0.4")
 
 (define-obsolete-function-alias 'elfeed-score/sort
   'elfeed-score-sort "0.2.0" "Move to standard-compliant naming.")
@@ -139,7 +215,8 @@ region's state."
            elfeed-score-default-score))
         (entries (elfeed-search-selected ignore-region)))
     (dolist (entry entries)
-      (elfeed-score--debug "entry '%s' => %d" (elfeed-entry-title entry) score)
+      (elfeed-score-log 'info "entry %s ('%s') was directly set to %d"
+                        (elfeed-entry-id entry ) (elfeed-entry-title entry) score)
       (setf (elfeed-meta entry elfeed-score-meta-keyword) score))))
 
 (define-obsolete-function-alias 'elfeed-score/get-score
@@ -510,16 +587,21 @@ Return nil on failure, t on match."
    ((or (eq match-type 's)
         (eq match-type 'S))
     (let ((case-fold-search (eq match-type 's)))
-      (string-match-p (regexp-quote match-text) search-text)))
+      (if (string-match (regexp-quote match-text) search-text)
+          (match-string 0 search-text)
+        nil)))
    ((or (eq match-type 'r)
         (eq match-type 'R)
         (not match-type))
     (let ((case-fold-search (eq match-type 'r)))
-      (string-match-p match-text search-text)))
+      (if (string-match match-text search-text)
+          (match-string 0 search-text)
+        nil)))
    ((or (eq match-type 'w)
         (eq match-type 'W))
     (let ((case-fold-search (eq match-type 'w)))
-      (string-match-p (word-search-regexp match-text) search-text)))
+      (if  (string-match (word-search-regexp match-text) search-text)
+          (match-string 0 search-text))))
    (t
     (error "Unknown match type %s" match-type))))
 
@@ -557,7 +639,10 @@ or nil, and is presumably a tag scoping for a scoring rule."
                          (elfeed-score--match-text match-text title match-type))))
         (if got-match
             (progn
-              (elfeed-score--debug "'%s' + %d (title)" title value)
+              (elfeed-score-log 'debug "title rule '%s' matched text '%s' for entry %s('%s'); \
+adding %d to its score"
+                                (elfeed-score-title-rule-text score-title) got-match
+                                (elfeed-entry-id entry) title value)
 		          (setq score (+ score value))
               (setf (elfeed-score-title-rule-date score-title) (float-time))))))
     score))
@@ -586,7 +671,10 @@ or nil, and is presumably a tag scoping for a scoring rule."
                          (elfeed-score--match-text match-text feed-text match-type))))
         (if got-match
             (progn
-              (elfeed-score--debug "%s + %d (feed)" (elfeed-entry-title entry) value)
+              (elfeed-score-log 'debug "feed rule '%s' matched text '%s' for entry %s('%s'); \
+adding %d to its score"
+                                feed-text got-match (elfeed-entry-id entry)
+                                (elfeed-entry-title entry) value)
 		          (setq score (+ score value))
 		          (setf (elfeed-score-feed-rule-date score-feed) (float-time))))))
     score))
@@ -608,8 +696,11 @@ or nil, and is presumably a tag scoping for a scoring rule."
                                                           content match-type))))
             (if got-match
                 (progn
-                  (elfeed-score--debug "%s + %d (content)" (elfeed-entry-title entry)
-                                       value)
+                  (elfeed-score-log 'debug "content rule '%s' matched text '%s' for entry %s('%s'); \
+adding %d to its score"
+                                    (elfeed-score-content-rule-text score-content)
+                                    got-match (elfeed-entry-id entry) (elfeed-entry-title entry)
+                                    value)
 		              (setq score (+ score value))
 		              (setf (elfeed-score-content-rule-date score-content)
                         (float-time)))))))
@@ -630,7 +721,9 @@ or nil, and is presumably a tag scoping for a scoring rule."
                          (elfeed-score--match-text match-text title match-type))))
         (if got-match
             (progn
-              (elfeed-score--debug "'%s' + %d (ToC/title: rule %s)" title value match-text)
+              (elfeed-score-log 'debug "title-or-conent rule '%s' matched text '%s' in the \
+title of entry '%s'('%s'); adding %d to its score"
+                                match-text got-match (elfeed-entry-id entry) title value)
 		          (setq score (+ score value))
               (setf (elfeed-score-title-or-content-rule-date score-title)
                     (float-time))))))
@@ -648,8 +741,10 @@ or nil, and is presumably a tag scoping for a scoring rule."
                              (elfeed-score--match-text match-text content match-type))))
             (if got-match
                 (progn
-                  (elfeed-score--debug "%s + %d (ToC/content: rule %s)"
-                                       (elfeed-entry-title entry) value match-text)
+                  (elfeed-score-log 'debug "title-or-content rule '%s' matched text '%s' in the \
+content of entry %s('%s'); adding %d to its score"
+                                    match-text got-match (elfeed-entry-id entry)
+                                    (elfeed-entry-title entry) value)
 		              (setq score (+ score value))
 		              (setf (elfeed-score-title-or-content-rule-date score-content)
                         (float-time)))))))
@@ -779,7 +874,8 @@ region is not active, only the entry under point will be scored."
   (let ((entries (elfeed-search-selected ignore-region)))
     (dolist (entry entries)
       (let ((score (elfeed-score--score-entry entry)))
-        (elfeed-score--debug "entry '%s' => %d" (elfeed-entry-title entry) score)))
+        (elfeed-score-log 'info "entry %s('%s') has been given a score of %d"
+                          (elfeed-entry-id entry) (elfeed-entry-title entry) score)))
     (if elfeed-score-score-file
        (elfeed-score-write-score-file elfeed-score-score-file))
     (elfeed-search-update t)))
@@ -794,7 +890,8 @@ region is not active, only the entry under point will be scored."
 
   (dolist (entry elfeed-search-entries)
     (let ((score (elfeed-score--score-entry entry)))
-      (elfeed-score--debug "entry %s => %s" (elfeed-entry-title entry) score)))
+      (elfeed-score-log 'info "entry %s('%s') has been given a score of %d"
+                        (elfeed-entry-id entry) (elfeed-entry-title entry) score)))
   (if elfeed-score-score-file
 	    (elfeed-score-write-score-file elfeed-score-score-file))
   (elfeed-search-update t))

@@ -591,6 +591,27 @@ Thought I had a bug; turns out I didn't understand `word-search-regexp'"
           (elfeed-score--score-entry entry)
           (should (not (elfeed-tagged-p 'unread entry)))))))))
 
+(ert-deftest elfeed-score-test-tags-20200314 ()
+  "Test scoring by a rule with multiple tag matches."
+  (let ((test-title "Traits, dynamic dispatch and upcasting"))
+    (with-elfeed-test
+     (let* ((feed (elfeed-test-generate-feed))
+            (entry (elfeed-score-test-generate-entry
+                    feed test-title "some content")))
+       (elfeed-db-add entry)
+       (elfeed-tag entry '@dev 'rust)
+       (with-elfeed-score-test
+        (let* ((elfeed-score--title-or-content-rules
+                (list
+                 (elfeed-score-title-or-content-rule--create
+                  :text "\\(traits\\|upcasting\\)"
+                  :title-value 2
+                  :content-value 1
+                  :type 'r
+                  :tags '(t . (@dev rust splat)))))
+               (score (elfeed-score--score-entry entry)))
+          (should (eq score 2))))))))
+
 (provide 'elfeed-score-tests)
 
 ;;; elfeed-score-tests.el ends here

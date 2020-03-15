@@ -1,6 +1,14 @@
+2020-03-14  Michael Herstine  <sp1ff@pobox.com>
+
+	Much-improved logging.
+	This commit introduces the *elfeed-score* log buffer, modeled on
+	`elfeed-log', to which much more detailed messages are sent. The
+	verbosity can be controlled by `elfeed-score-log-level'.
+
 2020-02-21  Michael Herstine  <sp1ff@pobox.com>
 
 	Change `assoc-delete-all' to `cl-delete' to avoid having to depend on a later version of Emacs.
+	Move the struct definitions ahead of their use, to ease re-loading.
 
 2020-02-21  Michael Herstine  <sp1ff@pobox.com>
 

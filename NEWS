@@ -1,5 +1,11 @@
 elfeed-score News -- history of user-visible changes -*- outline -*-
 
+* Changes in elfeed-score 0.4.0
+
+** New Features
+
+Much-improved logging, modeled on that of `elfeed' itself.
+
 * Changes in elfeed-score 0.3.0
 
 ** New Features
