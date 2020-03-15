@@ -74,6 +74,9 @@ is convenient for testing scoring)."
   `(let ((elfeed-score--title-rules nil)
          (elfeed-score--feed-rules nil)
          (elfeed-score--content-rules nil)
+         (elfeed-score--title-or-content-rules nil)
+         (elfeed-score--tag-rules nil)
+         (elfeed-score--adjust-tags-rules nil)
          (elfeed-score--score-mark nil))
      (progn ,@body)))
 
@@ -149,7 +152,11 @@ is convenient for testing scoring)."
                                        (elfeed-score-title-rule--create
                                         :text "long way( home)?" :value 100
                                         :type 'r))
-                         :content nil))))
+                         :content nil)))))
+
+(ert-deftest elfeed-score-test-score-files-1 ()
+  "Smoke test reading/writing score files"
+
   (let* ((score-entries
           '((version 2)
             ("title"
@@ -176,7 +183,11 @@ is convenient for testing scoring)."
                                         :text "long way( home)?" :value 100
                                         :type 'r))
                          :content nil
-                         :title-or-content nil))))
+                         :title-or-content nil)))))
+
+(ert-deftest elfeed-score-test-score-files-2 ()
+  "Smoke test reading/writing score files"
+
   (let* ((score-entries
           '((version 2)
             ("title"
@@ -213,7 +224,11 @@ is convenient for testing scoring)."
                             :title-or-content
                             (list (elfeed-score-title-or-content-rule--create
                                    :text "now is the time..." :title-value 150
-                                   :content-value 100 :type 's :tags '(t . (foo bar))))))))
+                                   :content-value 100 :type 's :tags '(t . (foo bar)))))))))
+
+(ert-deftest elfeed-score-test-score-files-3 ()
+  "Smoke test reading/writing score files"
+
   (let* ((score-entries
           '(("title"
              ("hoping" -1000 s nil (t . (foo bar)))
@@ -227,6 +242,7 @@ is convenient for testing scoring)."
          (score-entries-2 (elfeed-score--parse-score-file score-file)))
        (should (equal score-entries-2
                       (list :mark -2500
+                            :adjust-tags nil
                             :feeds (list (elfeed-score-feed-rule--create
                                           :text "foo.com" :value 100 :type 's
                                           :attr 'u)
@@ -240,7 +256,58 @@ is convenient for testing scoring)."
                                            :text "long way( home)?" :value 100
                                            :type 'r))
                             :content nil
-                            :title-or-content nil)))))
+                            :title-or-content nil
+                            :tag nil)))))
+
+(ert-deftest elfeed-score-test-score-files-4 ()
+  "Smoke test reading/writing score files"
+
+  (let* ((score-entries
+          '(("title"
+             ("hoping" -1000 s nil (t . (foo bar)))
+             ("long way( home)?" +100 r))
+            ("feed"
+             ("foo.com" +100 s u)
+             ("title" -100 s t))
+            ("tag"
+             ((t . (a b c)) +10)
+             ((nil . z) -1))
+            ("adjust-tags"
+             ((t . 100) (t . important))
+             ((nil . -100) (nil . important)))
+            (mark -2500)))
+         (score-text (pp-to-string score-entries))
+         (score-file (make-temp-file "elfeed-score-test-" nil nil score-text))
+         (score-entries-2 (elfeed-score--parse-score-file score-file)))
+    (should (equal score-entries-2
+                   (list :mark -2500
+                         :adjust-tags
+                         (list (elfeed-score-adjust-tags-rule--create
+                                :threshold '(t . 100)
+                                :tags '(t . important))
+                               (elfeed-score-adjust-tags-rule--create
+                                :threshold '(nil . -100)
+                                :tags '(nil . important)))
+                         :feeds (list (elfeed-score-feed-rule--create
+                                       :text "foo.com" :value 100 :type 's
+                                       :attr 'u)
+                                      (elfeed-score-feed-rule--create
+                                       :text "title" :value -100 :type 's
+                                       :attr 't))
+                         :titles (list (elfeed-score-title-rule--create
+                                        :text "hoping" :value -1000 :type 's
+                                        :tags (list t 'foo 'bar))
+                                       (elfeed-score-title-rule--create
+                                        :text "long way( home)?" :value 100
+                                        :type 'r))
+                         :content nil
+                         :title-or-content nil
+                         :tag (list (elfeed-score-tag-rule--create
+                                     :tags '(t . (a b c))
+                                     :value 10)
+                                    (elfeed-score-tag-rule--create
+                                     :tags '(nil . z)
+                                     :value -1)))))))
 
 (ert-deftest elfeed-score-test-match-tags ()
   "Test `elfeed-score--match-tags'."

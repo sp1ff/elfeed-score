@@ -1,3 +1,15 @@
+2020-03-15  Michael Herstine  <sp1ff@pobox.com>
+
+	Two new scoring rules: tag, and adjust-tags.
+	This commit adds two new scoring rules (and bumps the score file
+	version to 3):
+
+	    1. tag: adjust an entry's score up or down based on the presence
+	       or absence of one or more tags
+	    2. adjust-tags: after the scoring process is complete, add
+	       or remove tags based on the score being above or below
+	       given thresholds.
+
 2020-03-14  Michael Herstine  <sp1ff@pobox.com>
 
 	Much-improved logging.

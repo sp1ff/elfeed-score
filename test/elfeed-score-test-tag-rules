@@ -1,0 +1,4 @@
+#!/bin/bash
+EMACS=${EMACS:-emacs}
+# ${EMACS} -batch -L ${srcdir} -L ${srcdir}/.. -L ${srcdir}/../../elfeed  -L ${srcdir}/../../elfeed/tests  -l ${srcdir}/elfeed-score-test-tag-rules.el --eval '(progn (setq ert-batch-backtrace-right-margin 120) (ert-run-tests-batch-and-exit "^elfeed-score-test-tag-rules"))'
+${EMACS} -batch -L ${srcdir} -L ${srcdir}/..  -l ${srcdir}/elfeed-score-test-tag-rules.el --eval '(progn (setq ert-batch-backtrace-right-margin 120) (ert-run-tests-batch-and-exit "^elfeed-score-test-tag-rules"))'

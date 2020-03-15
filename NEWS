@@ -1,10 +1,18 @@
 elfeed-score News -- history of user-visible changes -*- outline -*-
 
-* Changes in elfeed-score 0.4.0
+* Changes in elfeed-score 0.4.1
 
 ** New Features
 
-Much-improved logging, modeled on that of `elfeed' itself.
+*** new rule types
+
+    1. tag: adjust an entry's score up or down based on the presence or absence of one or more tags
+
+    2. adjust-tags: after the scoring process is complete, add or remove tags based on the score being above or below given thresholds.
+
+*** much-improved logging
+
+modeled on that of `elfeed' itself.
 
 * Changes in elfeed-score 0.3.0
 
