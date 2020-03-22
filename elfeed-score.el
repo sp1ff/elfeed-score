@@ -124,6 +124,9 @@ information to the \"*Messages*\" buffer.")
 (defvar elfeed-score-log-level (if elfeed-score-debug 'info 'warn)
   "Level at which `elfeed-score' shall log; may be one of 'debug, 'info, 'warn, or 'error.")
 
+(defvar elfeed-score-max-log-buffer-size 750
+  "Maximum length (in lines) of the log buffer.  nil means unlimited.")
+
 (defun elfeed-score--log-level-number (level)
   "Return a numeric value for log level LEVEL."
   (cl-case level
@@ -141,6 +144,15 @@ information to the \"*Messages*\" buffer.")
       (with-current-buffer (generate-new-buffer elfeed-score-log-buffer-name)
         (special-mode)
         (current-buffer)))))
+
+(defun elfeed-score--truncate-log-buffer ()
+  "Truncate the log buffer to `elfeed-score-max-log-buffer-size lines."
+  (with-current-buffer (elfeed-score-log-buffer)
+    (goto-char (point-max))
+    (forward-line (- elfeed-score-max-log-buffer-size))
+    (beginning-of-line)
+    (let ((inhibit-read-only t))
+      (delete-region (point-min) (point)))))
 
 (defun elfeed-score-log (level fmt &rest objects)
   "Write a log message FMT at level LEVEL to the `elfeed-score' log buffer."
@@ -163,7 +175,11 @@ information to the \"*Messages*\" buffer.")
                   "%s\n")
           (format-time-string "%Y-%m-%d %H:%M:%S")
           level
-          (apply #'format fmt objects)))))))
+          (apply #'format fmt objects)))
+        (if (and elfeed-score-max-log-buffer-size
+                 (> (line-number-at-pos)
+                    elfeed-score-max-log-buffer-size))
+            (elfeed-score--truncate-log-buffer))))))
 
 (defun elfeed-score--debug (fmt &rest params)
   "Produce a formattted (FMT) message based on PARAMS at debug level.
@@ -173,6 +189,14 @@ Print a formatted message if `elfeed-score-debug' is non-nil."
 
 (make-obsolete 'elfeed-score--debug 'elfeed-score-log "0.4")
 
+(defun elfeed-score--set-score-on-entry (entry score)
+  "Set the score on ENTRY to SCORE."
+  (setf (elfeed-meta entry elfeed-score-meta-keyword) score))
+
+(defun elfeed-score--get-score-from-entry (entry)
+  "Retreive the score from ENTRY."
+  (elfeed-meta entry elfeed-score-meta-keyword elfeed-score-default-score))
+
 (define-obsolete-function-alias 'elfeed-score/sort
   'elfeed-score-sort "0.2.0" "Move to standard-compliant naming.")
 
@@ -181,14 +205,12 @@ Print a formatted message if `elfeed-score-debug' is non-nil."
 
 `elfeed-score' will substitute this for the Elfeed scoring function."
 
-  (let ((a-score (elfeed-meta a elfeed-score-meta-keyword
-                              elfeed-score-default-score))
-        (b-score (elfeed-meta b elfeed-score-meta-keyword
-                              elfeed-score-default-score)))
+  (let ((a-score (elfeed-score--get-score-from-entry a))
+        (b-score (elfeed-score--get-score-from-entry b)))
     (if (> a-score b-score)
         t
-      (let ((a-date  (elfeed-entry-date a))
-            (b-date  (elfeed-entry-date b)))
+      (let ((a-date (elfeed-entry-date a))
+            (b-date (elfeed-entry-date b)))
         (and (eq a-score b-score) (> a-date b-date))))))
 
 (define-obsolete-function-alias 'elfeed-score/set-score
@@ -217,7 +239,7 @@ region's state."
     (dolist (entry entries)
       (elfeed-score-log 'info "entry %s ('%s') was directly set to %d"
                         (elfeed-entry-id entry ) (elfeed-entry-title entry) score)
-      (setf (elfeed-meta entry elfeed-score-meta-keyword) score))))
+      (elfeed-score--set-score-on-entry entry score))))
 
 (define-obsolete-function-alias 'elfeed-score/get-score
   'elfeed-score-get-score "0.2.0" "Move to standard-compliant naming.")
@@ -230,8 +252,7 @@ If called intractively, print a message."
   (interactive)
 
   (let* ((entry (elfeed-search-selected t))
-         (score (elfeed-meta entry elfeed-score-meta-keyword
-                             elfeed-score-default-score)))
+         (score (elfeed-score--get-score-from-entry entry)))
     (if (called-interactively-p 'any)
         (message "%s has a score of %d." (elfeed-entry-title entry) score))
     score))
@@ -937,7 +958,7 @@ udpate the \"last matched\" time of the salient rules."
                   (elfeed-score--score-on-content          entry)
                   (elfeed-score--score-on-title-or-content entry)
                   (elfeed-score--score-on-tags             entry))))
-    (setf (elfeed-meta entry elfeed-score-meta-keyword) score)
+    (elfeed-score--set-score-on-entry entry score)
     (elfeed-score--adjust-tags entry score)
 	  (if (and elfeed-score--score-mark
 		         (< score elfeed-score--score-mark))
@@ -1130,9 +1151,7 @@ This implementation is derived from `elfeed-search-print-entry--default'."
                                title-width
                                elfeed-search-title-max-width)
                         :left))
-	 (score (elfeed-score-format-score
-		 (elfeed-meta entry elfeed-score-meta-keyword
-                              elfeed-score-default-score))))
+	       (score (elfeed-score--get-score-from-entry entry)))
     (insert score)
     (insert (propertize date 'face 'elfeed-search-date-face) " ")
     (insert (propertize title-column 'face title-faces 'kbd-help title) " ")

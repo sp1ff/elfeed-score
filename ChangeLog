@@ -1,3 +1,17 @@
+2020-03-21  Michael Herstine  <sp1ff@pobox.com>
+
+	Added a maximum size to the log buffer, along with `elfeed-score--{set-score-on,get-score-from}-entry.
+	This commit:
+
+	    1. adds variable `elfeed-score-max-log-buffer-size', an upper
+	       bound on the number of lines in the elfeed log buffer
+
+	    2. adds two internal convenience functions for setting &
+	       getting the score of an entry, resp.
+
+	       - elfeed-score--set-score-on-entry
+	       - elfeed-score--get-score-from-entry
+
 2020-03-15  Michael Herstine  <sp1ff@pobox.com>
 
 	Two new scoring rules: tag, and adjust-tags.
