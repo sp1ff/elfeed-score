@@ -1,3 +1,15 @@
+2020-03-22  Michael Herstine  <sp1ff@pobox.com>
+
+	Final pre-release fixes.
+	    1. format scores properly before displaying
+
+	    2. give `elfeed-score-enable' a prefix arg; if present, do
+	       *not* install the sort function. This is to accomodate
+	       people who have already customized the sort function.
+
+	    3. BUGFIX: `elfeed-score-unload' had been pulled into the
+	       definition of `elfeed-score-enable' (?)
+
 2020-03-21  Michael Herstine  <sp1ff@pobox.com>
 
 	Added a maximum size to the log buffer, along with `elfeed-score--{set-score-on,get-score-from}-entry.

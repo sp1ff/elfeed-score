@@ -2,7 +2,7 @@
 #+DESCRIPTION: Gnus-style scoring for Elfeed
 #+AUTHOR: Sp1ff
 #+EMAIL: sp1ff@pobox.com
-#+DATE: <2020-03-15 Sun 15:17>
+#+DATE: <2020-03-22 Sun 21:01>
 #+AUTODATE: t
 #+OPTIONS: toc:nil org-md-headline-style:setext *:t ^:nil
 
@@ -13,29 +13,32 @@
 
 [[https://github.com/sp1ff/elfeed-score][elfeed-score]] brings Gnus-style [[https://www.gnu.org/software/emacs/manual/html_node/gnus/Scoring.html#Scoring][scoring]] to [[https://github.com/skeeto/elfeed][Elfeed]].
 
-[[https://github.com/skeeto/elfeed][Elfeed]] is an extensible web feed reader for Emacs. By default, it will display entries in reverse chronological order. This package defines a bit of metadata for each of your feed entries: a "score". A score is an integer (negative or positive), and higher scores denote entries of greater interest to you. This package also installs a new sort function, so that Elfeed will display entries with higher scores before entries with lower scores (entries with the same scores will still be sorted in reverse chronological order).  It also provides an entry display function for the search buffer that displays each entry's score, should you choose to install it.
+[[https://github.com/skeeto/elfeed][Elfeed]] is an extensible web feed reader for Emacs. By default, it will display entries in reverse chronological order. This package defines a bit of metadata for each of your feed entries: a "score". A score is an integer (negative or positive), and higher scores denote entries of greater interest to you. This package also (optionally) installs a new sort function, so that Elfeed will display entries with higher scores before entries with lower scores (entries with the same scores will still be sorted in reverse chronological order). It also provides an entry display function for the search buffer that displays each entry's score, should you choose to install it.
 
-While you can manually assign a score to an entry, you will likely find it more convenient to create rules for scoring that will be automatically applied to each new entry every time you update Elfeed. You can currently score against title, feed & content by defining strings that will be matched against those attributes by substring, regexp or whole-word match. Rules can be scoped by Elfeed entry tags, so that a rule will only be applied if an entry has certain tags (or does not have certain tags). Each rule defines an integral value, and the rules are applied in order of definition. The new entry's score begins at zero, and is adjusted by the value defined by each matching scoring rule.
+While you can manually assign a score to an entry, you will likely find it more convenient to create rules for scoring that will be automatically applied to each new entry every time you update Elfeed. You can currently score against title, feed & content by defining strings that will be matched against those attributes by substring, regexp or whole-word match. You can also score against the presence or absence of tags. Rules (other than the last sort) can be scoped by Elfeed entry tags, so that a rule will only be applied if an entry has certain tags (or does not have certain tags). Each rule defines an integral value, and the rules are applied in order of definition. The new entry's score begins at zero, and is adjusted by the value defined by each matching scoring rule.
 
 For instance, here's a subset of my scoring file at the moment:
 
 #+BEGIN_EXAMPLE
-;;; Elfeed score file                                     -*- lisp -*-
-(("title"
-  ("OPEN THREAD" -1000 S 1576681345.4086394)
-  ("raymond c\\(hen\\)?" 250 r 1576808786.1558545) (t .(@dev)))
- ("content"
-  ("type erasure" 500 s 1576808786.043517))
- ("title-or-content"
-  ("california" 150 100 s 1576808786.4068587)
-  ("china" 150 100 w 1576808786.1848788))
- ("feed"
-  ("Essays in Idleness" 250 S t 1576808786.1956885)
-  ("Irreal" 250 S t 1576808786.1765869)
-  ("Julia Evans" 100 s t 1576808786.4092398)
-  ("National Weather Service" 400 S t 1576808786.1117532)
-  ("emacs-news – sacha chua" 350 S t 1576808785.3807983))
- (mark -2500))
+  ;;; Elfeed score file                                     -*- lisp -*-
+  (("title"
+    ("OPEN THREAD" -1000 S 1576681345.4086394)
+    ("raymond c\\(hen\\)?" 250 r 1576808786.1558545) (t .(@dev)))
+   ("content"
+    ("type erasure" 500 s 1576808786.043517))
+   ("title-or-content"
+    ("california" 150 100 s 1576808786.4068587)
+    ("china" 150 100 w 1576808786.1848788))
+   ("feed"
+    ("Essays in Idleness" 250 S t 1576808786.1956885)
+    ("Irreal" 250 S t 1576808786.1765869)
+    ("Julia Evans" 100 s t 1576808786.4092398)
+    ("National Weather Service" 400 S t 1576808786.1117532)
+    ("emacs-news – sacha chua" 350 S t 1576808785.3807983))
+   ("tag"
+    ((t . reddit-question)
+     750 nil))
+   (mark -2500))
 #+END_EXAMPLE
 
 Like Gnus scoring, this may look like Lisp code, but it is not directly eval'd. It will be read by the Lisp reader, so it must at least be a valid Lisp s-expression. You can find details below.
@@ -61,8 +64,8 @@ You can, if you wish, install from source as well:
 
 #+BEGIN_EXAMPLE
 cd /tmp
-curl -L --output=elfeed-score-0.4.1.tar.gz https://github.com/sp1ff/elfeed-score/archive/0.4.1.tar.gz
-tar xvf elfeed-score-0.4.1.tar.gz && cd elfeed-score-0.4.1
+curl -L --output=elfeed-score-0.4.3.tar.gz https://github.com/sp1ff/elfeed-score/archive/0.4.3.tar.gz
+tar xvf elfeed-score-0.4.3.tar.gz && cd elfeed-score-0.4.3
 ./configure
 make
 make install
@@ -75,9 +78,9 @@ The unit tests require some macros defined by the [[https://github.com/skeeto/el
 #+BEGIN_EXAMPLE
 cd /tmp
 git clone https://github.com/skeeto/elfeed.git
-curl -L --output=elfeed-score-0.4.1.tar.gz https://github.com/sp1ff/elfeed-score/archive/0.4.1.tar.gz
-tar xvf elfeed-score-0.4.1.tar.gz && cd elfeed-score-0.4.1
-export EMACSLOADPATH=/tmp/elfeed-score-0.4.1:/tmp/elfeed/tests:$EMACSLOADPATH
+curl -L --output=elfeed-score-0.4.3.tar.gz https://github.com/sp1ff/elfeed-score/archive/0.4.3.tar.gz
+tar xvf elfeed-score-0.4.3.tar.gz && cd elfeed-score-0.4.3
+export EMACSLOADPATH=/tmp/elfeed-score-0.4.3:/tmp/elfeed/tests:$EMACSLOADPATH
 ./configure
 make
 make check
@@ -160,7 +163,7 @@ If you've decided that an entry's score is low enough, you may not even want to 
 
 when the entry's final score is below =N=, the package will remove the =unread= tag from the entry, marking it as "read".
 
-When I began this project, the only example of scoring for Elfeed I could find was [[https://kitchingroup.cheme.cmu.edu/blog/2017/01/05/Scoring-elfeed-articles/][this]] article ("Scoring Elfeed Articles"). The author (John Kitchin) computes a score and adds one or two tags to entries whose score is sufficiently high. It's always bothered me that elfeed-score couldn't do that, so in build 0.4.1, I added one more type of rule: "adjust-tags". These are applied _after_ the scoring process, and will add or remove tags based on whether the entry's score is above or below a given threshold.
+When I began this project, the only example of scoring for Elfeed I could find was [[https://kitchingroup.cheme.cmu.edu/blog/2017/01/05/Scoring-elfeed-articles/][this]] article ("Scoring Elfeed Articles"). The author (John Kitchin) computes a score and adds one or two tags to entries whose score is sufficiently high. It's always bothered me that [[https://github.com/sp1ff/elfeed-score][elfeed-score]] couldn't do that, so in build 0.4.3, I added one more type of rule: "adjust-tags". These are applied _after_ the scoring process, and will add or remove tags based on whether the entry's score is above or below a given threshold.
 
 Adjust-tags rules are given by a three-tuple:
 
@@ -208,6 +211,8 @@ Just loading the library will *not* modify [[https://gitub.com/skeeto/elfeed][El
 
 This will install the new sort function & new entry hook, as well as read your score file. NB. =elfeed-score-enable= is autoloaded, so if you've installed this package in the usual way, you should be able to just invoke the function & have the package loaded & enabled automatically.
 
+Some [[https://github.com/skeeto/elfeed][elfeed]] users have already customized =elfeed-search-sort-function= and may not wish to have [[https://github.com/sp1ff/elfeed-score][efleed-score]] install a new one. =elfeed-score-enable= takes a prefix argument: if present, it will install the new entry hook & commence scoring, but will *not* install the new sort function. Such users may refer to =elfeed-score-sort= if they would like to incorporate scoring into their sort functions.
+
 The package defines a keymap, but does not bind it to any key. I like to set it to the === key:
 
 #+BEGIN_SRC elisp :tangle yes :comments no
@@ -225,13 +230,16 @@ You can optionally arrange to have the scores displayed in the search buffer:
 This is not turned on by =elfeed-score-enable=; you will need to set this manually. However, =elfeed-score-unload= will remove it, if it's there.
 
 Finally, you can configure score logging by setting the variable =elfeed-score-log-level=. By default it will be ='warn= (which will produce very little output). Other possible settings are ='debug=, ='info=, and ='error=.  To trouble-shoot a balky rule, type =(setq elfeed-score-log-level 'debug)=, re-score your current view, and switch to buffer =*elfeed-score*=.
+
 * Status and Roadmap
 
-I'm using =elfeed-score= day in & day out for my RSS reading, but this is a preliminary release (the version number, 0.4.1, was chosen to suggest this).
+I'm using [[https://github.com/sp1ff/elfeed-score][elfeed-score]] day in & day out for my RSS reading, but this is a preliminary release (the version number, 0.4, was chosen to suggest this).
 
-Things I want to do next:
+Things I may want to do in the future:
 
     - add some kind of feature to age out rules that haven't matched in a long time
     - capture which entries are actually opened & which ones are manually marked read without bothering to read them; see if I can "learn" from that information (something like Gnus Adaptive Scoring)
 
-Bugs, comments, feature requests &c welcome at [[mailto:sp1ff@pobox.com][sp1ff@pobox.com]].
+I wrote a post on how [[https://github.com/sp1ff/elfeed-score][elfeed-score]] works, along with the process of submitting code to MELPA, [[https://www.unwoundstack.com/blog/scoring-elfeed-entries.html][here]].
+
+Bugs, comments, issues, feature requests &c welcome at [[mailto:sp1ff@pobox.com][sp1ff@pobox.com]].

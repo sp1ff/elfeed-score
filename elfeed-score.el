@@ -3,7 +3,7 @@
 ;; Copyright (C) 2019-2020 Michael Herstine <sp1ff@pobox.com>
 
 ;; Author: Michael Herstine <sp1ff@pobox.com>
-;; Version: 0.4.1
+;; Version: 0.4.3
 ;; Package-Requires: ((emacs "24.1") (elfeed "3.3.0") (cl-lib "0.6.1"))
 ;; Keywords: news
 ;; URL: https://github.com/sp1ff/elfeed-score
@@ -39,7 +39,7 @@
 
 (require 'elfeed-search)
 
-(defconst elfeed-score-version "0.4.1")
+(defconst elfeed-score-version "0.4.3")
 
 (defgroup elfeed-score nil
   "Gnus-sytle scoring for Elfeed entries."
@@ -1151,7 +1151,9 @@ This implementation is derived from `elfeed-search-print-entry--default'."
                                title-width
                                elfeed-search-title-max-width)
                         :left))
-	       (score (elfeed-score--get-score-from-entry entry)))
+	       (score
+          (elfeed-score-format-score
+           (elfeed-score--get-score-from-entry entry))))
     (insert score)
     (insert (propertize date 'face 'elfeed-search-date-face) " ")
     (insert (propertize title-column 'face title-faces 'kbd-help title) " ")
@@ -1161,33 +1163,37 @@ This implementation is derived from `elfeed-search-print-entry--default'."
       (insert "(" tags-str ")"))))
 
 ;;;###autoload
-(defun elfeed-score-enable ()
-  "Enable `elfeed-score'."
+(defun elfeed-score-enable (arg)
+  "Enable `elfeed-score'.  With prefix ARG do not install a custom sort function."
 
-  (interactive)
+  (interactive "P")
 
   ;; Begin scoring on every new entry...
   (add-hook 'elfeed-new-entry-hook #'elfeed-score--score-entry)
   ;; sort based on score...
-  (setq elfeed-score--old-sort-function elfeed-search-sort-function
-        elfeed-search-sort-function #'elfeed-score-sort
-        elfeed-score--old-print-entry-function elfeed-search-print-entry-function)
+  (unless arg
+    (setq elfeed-score--old-sort-function        elfeed-search-sort-function
+          elfeed-search-sort-function            #'elfeed-score-sort
+          elfeed-score--old-print-entry-function elfeed-search-print-entry-function))
   ;; & load the default score file, if it's defined & exists.
   (if (and elfeed-score-score-file
            (file-exists-p elfeed-score-score-file))
-      (elfeed-score-load-score-file elfeed-score-score-file))
+      (elfeed-score-load-score-file elfeed-score-score-file)))
 
-  (defun elfeed-score-unload ()
-    "Unload `elfeed-score'."
+(defun elfeed-score-unload ()
+  "Unload `elfeed-score'."
 
-    (interactive)
+  (interactive)
 
-    (if elfeed-score-score-file
-	      (elfeed-score-write-score-file elfeed-score-score-file))
-    (setq elfeed-search-sort-function elfeed-score--old-sort-function
-          elfeed-search-print-entry-function elfeed-score--old-print-entry-function)
-    (remove-hook 'elfeed-new-entry-hook #'elfeed-score--score-entry)))
+  (if elfeed-score-score-file
+	    (elfeed-score-write-score-file elfeed-score-score-file))
+  (if elfeed-score--old-sort-function
+      (setq elfeed-search-sort-function elfeed-score--old-sort-function))
+  (if elfeed-score--old-print-entry-function
+      (setq elfeed-search-print-entry-function elfeed-score--old-print-entry-function))
+  (remove-hook 'elfeed-new-entry-hook #'elfeed-score--score-entry))
 
 
 (provide 'elfeed-score)
+
 ;;; elfeed-score.el ends here
