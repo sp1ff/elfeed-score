@@ -2,7 +2,7 @@
 #+DESCRIPTION: Gnus-style scoring for Elfeed
 #+AUTHOR: Sp1ff
 #+EMAIL: sp1ff@pobox.com
-#+DATE: <2020-03-22 Sun 21:01>
+#+DATE: <2020-03-28 Sat 11:43>
 #+AUTODATE: t
 #+OPTIONS: toc:nil org-md-headline-style:setext *:t ^:nil
 
@@ -64,8 +64,8 @@ You can, if you wish, install from source as well:
 
 #+BEGIN_EXAMPLE
 cd /tmp
-curl -L --output=elfeed-score-0.4.3.tar.gz https://github.com/sp1ff/elfeed-score/archive/0.4.3.tar.gz
-tar xvf elfeed-score-0.4.3.tar.gz && cd elfeed-score-0.4.3
+curl -L --output=elfeed-score-0.4.4.tar.gz https://github.com/sp1ff/elfeed-score/archive/0.4.4.tar.gz
+tar xvf elfeed-score-0.4.4.tar.gz && cd elfeed-score-0.4.4
 ./configure
 make
 make install
@@ -78,9 +78,9 @@ The unit tests require some macros defined by the [[https://github.com/skeeto/el
 #+BEGIN_EXAMPLE
 cd /tmp
 git clone https://github.com/skeeto/elfeed.git
-curl -L --output=elfeed-score-0.4.3.tar.gz https://github.com/sp1ff/elfeed-score/archive/0.4.3.tar.gz
-tar xvf elfeed-score-0.4.3.tar.gz && cd elfeed-score-0.4.3
-export EMACSLOADPATH=/tmp/elfeed-score-0.4.3:/tmp/elfeed/tests:$EMACSLOADPATH
+curl -L --output=elfeed-score-0.4.4.tar.gz https://github.com/sp1ff/elfeed-score/archive/0.4.4.tar.gz
+tar xvf elfeed-score-0.4.4.tar.gz && cd elfeed-score-0.4.4
+export EMACSLOADPATH=/tmp/elfeed-score-0.4.4:/tmp/elfeed/tests:$EMACSLOADPATH
 ./configure
 make
 make check

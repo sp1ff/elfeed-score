@@ -1,5 +1,12 @@
 elfeed-score News -- history of user-visible changes -*- outline -*-
 
+* Changes in elfeed-score 0.4.4
+
+** Bug Fixes
+
+*** Issue 2: (elfeed-score-enable) must have an argument now, unlike README suggests
+
+Fixed.
 * Changes in elfeed-score 0.4.3
 
 ** New Features

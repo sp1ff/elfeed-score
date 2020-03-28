@@ -1,3 +1,10 @@
+2020-03-28  Michael Herstine  <sp1ff@pobox.com>
+
+	Fix Issue #2: "(elfeed-score-enable) must have an argument now, unlike README suggests"
+	I foolishly forgot the `&optional' keyword; fixed & I'm working on
+	some non-ERT tests to catch this going forward (those tests aren't
+	committed yet).
+
 2020-03-22  Michael Herstine  <sp1ff@pobox.com>
 
 	Final pre-release fixes.
@@ -9,6 +16,8 @@
 
 	    3. BUGFIX: `elfeed-score-unload' had been pulled into the
 	       definition of `elfeed-score-enable' (?)
+
+	    4. update README.org
 
 2020-03-21  Michael Herstine  <sp1ff@pobox.com>
 

@@ -3,7 +3,7 @@
 ;; Copyright (C) 2019-2020 Michael Herstine <sp1ff@pobox.com>
 
 ;; Author: Michael Herstine <sp1ff@pobox.com>
-;; Version: 0.4.3
+;; Version: 0.4.4
 ;; Package-Requires: ((emacs "24.1") (elfeed "3.3.0") (cl-lib "0.6.1"))
 ;; Keywords: news
 ;; URL: https://github.com/sp1ff/elfeed-score
@@ -39,7 +39,7 @@
 
 (require 'elfeed-search)
 
-(defconst elfeed-score-version "0.4.3")
+(defconst elfeed-score-version "0.4.4")
 
 (defgroup elfeed-score nil
   "Gnus-sytle scoring for Elfeed entries."
@@ -1163,7 +1163,7 @@ This implementation is derived from `elfeed-search-print-entry--default'."
       (insert "(" tags-str ")"))))
 
 ;;;###autoload
-(defun elfeed-score-enable (arg)
+(defun elfeed-score-enable (&optional arg)
   "Enable `elfeed-score'.  With prefix ARG do not install a custom sort function."
 
   (interactive "P")

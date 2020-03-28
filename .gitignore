@@ -10,3 +10,4 @@ configure
 .dir-locals.el
 README.md
 env.sh
+smoke-test.el
