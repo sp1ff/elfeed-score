@@ -98,6 +98,7 @@ The score file (=~/.emacs.d/elfeed.score= by default) is an Emacs Lisp form that
     - "content": the value associated with this is a list of rules matching text against the entry content
     - "title-or-content": a list of rules matching against both entry title & content
     - "feed": the value associated with this is a list of rules matching text against the entry feed
+    - "authors": the value associated with this is a list of rules matching text against the name of the entry's author. If the entry has multiple authors the rules match against the string formed by concatenating the authors' names together with ", " as a delimiter.
     - "tag": a list of rules matching against entry tags
     - "adjust-tags": a list of rules to be applied *after* an entry is scored; they can add or remove tags based on the score being above or below given thresholds
     - =mark=: an integer which, if greater than an entry's final score, will result in the entry being marked as read (in other words, if your rules have lowered an entry's scores below this level, don't even display it in the Elfeed search buffer)
