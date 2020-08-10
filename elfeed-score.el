@@ -3,7 +3,7 @@
 ;; Copyright (C) 2019-2020 Michael Herstine <sp1ff@pobox.com>
 
 ;; Author: Michael Herstine <sp1ff@pobox.com>
-;; Version: 0.4.4
+;; Version: 0.5.0
 ;; Package-Requires: ((emacs "24.1") (elfeed "3.3.0") (cl-lib "0.6.1"))
 ;; Keywords: news
 ;; URL: https://github.com/sp1ff/elfeed-score
@@ -39,7 +39,7 @@
 
 (require 'elfeed-search)
 
-(defconst elfeed-score-version "0.4.4")
+(defconst elfeed-score-version "0.5.0")
 
 (defgroup elfeed-score nil
   "Gnus-sytle scoring for Elfeed entries."
@@ -384,6 +384,30 @@ defining a single rule for both.
               are present\"."
   text title-value content-value type date tags)
 
+(cl-defstruct (elfeed-score-authors-rule
+               (:constructor nil)
+               (:constructor elfeed-score-authors-rule--create))
+  "Rule for scoring against the names of all the auhtors
+
+    - :text :: The rule's match text; either a string or a
+               regular expression (on which more below)
+    - :value :: Integral value (positive or negative) to be
+                added to an entry's score should this rule match one of the authors
+    - :type :: (optional) One of the symbols s S r R w W; s/r/w
+               denotes substring/regexp/whole word match;
+               lower-case means case-insensitive and upper case
+               sensitive.  Defaults to r (case-insensitive regexp
+               match)
+    - :date :: time (in seconds since epoch) when this rule last matched
+    - :tags :: cons cell of the form (a . b) where A is either t or nil and
+               B is a list of symbols. The latter is interpreted as a list
+               of tags scoping the rule and the former as a bolean switch
+               possibly negating the scoping. E.g. (t . (a b)) means \"apply
+               this rule if either of tags a & b are present\". Making the
+               first nil element means \"do not apply this rule if any of a and b
+               are present\"."
+  text value type date tags)
+
 (cl-defstruct (elfeed-score-tag-rule
                (:constructor nil)
                (:constructor elfeed-score-tag-rule--create))
@@ -464,6 +488,20 @@ Each sub-list shall have the form '(TEXT VALUE TYPE DATE)."
         (unless (member struct feed-rules)
           (setq feed-rules (append feed-rules (list struct))))))
     feed-rules))
+
+(defun elfeed-score--parse-authors-rule-sexps (sexps)
+  "Parse a list of lists SEXPS into a list of authors rules."
+  (let (authors-rules)
+    (dolist (item sexps)
+      (let ((struct (elfeed-score-authors-rule--create
+                     :text  (nth 0 item)
+                     :value (nth 1 item)
+                     :type  (nth 2 item)
+                     :date  (nth 4 item)
+                     :tags  (nth 5 item))))
+        (unless (member struct authors-rules)
+          (setq authors-rules (append authors-rules (list struct))))))
+    authors-rules))
 
 (defun elfeed-score--parse-scoring-sexp-1 (sexp)
   "Interpret the S-expression SEXP as scoring rules version 1.
@@ -644,6 +682,63 @@ with the following keys:
      :title-or-content tocs
      :tag tags)))
 
+(defun elfeed-score--parse-scoring-sexp-4 (sexp)
+  "Interpret the S-expression SEXP as scoring rules version 4.
+
+Parse version 4 of the scoring S-expression.  Return a property list
+with the following keys:
+
+    - :title : list of elfeed-score-title-rule structs
+    - :content : list of elfeed-score-content-rule structs
+    - :title-or-content: list of elfeed-score-title-or-content-rule
+                         structs
+    - :feed : list of elfeed-score-feed-rule structs
+    - :authors : list of elfeed-score-authors-rule-structs
+    - :tag : list of elfeed-score-tag-rule structs
+    - :mark : score below which entries shall be marked read
+    - :adjust-tags : list of elfeed-score-adjust-tags-rule structs"
+
+  (let (mark titles feeds content tocs authors tags adj-tags)
+    (dolist (raw-item sexp)
+      (let ((key  (car raw-item))
+	          (rest (cdr raw-item)))
+	      (cond
+         ((string= key "version")
+          (unless (eq 4 (car rest))
+            (error "Unsupported score file version %s" (car rest))))
+	       ((string= key "title")
+          (setq titles (elfeed-score--parse-title-rule-sexps rest)))
+         ((string= key "content")
+          (setq content (elfeed-score--parse-content-rule-sexps rest)))
+         ((string= key "feed")
+          (setq feeds (elfeed-score--parse-feed-rule-sexps rest)))
+         ((string= key "title-or-content")
+          (setq tocs (elfeed-score--parse-title-or-content-rule-sexps rest)))
+	       ((string= key "authors")
+          (setq authors (elfeed-score--parse-authors-rule-sexps rest)))
+         ((string= key "tag")
+          (setq tags (elfeed-score--parse-tag-rule-sexps rest)))
+         ((string= key "adjust-tags")
+          (setq adj-tags (elfeed-score--parse-adjust-tags-rule-sexps rest)))
+	       ((eq key 'mark)
+          ;; set `mark' to (cdr rest) if (not mark) or (< mark (cdr rest))
+          (let ((rest (car rest)))
+            (if (or (not mark)
+                    (< mark rest))
+                (setq mark rest))))
+	       (t
+	        (error "Unknown score file key %s" key)))))
+    (list
+     :mark mark
+     :adjust-tags adj-tags
+	   :feeds feeds
+	   :titles titles
+     :content content
+     :title-or-content tocs
+     :authors authors
+     :tag tags)))
+
+
 (defun elfeed-score--parse-scoring-sexp (sexps)
   "Parse raw S-expressions (SEXPS) into scoring rules."
   (let ((version
@@ -656,7 +751,7 @@ with the following keys:
            ;; I'm going to assume this is a new, hand-authored scoring
            ;; file, and attempt to parse it according to the latest
            ;; version spec.
-           3))))
+           4))))
     ;; I use `cl-delete' instead of `assoc-delete-all' because the
     ;; latter would entail a dependency on Emacs 26.2, which I would
     ;; prefer not to do.
@@ -669,6 +764,8 @@ with the following keys:
       (elfeed-score--parse-scoring-sexp-2 sexps))
      ((eq version 3)
       (elfeed-score--parse-scoring-sexp-3 sexps))
+     ((eq version 4)
+      (elfeed-score--parse-scoring-sexp-4 sexps))
      (t
       (error "Unknown version %s" version)))))
 
@@ -681,6 +778,7 @@ into a property list with the following properties:
 
     - :content
     - :feeds
+    - :authors
     - :mark
     - :titles"
 
@@ -697,6 +795,9 @@ into a property list with the following properties:
 
 (defvar elfeed-score--feed-rules nil
   "List of structs each defining a scoring rule for entry feeds.")
+
+(defvar elfeed-score--authors-rules nil
+  "List of structs each defining a scoring rule for entry authors.")
 
 (defvar elfeed-score--content-rules nil
   "List of structs each defining a scoring rule for entry content.")
@@ -724,6 +825,7 @@ Internal.  Read SCORE-FILE, store scoring rules in our internal datastructures,"
           elfeed-score--content-rules          (plist-get score-entries :content)
           elfeed-score--title-or-content-rules (plist-get score-entries :title-or-content)
           elfeed-score--tag-rules              (plist-get score-entries :tag)
+          elfeed-score--authors-rules          (plist-get score-entries :authors)
           elfeed-score--score-mark             (plist-get score-entries :mark)
           elfeed-score--adjust-tags-rules      (plist-get score-entries :adjust-tags))))
 
@@ -775,6 +877,10 @@ or nil, and is presumably a tag scoping for a scoring rule."
           (not apply)))
     t))
 
+(defun elfeed-score--concatenate-authors (authors-list)
+  "Given AUTHORS-LIST, list of plists; return string of all authors concatenated."
+  (mapconcat (lambda (author) (plist-get author :name)) authors-list ", "))
+
 (defun elfeed-score--score-on-title (entry)
   "Run all title scoring rules against ENTRY; return the summed values."
   (let ((title (elfeed-entry-title entry))
@@ -796,6 +902,29 @@ adding %d to its score"
 		          (setq score (+ score value))
               (setf (elfeed-score-title-rule-date score-title) (float-time))))))
     score))
+
+(defun elfeed-score--score-on-authors (entry)
+  "Run all title scoring rules against ENTRY; return the summed values."
+  (let ((authors-string (elfeed-score--concatenate-authors (elfeed-meta entry :authors)))
+        (score 0))
+    (dolist (score-authors elfeed-score--authors-rules)
+	    (let* ((match-text (elfeed-score-authors-rule-text  score-authors))
+		         (value      (elfeed-score-authors-rule-value score-authors))
+		         (match-type (elfeed-score-authors-rule-type  score-authors))
+             (tag-rule   (elfeed-score-authors-rule-tags  score-authors))
+             (got-match (and
+                         (elfeed-score--match-tags (elfeed-entry-tags entry) tag-rule)
+                         (elfeed-score--match-text match-text authors-string match-type))))
+        (if got-match
+            (progn
+              (elfeed-score-log 'debug "title rule '%s' matched text '%s' for entry %s('%s'); \
+adding %d to its score"
+                                (elfeed-score-authors-rule-text score-authors) got-match
+                                (elfeed-entry-id entry) authors-string value)
+		          (setq score (+ score value))
+              (setf (elfeed-score-authors-rule-date score-authors) (float-time))))))
+    score))
+
 
 (defun elfeed-score--score-on-feed (entry)
   "Run all feed scoring rules against ENTRY; return the summed values."
@@ -919,6 +1048,8 @@ adding %d to its score"
               (setf (elfeed-score-tag-rule-date score-tags) (float-time))))))
     score))
 
+
+
 (defun elfeed-score--adjust-tags (entry score)
   "Run all tag adjustment rules against ENTRY for score SCORE."
   (dolist (adj-tags elfeed-score--adjust-tags-rules)
@@ -957,6 +1088,7 @@ udpate the \"last matched\" time of the salient rules."
                   (elfeed-score--score-on-feed             entry)
                   (elfeed-score--score-on-content          entry)
                   (elfeed-score--score-on-title-or-content entry)
+                  (elfeed-score--score-on-authors          entry)
                   (elfeed-score--score-on-tags             entry))))
     (elfeed-score--set-score-on-entry entry score)
     (elfeed-score--adjust-tags entry score)
@@ -991,7 +1123,7 @@ udpate the \"last matched\" time of the salient rules."
     ";;; Elfeed score file                                     -*- lisp -*-\n%s"
 	  (pp-to-string
 	   (list
-	    (list 'version 3)
+	    (list 'version 4)
       (append
        '("title")
 	     (mapcar
@@ -1047,6 +1179,21 @@ udpate the \"last matched\" time of the salient rules."
            (elfeed-score-tag-rule-value x)
            (elfeed-score-tag-rule-date  x)))
         elfeed-score--tag-rules))
+      (append
+       '("authors")
+	     (mapcar
+	      (lambda (x)
+          (let ((body
+                 (list
+                  (elfeed-score-authors-rule-text  x)
+                  (elfeed-score-authors-rule-value x)
+                  (elfeed-score-authors-rule-type  x)
+                  (elfeed-score-authors-rule-date  x)))
+                (tags (elfeed-score-authors-rule-tags x)))
+            (if tags
+                (append body (list tags))
+              body)))
+	      elfeed-score--authors-rules))
       (append
        '("feed")
 	     (mapcar

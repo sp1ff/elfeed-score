@@ -1,5 +1,13 @@
 elfeed-score News -- history of user-visible changes -*- outline -*-
 
+* Changes in elfeed-score 0.5.0
+
+** New Features
+
+*** New Rule Type: Authors
+
+Adjust an entry's score up or down based on the Author.
+
 * Changes in elfeed-score 0.4.4
 
 ** Bug Fixes

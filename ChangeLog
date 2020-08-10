@@ -1,3 +1,19 @@
+2020-08-10  Michael Herstine  <sp1ff@pobox.com>
+
+	Minor touch-ups ahead of merging C-J-Cundy's PR.
+
+2020-08-04  Chris Cundy  <chris.j.cundy@gmail.com>
+
+	Added description of `authors` matching to README
+
+2020-07-30  Chris Cundy  <chris.j.cundy@gmail.com>
+
+	Adds in scoring by author
+	This adds in a new field to score entries against: author.
+	Uses the entry :author metadata to concatenate all the authors'
+	names together. This string is then matched on in the same way as
+	e.g. the contents string is matched on.
+
 2020-03-28  Michael Herstine  <sp1ff@pobox.com>
 
 	Fix Issue #2: "(elfeed-score-enable) must have an argument now, unlike README suggests"
