@@ -45,7 +45,8 @@ URL (which is convenient for testing scoring)."
       (setf (elfeed-feed-url feed) url))))
 
 (cl-defun elfeed-score-test-generate-entry (feed title content
-                                                 &key (within "1 year") tags)
+                                                 &key (within "1 year")
+                                                 tags (authors '((:name "spaceman sp1ff"))))
   "Generate a random entry with feed FEED, title TITLE & content CONTENT.
 Use WITHIN to scope the date.  TAGS specifies tags to be applied in addition
 to 'unread.
@@ -58,15 +59,17 @@ is convenient for testing scoring)."
 
   (let* ((feed-id (elfeed-feed-id feed))
          (namespace (elfeed-url-to-namespace feed-id))
-         (link (elfeed-test-generate-url)))
-    (elfeed-entry--create
-     :id (cons namespace link)
-     :title title
-     :link link
-     :date (elfeed-test-generate-date within)
-     :tags (append tags (list 'unread))
-     :feed-id feed-id
-     :content (elfeed-ref content))))
+         (link (elfeed-test-generate-url))
+         (entry (elfeed-entry--create
+                 :id (cons namespace link)
+                 :title title
+                 :link link
+                 :date (elfeed-test-generate-date within)
+                 :tags (append tags (list 'unread))
+                 :feed-id feed-id
+                 :content (elfeed-ref content))))
+    (prog1 entry
+      (setf (elfeed-meta entry :authors) authors))))
 
 (defmacro with-elfeed-score-test (&rest body)
   "Run BODY with a fresh, empty set of scoring rules."
@@ -226,6 +229,60 @@ is convenient for testing scoring)."
                                    :text "now is the time..." :title-value 150
                                    :content-value 100 :type 's :tags '(t . (foo bar)))))))))
 
+(ert-deftest elfeed-score-test-score-files-5 ()
+  "Smoke test reading/writing score files"
+
+  (let* ((score-entries
+          '(("title"
+             ("hoping" -1000 s nil (t . (foo bar)))
+             ("long way( home)?" +100 r))
+            ("feed"
+             ("foo.com" +100 s u)
+             ("title" -100 s t))
+            ("authors"
+             ("esr" +100 s t))
+            ("tag"
+             ((t . (a b c)) +10)
+             ((nil . z) -1))
+            ("adjust-tags"
+             ((t . 100) (t . important))
+             ((nil . -100) (nil . important)))
+            (mark -2500)))
+         (score-text (pp-to-string score-entries))
+         (score-file (make-temp-file "elfeed-score-test-" nil nil score-text))
+         (score-entries-2 (elfeed-score--parse-score-file score-file)))
+    (should (equal score-entries-2
+                   (list :mark -2500
+                         :adjust-tags
+                         (list (elfeed-score-adjust-tags-rule--create
+                                :threshold '(t . 100)
+                                :tags '(t . important))
+                               (elfeed-score-adjust-tags-rule--create
+                                :threshold '(nil . -100)
+                                :tags '(nil . important)))
+                         :feeds (list (elfeed-score-feed-rule--create
+                                       :text "foo.com" :value 100 :type 's
+                                       :attr 'u)
+                                      (elfeed-score-feed-rule--create
+                                       :text "title" :value -100 :type 's
+                                       :attr 't))
+                         :titles (list (elfeed-score-title-rule--create
+                                        :text "hoping" :value -1000 :type 's
+                                        :tags (list t 'foo 'bar))
+                                       (elfeed-score-title-rule--create
+                                        :text "long way( home)?" :value 100
+                                        :type 'r))
+                         :content nil
+                         :title-or-content nil
+                         :authors (list (elfeed-score-authors-rule--create
+                                         :text "esr" :value 100 :type 's))
+                         :tag (list (elfeed-score-tag-rule--create
+                                     :tags '(t . (a b c))
+                                     :value 10)
+                                    (elfeed-score-tag-rule--create
+                                     :tags '(nil . z)
+                                     :value -1)))))))
+
 (ert-deftest elfeed-score-test-score-files-3 ()
   "Smoke test reading/writing score files"
 
@@ -257,6 +314,7 @@ is convenient for testing scoring)."
                                            :type 'r))
                             :content nil
                             :title-or-content nil
+                            :authors nil
                             :tag nil)))))
 
 (ert-deftest elfeed-score-test-score-files-4 ()
@@ -302,6 +360,7 @@ is convenient for testing scoring)."
                                         :type 'r))
                          :content nil
                          :title-or-content nil
+                         :authors nil
                          :tag (list (elfeed-score-tag-rule--create
                                      :tags '(t . (a b c))
                                      :value 10)
@@ -614,6 +673,33 @@ tags scoping."
                        :type 's :tags '(t . (foo splat)))
                       (elfeed-score-title-or-content-rule--create
                        :text "lorem ipsum" :title-value 1 :content-value 0
+                       :type 's :tags '(t . (splat)))))
+               (score (elfeed-score--score-entry entry)))
+          (should (eq score 2))))))))
+
+(ert-deftest elfeed-score-test-test-scoring-on-authors-1 ()
+  "Test scoring based on authors-- substring matching,
+tags scoping."
+
+  (let* ((lorem-ipsum "Lorem ipsum dolor sit amet")
+         (entry-title "Lorem ipsum"))
+    (with-elfeed-test
+     (let* ((feed (elfeed-test-generate-feed))
+            (entry (elfeed-score-test-generate-entry
+                    feed entry-title lorem-ipsum
+                    :authors '((:name "John Hancock"))
+                    :tags '(foo bar))))
+       (elfeed-db-add entry)
+       ;; case-insensitive
+       (with-elfeed-score-test
+        (let* ((elfeed-score--authors-rules
+                (list (elfeed-score-authors-rule--create
+                       :text "Hancock" :value 1 :type 's)
+                      (elfeed-score-authors-rule--create
+                       :text "John" :value 1
+                       :type 'S :tags '(t . (foo splat)))
+                      (elfeed-score-authors-rule--create
+                       :text "john hancock" :value 1
                        :type 's :tags '(t . (splat)))))
                (score (elfeed-score--score-entry entry)))
           (should (eq score 2))))))))

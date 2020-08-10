@@ -2,7 +2,7 @@
 #+DESCRIPTION: Gnus-style scoring for Elfeed
 #+AUTHOR: Sp1ff
 #+EMAIL: sp1ff@pobox.com
-#+DATE: <2020-03-28 Sat 11:43>
+#+DATE: <2020-08-10 Mon 07:15>
 #+AUTODATE: t
 #+OPTIONS: toc:nil org-md-headline-style:setext *:t ^:nil
 
@@ -35,6 +35,8 @@ For instance, here's a subset of my scoring file at the moment:
     ("Julia Evans" 100 s t 1576808786.4092398)
     ("National Weather Service" 400 S t 1576808786.1117532)
     ("emacs-news – sacha chua" 350 S t 1576808785.3807983))
+   ("author"
+    ("Leto Sapunar" 500 S t 1597068910.0))
    ("tag"
     ((t . reddit-question)
      750 nil))
@@ -64,8 +66,8 @@ You can, if you wish, install from source as well:
 
 #+BEGIN_EXAMPLE
 cd /tmp
-curl -L --output=elfeed-score-0.4.4.tar.gz https://github.com/sp1ff/elfeed-score/archive/0.4.4.tar.gz
-tar xvf elfeed-score-0.4.4.tar.gz && cd elfeed-score-0.4.4
+curl -L --output=elfeed-score-0.5.0.tar.gz https://github.com/sp1ff/elfeed-score/archive/0.5.0.tar.gz
+tar xvf elfeed-score-0.5.0.tar.gz && cd elfeed-score-0.5.0
 ./configure
 make
 make install
@@ -78,9 +80,9 @@ The unit tests require some macros defined by the [[https://github.com/skeeto/el
 #+BEGIN_EXAMPLE
 cd /tmp
 git clone https://github.com/skeeto/elfeed.git
-curl -L --output=elfeed-score-0.4.4.tar.gz https://github.com/sp1ff/elfeed-score/archive/0.4.4.tar.gz
-tar xvf elfeed-score-0.4.4.tar.gz && cd elfeed-score-0.4.4
-export EMACSLOADPATH=/tmp/elfeed-score-0.4.4:/tmp/elfeed/tests:$EMACSLOADPATH
+curl -L --output=elfeed-score-0.5.0.tar.gz https://github.com/sp1ff/elfeed-score/archive/0.5.0.tar.gz
+tar xvf elfeed-score-0.5.0.tar.gz && cd elfeed-score-0.5.0
+export EMACSLOADPATH=/tmp/elfeed-score-0.5.0:/tmp/elfeed/tests:$EMACSLOADPATH
 ./configure
 make
 make check
@@ -234,7 +236,7 @@ Finally, you can configure score logging by setting the variable =elfeed-score-l
 
 * Status and Roadmap
 
-I'm using [[https://github.com/sp1ff/elfeed-score][elfeed-score]] day in & day out for my RSS reading, but this is a preliminary release (the version number, 0.4, was chosen to suggest this).
+I'm using [[https://github.com/sp1ff/elfeed-score][elfeed-score]] day in & day out for my RSS reading, but this is a preliminary release (the version number, 0.N, was chosen to suggest this).
 
 Things I may want to do in the future:
 

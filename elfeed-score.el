@@ -3,9 +3,7 @@
 ;; Copyright (C) 2019-2020 Michael Herstine <sp1ff@pobox.com>
 
 ;; Author: Michael Herstine <sp1ff@pobox.com>
-;; Version: 0.4.4
-;; Package-Version: 20200328.1855
-;; Package-Commit: 916c47b3590b2ff3c5075dcc1def4b36a4b14947
+;; Version: 0.5.0
 ;; Package-Requires: ((emacs "24.1") (elfeed "3.3.0") (cl-lib "0.6.1"))
 ;; Keywords: news
 ;; URL: https://github.com/sp1ff/elfeed-score
@@ -41,7 +39,7 @@
 
 (require 'elfeed-search)
 
-(defconst elfeed-score-version "0.5")
+(defconst elfeed-score-version "0.5.0")
 
 (defgroup elfeed-score nil
   "Gnus-sytle scoring for Elfeed entries."
@@ -394,20 +392,20 @@ defining a single rule for both.
     - :text :: The rule's match text; either a string or a
                regular expression (on which more below)
     - :value :: Integral value (positive or negative) to be
-                      added to an entry's score should this rule match one of the authors
-    - type :: (optional) One of the symbols s S r R w W; s/r/w
-              denotes substring/regexp/whole word match;
-              lower-case means case-insensitive and upper case
-              sensitive.  Defaults to r (case-insensitive regexp
-              match)
+                added to an entry's score should this rule match one of the authors
+    - :type :: (optional) One of the symbols s S r R w W; s/r/w
+               denotes substring/regexp/whole word match;
+               lower-case means case-insensitive and upper case
+               sensitive.  Defaults to r (case-insensitive regexp
+               match)
     - :date :: time (in seconds since epoch) when this rule last matched
-    - tags :: cons cell of the form (a . b) where A is either t or nil and
-              B is a list of symbols. The latter is interpreted as a list
-              of tags scoping the rule and the former as a bolean switch
-              possibly negating the scoping. E.g. (t . (a b)) means \"apply
-              this rule if either of tags a & b are present\". Making the
-              first nil element means \"do not apply this rule if any of a and b
-              are present\"."
+    - :tags :: cons cell of the form (a . b) where A is either t or nil and
+               B is a list of symbols. The latter is interpreted as a list
+               of tags scoping the rule and the former as a bolean switch
+               possibly negating the scoping. E.g. (t . (a b)) means \"apply
+               this rule if either of tags a & b are present\". Making the
+               first nil element means \"do not apply this rule if any of a and b
+               are present\"."
   text value type date tags)
 
 (cl-defstruct (elfeed-score-tag-rule
@@ -716,7 +714,7 @@ with the following keys:
           (setq feeds (elfeed-score--parse-feed-rule-sexps rest)))
          ((string= key "title-or-content")
           (setq tocs (elfeed-score--parse-title-or-content-rule-sexps rest)))
-	 ((string= key "authors")
+	       ((string= key "authors")
           (setq authors (elfeed-score--parse-authors-rule-sexps rest)))
          ((string= key "tag")
           (setq tags (elfeed-score--parse-tag-rule-sexps rest)))
@@ -879,11 +877,9 @@ or nil, and is presumably a tag scoping for a scoring rule."
           (not apply)))
     t))
 
-
-(defun concatenate-authors (authors-list)
+(defun elfeed-score--concatenate-authors (authors-list)
   "Given AUTHORS-LIST, list of plists; return string of all authors concatenated."
   (mapconcat (lambda (author) (plist-get author :name)) authors-list ", "))
-
 
 (defun elfeed-score--score-on-title (entry)
   "Run all title scoring rules against ENTRY; return the summed values."
@@ -909,7 +905,7 @@ adding %d to its score"
 
 (defun elfeed-score--score-on-authors (entry)
   "Run all title scoring rules against ENTRY; return the summed values."
-  (let ((authors-string (concatenate-authors (elfeed-meta entry :authors)))
+  (let ((authors-string (elfeed-score--concatenate-authors (elfeed-meta entry :authors)))
         (score 0))
     (dolist (score-authors elfeed-score--authors-rules)
 	    (let* ((match-text (elfeed-score-authors-rule-text  score-authors))
