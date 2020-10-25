@@ -3,7 +3,7 @@
 ;; Copyright (C) 2019-2020 Michael Herstine <sp1ff@pobox.com>
 
 ;; Author: Michael Herstine <sp1ff@pobox.com>
-;; Version: 0.5.0
+;; Version: 0.5.1
 ;; Package-Requires: ((emacs "24.1") (elfeed "3.3.0") (cl-lib "0.6.1"))
 ;; Keywords: news
 ;; URL: https://github.com/sp1ff/elfeed-score
@@ -39,7 +39,7 @@
 
 (require 'elfeed-search)
 
-(defconst elfeed-score-version "0.5.0")
+(defconst elfeed-score-version "0.5.1")
 
 (defgroup elfeed-score nil
   "Gnus-sytle scoring for Elfeed entries."
@@ -1121,105 +1121,107 @@ udpate the \"last matched\" time of the salient rules."
   (write-region
    (format
     ";;; Elfeed score file                                     -*- lisp -*-\n%s"
-	  (pp-to-string
-	   (list
-	    (list 'version 4)
-      (append
-       '("title")
-	     (mapcar
-	      (lambda (x)
-          (let ((body
-                 (list
-                  (elfeed-score-title-rule-text  x)
-                  (elfeed-score-title-rule-value x)
-                  (elfeed-score-title-rule-type  x)
-                  (elfeed-score-title-rule-date  x)))
-                (tags (elfeed-score-title-rule-tags x)))
-            (if tags
-                (append body (list tags))
-              body)))
-	      elfeed-score--title-rules))
-      (append
-       '("content")
-	     (mapcar
-	      (lambda (x)
-          (let ((body
-		             (list
-		              (elfeed-score-content-rule-text  x)
-		              (elfeed-score-content-rule-value x)
-		              (elfeed-score-content-rule-type  x)
-		              (elfeed-score-content-rule-date  x)))
-                (tags (elfeed-score-content-rule-tags x)))
-            (if tags
-                (append body (list tags))
-              body)))
-	      elfeed-score--content-rules))
-      (append
-       '("title-or-content")
-       (mapcar
-        (lambda (x)
-          (let ((body
-                 (list
-                  (elfeed-score-title-or-content-rule-text x)
-                  (elfeed-score-title-or-content-rule-title-value x)
-                  (elfeed-score-title-or-content-rule-content-value x)
-                  (elfeed-score-title-or-content-rule-type x)
-                  (elfeed-score-title-or-content-rule-date x)))
-                (tags (elfeed-score-title-or-content-rule-tags x)))
-            (if tags
-                (append body (list tags))
-              body)))
-        elfeed-score--title-or-content-rules))
-      (append
-       '("tag")
-       (mapcar
-        (lambda (x)
-          (list
-           (elfeed-score-tag-rule-tags  x)
-           (elfeed-score-tag-rule-value x)
-           (elfeed-score-tag-rule-date  x)))
-        elfeed-score--tag-rules))
-      (append
-       '("authors")
-	     (mapcar
-	      (lambda (x)
-          (let ((body
-                 (list
-                  (elfeed-score-authors-rule-text  x)
-                  (elfeed-score-authors-rule-value x)
-                  (elfeed-score-authors-rule-type  x)
-                  (elfeed-score-authors-rule-date  x)))
-                (tags (elfeed-score-authors-rule-tags x)))
-            (if tags
-                (append body (list tags))
-              body)))
-	      elfeed-score--authors-rules))
-      (append
-       '("feed")
-	     (mapcar
-	      (lambda (x)
-          (let ((body
-		             (list
-		              (elfeed-score-feed-rule-text  x)
-		              (elfeed-score-feed-rule-value x)
-		              (elfeed-score-feed-rule-type  x)
-                  (elfeed-score-feed-rule-attr  x)
-		              (elfeed-score-feed-rule-date  x)))
-                (tags (elfeed-score-feed-rule-tags x)))
-            (if tags
-                (append body (list tags))
-              body)))
-	      elfeed-score--feed-rules))
-      (list 'mark elfeed-score--score-mark)
-      (append
-       '("adjust-tags")
-       (mapcar
-        (lambda (x)
-          (list
-           (elfeed-score-adjust-tags-rule-threshold x)
-           (elfeed-score-adjust-tags-rule-tags      x)
-           (elfeed-score-adjust-tags-rule-date      x)))
-        elfeed-score--adjust-tags-rules)))))
+    (let ((print-level nil)
+          (print-length nil))
+	    (pp-to-string
+	     (list
+	      (list 'version 4)
+        (append
+         '("title")
+	       (mapcar
+	        (lambda (x)
+            (let ((body
+                   (list
+                    (elfeed-score-title-rule-text  x)
+                    (elfeed-score-title-rule-value x)
+                    (elfeed-score-title-rule-type  x)
+                    (elfeed-score-title-rule-date  x)))
+                  (tags (elfeed-score-title-rule-tags x)))
+              (if tags
+                  (append body (list tags))
+                body)))
+	        elfeed-score--title-rules))
+        (append
+         '("content")
+	       (mapcar
+	        (lambda (x)
+            (let ((body
+		               (list
+		                (elfeed-score-content-rule-text  x)
+		                (elfeed-score-content-rule-value x)
+		                (elfeed-score-content-rule-type  x)
+		                (elfeed-score-content-rule-date  x)))
+                  (tags (elfeed-score-content-rule-tags x)))
+              (if tags
+                  (append body (list tags))
+                body)))
+	        elfeed-score--content-rules))
+        (append
+         '("title-or-content")
+         (mapcar
+          (lambda (x)
+            (let ((body
+                   (list
+                    (elfeed-score-title-or-content-rule-text x)
+                    (elfeed-score-title-or-content-rule-title-value x)
+                    (elfeed-score-title-or-content-rule-content-value x)
+                    (elfeed-score-title-or-content-rule-type x)
+                    (elfeed-score-title-or-content-rule-date x)))
+                  (tags (elfeed-score-title-or-content-rule-tags x)))
+              (if tags
+                  (append body (list tags))
+                body)))
+          elfeed-score--title-or-content-rules))
+        (append
+         '("tag")
+         (mapcar
+          (lambda (x)
+            (list
+             (elfeed-score-tag-rule-tags  x)
+             (elfeed-score-tag-rule-value x)
+             (elfeed-score-tag-rule-date  x)))
+          elfeed-score--tag-rules))
+        (append
+         '("authors")
+	       (mapcar
+	        (lambda (x)
+            (let ((body
+                   (list
+                    (elfeed-score-authors-rule-text  x)
+                    (elfeed-score-authors-rule-value x)
+                    (elfeed-score-authors-rule-type  x)
+                    (elfeed-score-authors-rule-date  x)))
+                  (tags (elfeed-score-authors-rule-tags x)))
+              (if tags
+                  (append body (list tags))
+                body)))
+	        elfeed-score--authors-rules))
+        (append
+         '("feed")
+	       (mapcar
+	        (lambda (x)
+            (let ((body
+		               (list
+		                (elfeed-score-feed-rule-text  x)
+		                (elfeed-score-feed-rule-value x)
+		                (elfeed-score-feed-rule-type  x)
+                    (elfeed-score-feed-rule-attr  x)
+		                (elfeed-score-feed-rule-date  x)))
+                  (tags (elfeed-score-feed-rule-tags x)))
+              (if tags
+                  (append body (list tags))
+                body)))
+	        elfeed-score--feed-rules))
+        (list 'mark elfeed-score--score-mark)
+        (append
+         '("adjust-tags")
+         (mapcar
+          (lambda (x)
+            (list
+             (elfeed-score-adjust-tags-rule-threshold x)
+             (elfeed-score-adjust-tags-rule-tags      x)
+             (elfeed-score-adjust-tags-rule-date      x)))
+          elfeed-score--adjust-tags-rules))))))
    nil score-file))
 
 (define-obsolete-function-alias 'elfeed-score/score

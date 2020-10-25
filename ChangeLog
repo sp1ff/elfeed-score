@@ -1,6 +1,15 @@
+2020-10-25  Michael Herstine  <sp1ff@pobox.com>
+
+	BUGFIX: issue #4
+	let-bind 'print-le{vel,ngth}' to nil before calling 'pp-to-string'.
+
 2020-08-10  Michael Herstine  <sp1ff@pobox.com>
 
-	Minor touch-ups ahead of merging C-J-Cundy's PR.
+	Merge branch 'C-J-Cundy-master'
+
+	Preparing to merge C-J-Cundy's PR https://github.com/sp1ff/elfeed-score/pull/3:
+	  - Minor touch-ups to the PR
+	  - Added unit tests; updated maintainer's files
 
 2020-08-04  Chris Cundy  <chris.j.cundy@gmail.com>
 

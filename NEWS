@@ -1,5 +1,12 @@
 elfeed-score News -- history of user-visible changes -*- outline -*-
 
+* Changes in elfeed-score 0.5.1
+
+** Buf Fixes
+
+**** Issue 2: `elfeed-score-write-score-file` will elide information when the list gets long enough
+
+Fixed.
 * Changes in elfeed-score 0.5.0
 
 ** New Features
