@@ -2,7 +2,7 @@
 #+DESCRIPTION: Gnus-style scoring for Elfeed
 #+AUTHOR: Sp1ff
 #+EMAIL: sp1ff@pobox.com
-#+DATE: <2020-10-25 Sun 14:44>
+#+DATE: <2020-10-30 Fri 18:12>
 #+AUTODATE: t
 #+OPTIONS: toc:nil org-md-headline-style:setext *:t ^:nil
 
@@ -15,7 +15,7 @@
 
 [[https://github.com/skeeto/elfeed][Elfeed]] is an extensible web feed reader for Emacs. By default, it will display entries in reverse chronological order. This package defines a bit of metadata for each of your feed entries: a "score". A score is an integer (negative or positive), and higher scores denote entries of greater interest to you. This package also (optionally) installs a new sort function, so that Elfeed will display entries with higher scores before entries with lower scores (entries with the same scores will still be sorted in reverse chronological order). It also provides an entry display function for the search buffer that displays each entry's score, should you choose to install it.
 
-While you can manually assign a score to an entry, you will likely find it more convenient to create rules for scoring that will be automatically applied to each new entry every time you update Elfeed. You can currently score against title, feed & content by defining strings that will be matched against those attributes by substring, regexp or whole-word match. You can also score against the presence or absence of tags. Rules (other than the last sort) can be scoped by Elfeed entry tags, so that a rule will only be applied if an entry has certain tags (or does not have certain tags). Each rule defines an integral value, and the rules are applied in order of definition. The new entry's score begins at zero, and is adjusted by the value defined by each matching scoring rule.
+While you can manually assign a score to an entry, you will likely find it more convenient to create rules for scoring that will be automatically applied to each new entry every time you update Elfeed. You can score against title, feed, content & authors by defining strings that will be matched against those attributes by substring, regexp or whole-word match. You can also score against the presence or absence of tags. Rules (other than the last sort) can be scoped by Elfeed entry tags, so that a rule will only be applied if an entry has certain tags (or does not have certain tags). Rules may also be scoped by feed (so that a rule will only be applied to entries from certain feeds). Each rule defines an integral value, and the rules are applied in order of definition. The new entry's score begins at zero, and is adjusted by the value defined by each matching scoring rule.
 
 For instance, here's a subset of my scoring file at the moment:
 
@@ -66,11 +66,11 @@ You can, if you wish, install from source as well:
 
 #+BEGIN_EXAMPLE
 cd /tmp
-curl -L --output=elfeed-score-0.5.1.tar.gz https://github.com/sp1ff/elfeed-score/archive/0.5.1.tar.gz
-tar xvf elfeed-score-0.5.1.tar.gz && cd elfeed-score-0.5.1
+curl -L --output=elfeed-score-0.5.2.tar.gz https://github.com/sp1ff/elfeed-score/archive/0.5.2.tar.gz
+tar xvf elfeed-score-0.5.2.tar.gz && cd elfeed-score-0.5.2
 ./configure
 make
-make install
+sudo make install
 #+END_EXAMPLE
 
 ** Running the Unit Tests
@@ -80,9 +80,9 @@ The unit tests require some macros defined by the [[https://github.com/skeeto/el
 #+BEGIN_EXAMPLE
 cd /tmp
 git clone https://github.com/skeeto/elfeed.git
-curl -L --output=elfeed-score-0.5.1.tar.gz https://github.com/sp1ff/elfeed-score/archive/0.5.1.tar.gz
-tar xvf elfeed-score-0.5.1.tar.gz && cd elfeed-score-0.5.1
-export EMACSLOADPATH=/tmp/elfeed-score-0.5.1:/tmp/elfeed/tests:$EMACSLOADPATH
+curl -L --output=elfeed-score-0.5.2.tar.gz https://github.com/sp1ff/elfeed-score/archive/0.5.2.tar.gz
+tar xvf elfeed-score-0.5.2.tar.gz && cd elfeed-score-0.5.2
+export EMACSLOADPATH=/tmp/elfeed-score-0.5.2:/tmp/elfeed/tests:$EMACSLOADPATH
 ./configure
 make
 make check
@@ -97,21 +97,23 @@ Unless you already use =EMACSLOADPATH=, this likely won't work as written-- you'
 The score file (=~/.emacs.d/elfeed.score= by default) is an Emacs Lisp form that evaluates to an association list. Comments are as per usual. The current format recognizes seven keys:
 
     - "title": the value associated with this is a list of rules matching text against the entry title
-    - "content": the value associated with this is a list of rules matching text against the entry content
+    - "content": a list of rules matching text against the entry content
     - "title-or-content": a list of rules matching against both entry title & content
-    - "feed": the value associated with this is a list of rules matching text against the entry feed
-    - "authors": the value associated with this is a list of rules matching text against the name of the entry's author. If the entry has multiple authors the rules match against the string formed by concatenating the authors' names together with ", " as a delimiter.
+    - "feed": a list of rules matching text against the entry feed
+    - "authors": a list of rules matching text against the name of the entry's author. If the entry has multiple authors the rules match against the string formed by concatenating the authors' names together with ", " as a delimiter.
     - "tag": a list of rules matching against entry tags
     - "adjust-tags": a list of rules to be applied *after* an entry is scored; they can add or remove tags based on the score being above or below given thresholds
     - =mark=: an integer which, if greater than an entry's final score, will result in the entry being marked as read (in other words, if your rules have lowered an entry's scores below this level, don't even display it in the Elfeed search buffer)
 
-Title & content rules are defined by a list of length five:
+Title & content rules are defined by a list of length seven:
 
     1. the match text
     2. the match value: this is an integer specifying the amount by which the entry's score should be adjusted, should the text match
     3. the match type: this may be one of =s=, =S=, =r=, =R=, =w= or =W= for substring match, case-sensitive substring match, regexp match or case-sensitive regexp match, and case-insensitive or case-sensitive whole word match, respectively. Whole word matching just feeds the match text to =word-search-regexp= before doing a regexp search.
-    4. the last time this rule matched an entry, in seconds since Unix epoch. This element is optional, need not be supplied by the score file author, and will be automatically kept up-to-date by the package.
-    5. tag scoping rules (on which more below); this is optional, and won't be written out when the scoring rules are serialized unless it is non-nil.
+    4. the last time this rule matched an entry, in seconds since Unix epoch. When defining rules, this element & all those following are optional & need not be supplied by the score file author. This field will be automatically kept up-to-date by the package.
+    5. tag scoping rules (on which more below)
+    6. the number of times this rule has matched any entry; this field will be automatically kept up-to-date by the package.
+    7. feed scoping rules (on which more below)
 
 So, when first setting up your score file, saying:
 
@@ -136,7 +138,7 @@ I've found myself defining duplicate rules for both title & content, albeit with
 defines a rule that will perform a substring match for "california" against both the entry title and content.  A match found in the title adds 150 to the score, and a match found in the content adds 100.  The rule will only be applied, however,
 to entries whose tags contain =@daily=, =@politics= or both.
 
-Scoring against the entry's feed is done similarly, but may be done against either the feed title or the feed URL. This is indicated by adding a new element at index 3 which may be one of =t= or =u= (for title or URL, respectively).
+Scoring against the entry's feed is done similarly, but may be done against the feed title, the feed URL, or the feed author. This is indicated by adding a new element at index 3 which may be one of =t= , =u= or =a= (for title, URL, or author, respectively).
 
 Scoring against the entry's tags is similar, but is done with a three tuple:
 
@@ -197,7 +199,20 @@ Limiting rules by entry tags involves the use of a cons cell of the form:
 
 The =car= is a boolean, and the =cdr= is a list of tags.  If the former is =t=, the rule will only be applied if the entry has at least one of the tags listed.  If the boolean value is =nil=, the rule will only apply if the entry has *none* of the tags listed.
 
-This only applies to title, content, title-or-content & feed-based rules.
+This only applies to title, content, title-or-content, authors & feed-based rules.
+*** Feed Scoping Rules
+
+Limiting rules by entry feeds involves the use of a cons cell of the form:
+
+#+BEGIN_EXAMPLE
+(BOOLEAN . ((ATTR MATCH-TYPE MATCH-TEXT)...))
+#+END_EXAMPLE
+
+The =car= is a boolean, and the =cdr= is a list of three-tuples. If the former is =t=, the rule will only be applied if the entry's feed matches at least one of the selectors listed. If the boolean is =nil=, the rule will only apply if the entry's feed matches *none* of the selectors listed.
+
+Each three-tuple, or selector specifies the feed attribute (=t= for title, =u= for URL, or =a= for author) to be matched, the match type (=s=, =S=, =r=, =R=, =w=, or =W=, as per usual) specifies the match type, and the text to be matched. So, for instance, ='(t s "foo")= will carry out a case-insensitive substring match of "foo" against the feed title.
+
+This only applies to title, content, title-or-content & authors rules.
 ** Using elfeed-score
 
 Once your score file is setup, load elfeed-score. 
@@ -214,7 +229,7 @@ Just loading the library will *not* modify [[https://gitub.com/skeeto/elfeed][El
 
 This will install the new sort function & new entry hook, as well as read your score file. NB. =elfeed-score-enable= is autoloaded, so if you've installed this package in the usual way, you should be able to just invoke the function & have the package loaded & enabled automatically.
 
-Some [[https://github.com/skeeto/elfeed][elfeed]] users have already customized =elfeed-search-sort-function= and may not wish to have [[https://github.com/sp1ff/elfeed-score][efleed-score]] install a new one. =elfeed-score-enable= takes a prefix argument: if present, it will install the new entry hook & commence scoring, but will *not* install the new sort function. Such users may refer to =elfeed-score-sort= if they would like to incorporate scoring into their sort functions.
+Some [[https://github.com/skeeto/elfeed][elfeed]] users have already customized =elfeed-search-sort-function= and may not wish to have [[https://github.com/sp1ff/elfeed-score][elfeed-score]] install a new one. =elfeed-score-enable= takes a prefix argument: if present, it will install the new entry hook & commence scoring, but will *not* install the new sort function. Such users may refer to =elfeed-score-sort= if they would like to incorporate scoring into their sort functions.
 
 The package defines a keymap, but does not bind it to any key. I like to set it to the === key:
 
@@ -245,4 +260,4 @@ Things I may want to do in the future:
 
 I wrote a post on how [[https://github.com/sp1ff/elfeed-score][elfeed-score]] works, along with the process of submitting code to MELPA, [[https://www.unwoundstack.com/blog/scoring-elfeed-entries.html][here]].
 
-Bugs, comments, issues, feature requests &c welcome at [[mailto:sp1ff@pobox.com][sp1ff@pobox.com]].
+Bugs, comments, issues, PRs, feature requests &c welcome at [[mailto:sp1ff@pobox.com][sp1ff@pobox.com]].

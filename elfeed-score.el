@@ -3,7 +3,7 @@
 ;; Copyright (C) 2019-2020 Michael Herstine <sp1ff@pobox.com>
 
 ;; Author: Michael Herstine <sp1ff@pobox.com>
-;; Version: 0.5.1
+;; Version: 0.5.2
 ;; Package-Requires: ((emacs "24.1") (elfeed "3.3.0") (cl-lib "0.6.1"))
 ;; Keywords: news
 ;; URL: https://github.com/sp1ff/elfeed-score
@@ -39,10 +39,10 @@
 
 (require 'elfeed-search)
 
-(defconst elfeed-score-version "0.5.1")
+(defconst elfeed-score-version "0.5.2")
 
 (defgroup elfeed-score nil
-  "Gnus-sytle scoring for Elfeed entries."
+  "Gnus-style scoring for Elfeed entries."
   :group 'comm)
 
 (define-obsolete-variable-alias 'elfeed-score/default-score
@@ -69,7 +69,7 @@
   "Location at which to persist scoring rules.
 
 Set this to nil to disable automatic serialization &
-de-serialization of scoring rules."
+deserialization of scoring rules."
   :group 'elfeed-score
   :type 'file)
 
@@ -182,7 +182,7 @@ information to the \"*Messages*\" buffer.")
             (elfeed-score--truncate-log-buffer))))))
 
 (defun elfeed-score--debug (fmt &rest params)
-  "Produce a formattted (FMT) message based on PARAMS at debug level.
+  "Produce a formatted (FMT) message based on PARAMS at debug level.
 
 Print a formatted message if `elfeed-score-debug' is non-nil."
   (elfeed-score-log 'debug fmt params))
@@ -194,7 +194,7 @@ Print a formatted message if `elfeed-score-debug' is non-nil."
   (setf (elfeed-meta entry elfeed-score-meta-keyword) score))
 
 (defun elfeed-score--get-score-from-entry (entry)
-  "Retreive the score from ENTRY."
+  "Retrieve the score from ENTRY."
   (elfeed-meta entry elfeed-score-meta-keyword elfeed-score-default-score))
 
 (define-obsolete-function-alias 'elfeed-score/sort
@@ -247,7 +247,7 @@ region's state."
 (defun elfeed-score-get-score ()
   "Return the score of the entry under point.
 
-If called intractively, print a message."
+If called interactively, print a message."
 
   (interactive)
 
@@ -285,72 +285,145 @@ formatting.  This implementation is based on that of
 
     - text :: The rule's match text; either a string or a regular
               expression (on which more below)
-    - value :: Integral value (positive or negative) to be added to
-               an entry's score if this rule matches
-    - type :: (optional) One of the symbols s S r R w W; s/r/w
-              denotes substring/regexp/whole word match;
-              lower-case means case-insensitive and upper case
-              sensitive.  Defaults to r (case-insensitive regexp
-              match)
-    - date :: time (in seconds since epoch) when this rule last matched
-    - tags :: cons cell of the form (a . b) where A is either t or nil and
-              B is a list of symbols. The latter is interpreted as a list
-              of tags scoping the rule and the former as a bolean switch
-              possibly negating the scoping. E.g. (t . (a b)) means \"apply
-              this rule if either of tags a & b are present\". Making the
-              first element nil means \"do not apply this rule if any of a and b
-              are present\"."
-  text value type date tags)
+
+    - value :: Integral value (positive or negative) to be added
+               to an entry's score if this rule matches
+
+    - type :: One of the symbols s S r R w W; s/r/w denotes
+              substring/regexp/whole word match; lower-case means
+              case-insensitive and upper case sensitive.
+              Defaults to r (case-insensitive regexp match)
+
+    - date :: time (in seconds since epoch) when this rule last
+              matched
+
+    - tags :: cons cell of the form (A . B) where A is either t
+              or nil and B is a list of symbols. The latter is
+              interpreted as a list of tags scoping the rule and
+              the former as a boolean switch possibly negating the
+              scoping. E.g. (t . (a b)) means \"apply this rule
+              if either of tags a & b are present\". Making the
+              first element nil means \"do not apply this rule if
+              any of a and b are present\".
+
+    - hits :: the number of times since upgrading to score file
+              version 5 that this rule has been matched
+
+    - feeds :: cons cell of the form (A . B) where A is either t
+               or nil and B is a list of three-tuples. Each
+               three-tuple will be matched against an entry's
+               feed:
+
+                 1. attribute: one of 't, 'u, or 'a for title,
+                 URL, or author, resp.
+                 2. match type: one of 's, 'S, 'r, 'R, 'w, or
+                 'W (the usual match types)
+                 3. match text
+
+               So, e.g. '(t s \"foo\") means do a
+               case-insensitive substring match for \"foo\"
+               against the feed title.
+
+               The first element of the cons cell is interpreted as a boolean
+               switch possibly negating the scoping. For
+               instance, (t . '((t s \"foo\") (u s
+               \"http://bar.com/feed\"))) means \"apply this rule
+               only to feeds entitled foo or from
+               http://bar/com/feed\" Making the first element nil
+               means \"do not apply this rule if the feed is
+               either foo or bar\"."
+  text value type date tags (hits 0) feeds)
 
 (cl-defstruct (elfeed-score-feed-rule
                (:constructor nil)
                (:constructor elfeed-score-feed-rule--create))
   "Rule for scoring against entry feeds.
 
-    - :text :: The rule's match text; either astring or a regular
-               expression (on which more below)
-    - :value :: Integral value (positive or negative) to be added to
-                an entry's score if this rule matches
-    - type :: (optional) One of the symbols s S r R w W; s/r/w
-              denotes substring/regexp/whole word match;
-              lower-case means case-insensitive and upper case
-              sensitive.  Defaults to r (case-insensitive regexp
-              match)
-    - :attr :: Defines the feed attribute against which matching shall be
-               performed: 't for title & 'u for URL.
-    - :date :: time (in seconds since epoch) when this rule last matched
-    - :tags :: cons cell of the form (a . b) where A is either t or nil and
-               B is a list of symbols. The latter is interpreted as a list
-               of tags scoping the rule and the former as a bolean switch
-               possibly negating the scoping. E.g. (t . (a b)) means \"apply
-               this rule if either of tags a & b are present\". Making the
-               first element nil means \"do not apply this rule if any of a and b
-               are present\"."
-  text value type attr date tags)
+    - text :: The rule's match text; either a string or a regular
+              expression (on which more below)
+
+    - value :: Integral value (positive or negative) to be added to
+               an entry's score if this rule matches
+
+    - type :: One of the symbols s S r R w W; s/r/w denotes
+              substring/regexp/whole word match; lower-case means
+              case-insensitive and upper case sensitive.
+              Defaults to r (case-insensitive regexp match)
+
+    - attr :: Defines the feed attribute against which matching
+              shall be performed: 't for title & 'u for URL.
+
+    - date :: time (in seconds since epoch) when this rule last
+              matched
+
+    - tags :: cons cell of the form (a . b) where A is either t
+              or nil and B is a list of symbols. The latter is
+              interpreted as a list of tags scoping the rule and
+              the former as a boolean switch possibly negating the
+              scoping. E.g. (t . (a b)) means \"apply this rule
+              if either of tags a & b are present\". Making the
+              first element nil means \"do not apply this rule if
+              any of a and b are present\".
+
+    - hits :: the number of times since upgrading to score file
+              version 5 that this rule has been matched"
+  text value type attr date tags (hits 0))
 
 (cl-defstruct (elfeed-score-content-rule
                (:constructor nil)
                (:constructor elfeed-score-content-rule--create))
   "Rule for scoring against entry content
 
-    - :text :: The rule's match text; either a string or a regular
-               expression (on which more below)
-    - :value :: Integral value (positive or negative) to be added to
-                an entry's score if this rule matches
-    - type :: (optional) One of the symbols s S r R w W; s/r/w
-              denotes substring/regexp/whole word match;
-              lower-case means case-insensitive and upper case
-              sensitive.  Defaults to r (case-insensitive regexp
-              match)
-    - :date :: time (in seconds since epoch) when this rule last matched
-    - tags :: cons cell of the form (a . b) where A is either t or nil and
-              B is a list of symbols. The latter is interpreted as a list
-              of tags scoping the rule and the former as a bolean switch
-              possibly negating the scoping. E.g. (t . (a b)) means \"apply
-              this rule if either of tags a & b are present\". Making the
-              first element nil means \"do not apply this rule if any of a and b
-              are present\"."
-  text value type date tags)
+    - text :: The rule's match text; either a string or a regular
+              expression (on which more below)
+
+    - value :: Integral value (positive or negative) to be added to
+               an entry's score if this rule matches
+
+    - type :: One of the symbols s S r R w W; s/r/w denotes
+              substring/regexp/whole word match; lower-case
+              means case-insensitive and upper case sensitive.
+              Defaults to r (case-insensitive regexp match)
+
+    - date :: time (in seconds since epoch) when this rule last
+              matched
+
+    - tags :: cons cell of the form (a . b) where A is either t
+              or nil and B is a list of symbols. The latter is
+              interpreted as a list of tags scoping the rule and
+              the former as a boolean switch possibly negating the
+              scoping. E.g. (t . (a b)) means \"apply this rule
+              if either of tags a & b are present\". Making the
+              first element nil means \"do not apply this rule if
+              any of a and b are present\".
+
+    - hits :: the number of times since upgrading to score file
+              version 5 that this rule has been matched
+
+    - feeds :: cons cell of the form (A . B) where A is either t
+               or nil and B is a list of three-tuples. Each
+               three-tuple will be matched against an entry's
+               feed:
+
+                 1. attribute: one of 't, 'u, or 'a for title,
+                 URL, or author, resp.
+                 2. match type: one of 's, 'S, 'r, 'R, 'w, or
+                 'W (the usual match types)
+                 3. match text
+
+               So, e.g. '(t s \"foo\") means do a
+               case-insensitive substring match for \"foo\"
+               against the feed title.
+
+               The first element of the cons cell is interpreted as a boolean
+               switch possibly negating the scoping. For
+               instance, (t . '((t s \"foo\") (u s
+               \"http://bar.com/feed\"))) means \"apply this rule
+               only to feeds entitled foo or from
+               http://bar/com/feed\" Making the first element nil
+               means \"do not apply this rule if the feed is
+               either foo or bar\"."
+  text value type date tags (hits 0) feeds)
 
 (cl-defstruct (elfeed-score-title-or-content-rule
                (:constructor nil)
@@ -361,93 +434,177 @@ I found myself replicating the same rule for both title &
 content, with a higher score for title.  This rule permits
 defining a single rule for both.
 
-    - :text :: The rule's match text; either a string or a
-               regular expression (on which more below)
-    - :title-value :: Integral value (positive or negative) to be
-                      added to an entry's score should this rule match the
-                      entry's title
-    - :content-value :: Integral value (positive or negative) to be
-                      added to an entry's score should this rule match the
-                      entry's value
-    - type :: (optional) One of the symbols s S r R w W; s/r/w
-              denotes substring/regexp/whole word match;
-              lower-case means case-insensitive and upper case
-              sensitive.  Defaults to r (case-insensitive regexp
-              match)
-    - :date :: time (in seconds since epoch) when this rule last matched
-    - tags :: cons cell of the form (a . b) where A is either t or nil and
-              B is a list of symbols. The latter is interpreted as a list
-              of tags scoping the rule and the former as a bolean switch
-              possibly negating the scoping. E.g. (t . (a b)) means \"apply
-              this rule if either of tags a & b are present\". Making the
-              first nil element means \"do not apply this rule if any of a and b
-              are present\"."
-  text title-value content-value type date tags)
+    - text :: The rule's match text; either a string or a regular
+              expression (on which more below)
+
+    - title-value :: Integral value (positive or negative) to be
+                     added to an entry's score should this rule
+                     match the entry's title
+
+    - content-value :: Integral value (positive or negative) to
+                       be added to an entry's score should this
+                       rule match the entry's value
+
+    - type :: One of the symbols s S r R w W; s/r/w denotes
+              substring/regexp/whole word match; lower-case means
+              case-insensitive and upper case sensitive.
+              Defaults to r (case-insensitive regexp match)
+
+    - date :: time (in seconds since epoch) when this rule last matched
+
+    - tags :: cons cell of the form (a . b) where A is either t
+              or nil and B is a list of symbols. The latter is
+              interpreted as a list of tags scoping the rule and
+              the former as a boolean switch possibly negating the
+              scoping. E.g. (t . (a b)) means \"apply this rule
+              if either of tags a & b are present\". Making the
+              first nil element means \"do not apply this rule if
+              any of a and b are present\".
+
+    - hits :: the number of times since upgrading to score file version
+              5 that this rule has been matched
+
+    - feeds :: cons cell of the form (A . B) where A is either t
+               or nil and B is a list of three-tuples. Each
+               three-tuple will be matched against an entry's
+               feed:
+
+                 1. attribute: one of 't, 'u, or 'a for title,
+                 URL, or author, resp.
+                 2. match type: one of 's, 'S, 'r, 'R, 'w, or
+                 'W (the usual match types)
+                 3. match text
+
+               So, e.g. '(t s \"foo\") means do a
+               case-insensitive substring match for \"foo\"
+               against the feed title.
+
+               The first element of the cons cell is interpreted as a boolean
+               switch possibly negating the scoping. For
+               instance, (t . '((t s \"foo\") (u s
+               \"http://bar.com/feed\"))) means \"apply this rule
+               only to feeds entitled foo or from
+               http://bar/com/feed\" Making the first element nil
+               means \"do not apply this rule if the feed is
+               either foo or bar\"."
+  text title-value content-value type date tags (hits 0) feeds)
 
 (cl-defstruct (elfeed-score-authors-rule
                (:constructor nil)
                (:constructor elfeed-score-authors-rule--create))
-  "Rule for scoring against the names of all the auhtors
+  "Rule for scoring against the names of all the authors
 
-    - :text :: The rule's match text; either a string or a
-               regular expression (on which more below)
-    - :value :: Integral value (positive or negative) to be
-                added to an entry's score should this rule match one of the authors
-    - :type :: (optional) One of the symbols s S r R w W; s/r/w
-               denotes substring/regexp/whole word match;
-               lower-case means case-insensitive and upper case
-               sensitive.  Defaults to r (case-insensitive regexp
-               match)
-    - :date :: time (in seconds since epoch) when this rule last matched
-    - :tags :: cons cell of the form (a . b) where A is either t or nil and
-               B is a list of symbols. The latter is interpreted as a list
-               of tags scoping the rule and the former as a bolean switch
-               possibly negating the scoping. E.g. (t . (a b)) means \"apply
-               this rule if either of tags a & b are present\". Making the
-               first nil element means \"do not apply this rule if any of a and b
-               are present\"."
-  text value type date tags)
+    - text :: The rule's match text; either a string or a regular
+              expression (on which more below)
+
+    - value :: Integral value (positive or negative) to be added
+               to an entry's score should this rule match one of
+               the authors
+
+    - type :: One of the symbols s S r R w W; s/r/w denotes
+              substring/regexp/whole word match; lower-case means
+              case-insensitive and upper case sensitive.
+              Defaults to r (case-insensitive regexp match)
+
+    - date :: time (in seconds since epoch) when this rule last
+              matched
+
+    - tags :: cons cell of the form (a . b) where A is either t
+              or nil and B is a list of symbols. The latter is
+              interpreted as a list of tags scoping the rule and
+              the former as a boolean switch possibly negating the
+              scoping. E.g. (t . (a b)) means \"apply this rule
+              if either of tags a & b are present\". Making the
+              first nil element means \"do not apply this rule if
+              any of a and b are present\".
+
+    - hits :: the number of times since upgrading to score file
+              version 5 that this rule has been matched
+
+    - - feeds :: cons cell of the form (A . B) where A is either t
+               or nil and B is a list of three-tuples. Each
+               three-tuple will be matched against an entry's
+               feed:
+
+                 1. attribute: one of 't, 'u, or 'a for title,
+                 URL, or author, resp.
+                 2. match type: one of 's, 'S, 'r, 'R, 'w, or
+                 'W (the usual match types)
+                 3. match text
+
+               So, e.g. '(t s \"foo\") means do a
+               case-insensitive substring match for \"foo\"
+               against the feed title.
+
+               The first element of the cons cell is interpreted as a boolean
+               switch possibly negating the scoping. For
+               instance, (t . '((t s \"foo\") (u s
+               \"http://bar.com/feed\"))) means \"apply this rule
+               only to feeds entitled foo or from
+               http://bar/com/feed\" Making the first element nil
+               means \"do not apply this rule if the feed is
+               either foo or bar\"."
+  text value type date tags (hits 0) feeds)
 
 (cl-defstruct (elfeed-score-tag-rule
                (:constructor nil)
                (:constructor elfeed-score-tag-rule--create))
   "Rule for scoring based on the presence or absence of a tag or tags.
 
-    - :tags :: cons cell of the form (a . b) where A is either t
-      or nil and B is a symbol or list of symbols. The latter is
-      interpreted as a list of tags selecting the entries to
-      which this rule shall apply & the former as a boolean swith
-      possibly negating this selection.  E.g. (t . (a b)) means
-      \"apply this if either of the tags a & b are
-      present\". Making the first element nil means \" do not
-      apply thi srule if any of a and b are present\".
-    - :value :: integral value (positive or negative) by which to
-      adjust the entry score if this rule matches
-    - :date :: time (in seconds since epoch) when this rule last matched"
-  tags value date)
+    - tags :: cons cell of the form (A . B) where A is either t
+              or nil and B is a symbol or list of symbols. The
+              latter is interpreted as a list of tags selecting
+              the entries to which this rule shall apply & the
+              former as a boolean switch possibly negating this
+              selection.  E.g. (t . (a b)) means \"apply this if
+              either of the tags a & b are present\". Making the
+              first element nil means \" do not apply this rule
+              if any of a and b are present\".
+
+    - value :: integral value (positive or negative) by which to
+               adjust the entry score if this rule matches
+
+    - date :: time (in seconds since epoch) when this rule last
+              matched
+
+    - hits :: the number of times since upgrading to score file
+              version 5 that this rule has been matched"
+  tags value date (hits 0))
 
 (cl-defstruct (elfeed-score-adjust-tags-rule
                (:constructor nil)
                (:constructor elfeed-score-adjust-tags-rule--create))
   "Rule for adjusting tags based on score.
 
-    - :threshold :: a cons cell of the form (a . b) where A is a
-      boolean and B is an integral value. If A is t, then this
-      rule will apply to all entries whose score is greater than
-      or equal to B. If A is nil, this rule will apply to all
-      entires whose score is less than or equal to B.
-    - :tags :: a cons cell of the form (a . b) where A is a
-      boolean and B is a symbol or list of symbols. If A is t,
-      and this rule matches, the tags in B will be added to the
-      entry. If A is nil & this rule matches, the list of tags in
-      B shall be removed from the entry.
-    - :date :: time (in seconds since epoch) when this rule last matched"
-  threshold tags date)
+    - threshold :: a cons cell of the form (A . B) where A is a
+                   boolean and B is an integral value. If A is t,
+                   then this rule will apply to all entries whose
+                   score is greater than or equal to B. If A is
+                   nil, this rule will apply to all entries whose
+                   score is less than or equal to B.
+
+    - tags :: a cons cell of the form (A . B) where A is a
+              boolean and B is a symbol or list of symbols. If A
+              is t, and this rule matches, the tags in B will be
+              added to the entry. If A is nil & this rule
+              matches, the list of tags in B shall be removed
+              from the entry.
+
+    - date :: time (in seconds since epoch) when this rule last
+              matched
+
+    - hits :: the number of times since upgrading to score file
+              version 5 that this rule has been matched"
+  threshold tags date (hits 0))
 
 (defun elfeed-score--parse-title-rule-sexps (sexps)
   "Parse a list of lists SEXPS into a list of title rules.
 
-Each sub-list shall have the form '(TEXT VALUE TYPE DATE)."
+Each sub-list shall have the form (TEXT VALUE TYPE DATE TAGS HITS
+FEEDS).  NB Over the course of successive score file versions,
+new fields have been added at the end so as to maintain backward
+compatibility (i.e. this function can be used to read all
+versions of the title rule serialization format.)"
   (let (title-rules)
     (dolist (item sexps)
       (let ((struct (elfeed-score-title-rule--create
@@ -455,27 +612,21 @@ Each sub-list shall have the form '(TEXT VALUE TYPE DATE)."
                      :value (nth 1 item)
                      :type  (nth 2 item)
                      :date  (nth 3 item)
-                     :tags  (nth 4 item))))
+                     :tags  (nth 4 item)
+                     :hits  (let ((hits (nth 5 item))) (or hits 0))
+                     :feeds (nth 6 item))))
         (unless (member struct title-rules)
           (setq title-rules (append title-rules (list struct))))))
     title-rules))
 
-(defun elfeed-score--parse-content-rule-sexps (sexps)
-  "Parse a lsit of lists SEXPS into a list of content rules."
-  (let (content-rules)
-    (dolist (item sexps)
-      (let ((struct (elfeed-score-content-rule--create
-                     :text  (nth 0 item)
-                     :value (nth 1 item)
-                     :type  (nth 2 item)
-                     :date  (nth 3 item)
-                     :tags  (nth 4 item))))
-        (unless (member struct content-rules)
-          (setq content-rules (append content-rules (list struct))))))
-    content-rules))
-
 (defun elfeed-score--parse-feed-rule-sexps (sexps)
-  "Parse a list of lists SEXPS into a list of feed rules."
+  "Parse a list of lists SEXPS into a list of feed rules.
+
+Each sub-list shall have the form (TEXT VALUE TYPE ATTR DATE TAGS
+HITS).  NB Over the course of successive score file versions, new
+fields have been added at the end so as to maintain backward
+compatibility (i.e. this function can be used to read all
+versions of the feed rule serialization format.)"
   (let (feed-rules)
     (dolist (item sexps)
       (let ((struct (elfeed-score-feed-rule--create
@@ -484,21 +635,76 @@ Each sub-list shall have the form '(TEXT VALUE TYPE DATE)."
                      :type  (nth 2 item)
                      :attr  (nth 3 item)
                      :date  (nth 4 item)
-                     :tags  (nth 5 item))))
+                     :tags  (nth 5 item)
+                     :hits  (let ((hits (nth 6 item))) (or hits 0)))))
         (unless (member struct feed-rules)
           (setq feed-rules (append feed-rules (list struct))))))
     feed-rules))
 
+(defun elfeed-score--parse-content-rule-sexps (sexps)
+  "Parse a list of lists SEXPS into a list of content rules.
+
+Each sub-list shall have the form (TEXT VALUE TYPE DATE TAGS HITS
+FEEDS).  NB Over the course of successive score file versions,
+new fields have been added at the end so as to maintain backward
+compatibility (i.e. this function can be used to read all
+versions of the content rule serialization format.)"
+  (let (content-rules)
+    (dolist (item sexps)
+      (let ((struct (elfeed-score-content-rule--create
+                     :text  (nth 0 item)
+                     :value (nth 1 item)
+                     :type  (nth 2 item)
+                     :date  (nth 3 item)
+                     :tags  (nth 4 item)
+                     :hits  (let ((hits (nth 5 item))) (or hits 0))
+                     :feeds (nth 6 item))))
+        (unless (member struct content-rules)
+          (setq content-rules (append content-rules (list struct))))))
+    content-rules))
+
+(defun elfeed-score--parse-title-or-content-rule-sexps (sexps)
+  "Parse a list of lists SEXPS into a list of title-or-content rules.
+
+Each sub-list shall have the form '(TEXT TITLE-VALUE
+CONTENT-VALUE TYPE DATE TAGS HITS FEEDS).  NB Over the course of
+successive score file versions, new fields have been added at the
+end so as to maintain backward compatibility (i.e. this function
+can be used to read all versions of the title-or-content rule
+serialization format.)"
+  (let (toc-rules)
+    (dolist (item sexps)
+      (let ((struct (elfeed-score-title-or-content-rule--create
+                     :text          (nth 0 item)
+                     :title-value   (nth 1 item)
+                     :content-value (nth 2 item)
+                     :type          (nth 3 item)
+                     :date          (nth 4 item)
+                     :tags          (nth 5 item)
+                     :hits          (let ((hits (nth 6 item))) (or hits 0))
+                     :feeds         (nth 7 item))))
+        (unless (member struct toc-rules)
+          (setq toc-rules (append toc-rules (list struct))))))
+    toc-rules))
+
 (defun elfeed-score--parse-authors-rule-sexps (sexps)
-  "Parse a list of lists SEXPS into a list of authors rules."
+  "Parse a list of lists SEXPS into a list of authors rules.
+
+Each sub-list shall have the form '(TEXT VALUE TYPE DATE TAGS
+HITS FEEDS).  NB Over the course of successive score file
+versions, new fields have been added at the end so as to maintain
+backward compatibility (i.e. this function can be used to read
+all versions of the authors rule serialization format.)"
   (let (authors-rules)
     (dolist (item sexps)
       (let ((struct (elfeed-score-authors-rule--create
                      :text  (nth 0 item)
                      :value (nth 1 item)
                      :type  (nth 2 item)
-                     :date  (nth 4 item)
-                     :tags  (nth 5 item))))
+                     :date  (nth 3 item)
+                     :tags  (nth 4 item)
+                     :hits  (let ((hits (nth 5 item))) (or hits 0))
+                     :feeds (nth 6 item))))
         (unless (member struct authors-rules)
           (setq authors-rules (append authors-rules (list struct))))))
     authors-rules))
@@ -543,24 +749,6 @@ such).  Return a property list with the following keys:
 	   :feeds feeds
 	   :titles titles
      :content content)))
-
-(defun elfeed-score--parse-title-or-content-rule-sexps (sexps)
-  "Parse a list of lists SEXPS into a list of title-or-content rules.
-
-Each sub-list shall have the form '(TEXT TITLE-VALUE
-CONTENT-VALUE TYPE DATE)."
-  (let (toc-rules)
-    (dolist (item sexps)
-      (let ((struct (elfeed-score-title-or-content-rule--create
-                     :text          (nth 0 item)
-                     :title-value   (nth 1 item)
-                     :content-value (nth 2 item)
-                     :type          (nth 3 item)
-                     :date          (nth 4 item)
-                     :tags          (nth 5 item))))
-        (unless (member struct toc-rules)
-          (setq toc-rules (append toc-rules (list struct))))))
-    toc-rules))
 
 (defun elfeed-score--parse-scoring-sexp-2 (sexp)
   "Interpret the S-expression SEXP as scoring rules version 2.
@@ -704,7 +892,7 @@ with the following keys:
 	          (rest (cdr raw-item)))
 	      (cond
          ((string= key "version")
-          (unless (eq 4 (car rest))
+          (unless (or (eq 4 (car rest)) (eq 5 (car rest)))
             (error "Unsupported score file version %s" (car rest))))
 	       ((string= key "title")
           (setq titles (elfeed-score--parse-title-rule-sexps rest)))
@@ -738,7 +926,6 @@ with the following keys:
      :authors authors
      :tag tags)))
 
-
 (defun elfeed-score--parse-scoring-sexp (sexps)
   "Parse raw S-expressions (SEXPS) into scoring rules."
   (let ((version
@@ -766,6 +953,21 @@ with the following keys:
       (elfeed-score--parse-scoring-sexp-3 sexps))
      ((eq version 4)
       (elfeed-score--parse-scoring-sexp-4 sexps))
+     ((eq version 5)
+      ;; This is not a typo-- I want to call
+      ;; `elfeed-score--parse-scoring-sexp-4' even when the score file
+      ;; format is 5.  The difference in the two formats is that
+      ;; version 5 adds new fields to the end of several rule types;
+      ;; the first-level structure of the s-expression doesn't
+      ;; change.  So if an old version of `elfeed-score' tried to read
+      ;; version 5, it wouldn't encounter an error, it would just
+      ;; silently ignore those new fields. I don't think this is what
+      ;; the user would want (especially since their new attributes
+      ;; would be lost the first time their old `elfeed-score' writes
+      ;; out their scoring rules), so I bumped the version to 5 (to
+      ;; keep old versions from even trying to read it) but I can
+      ;; still use the same first-level parsing logic.
+      (elfeed-score--parse-scoring-sexp-4 sexps))
      (t
       (error "Unknown version %s" version)))))
 
@@ -780,7 +982,10 @@ into a property list with the following properties:
     - :feeds
     - :authors
     - :mark
-    - :titles"
+    - :titles
+    - :adjust-tags
+    - :title-or-content
+    - :tags"
 
   (let ((sexp
          (car
@@ -858,7 +1063,7 @@ Return nil on failure, t on match."
   "Test a ENTRY-TAGS against TAG-RULE.
 
 ENTRY-TAGS shall be a list of symbols, presumably the tags applied to the Elfeed
-entry bing scored.  TAG-RULE shall be a list of the form (boolean . (symbol...))
+entry being scored.  TAG-RULE shall be a list of the form (boolean . (symbol...))
 or nil, and is presumably a tag scoping for a scoring rule."
 
   (if tag-rule
@@ -877,6 +1082,40 @@ or nil, and is presumably a tag scoping for a scoring rule."
           (not apply)))
     t))
 
+(defun elfeed-score--get-feed-attr (feed attr)
+  "Retrieve attribute ATTR from FEED."
+  (cond
+   ((eq attr 't) (elfeed-feed-title feed))
+   ((eq attr 'u) (elfeed-feed-url feed))
+   ((eq attr 'a) (elfeed-feed-author -feed))
+   (t (error "Unknown feed attribute %s" attr))))
+
+(defun elfeed-score--match-feeds (entry-feed feed-rule)
+  "Test ENTRY-FEED against FEED-RULE.
+
+ENTRY-FEED shall be an <elfeed-feed> instance.  FEED-RULE shall
+be a list of the form (BOOLEAN (ATTR TYPE TEXT)...), or nil, and
+is presumably the feed scoping for a scoring rule."
+
+  (if feed-rule
+      (let ((flag (car feed-rule))
+            (rule-feeds (cdr feed-rule))
+            (match))
+        ;; Special case allowing this method to be called like (... (t 't 's "title))
+        (if (symbolp (car rule-feeds))
+            (setq rule-feeds (list rule-feeds)))
+        (while (and rule-feeds (not match))
+          (let* ((feed (car rule-feeds))
+                 (attr (nth 0 feed))
+                 (match-type (nth 1 feed))
+                 (match-text (nth 2 feed))
+                 (feed-text (elfeed-score--get-feed-attr entry-feed attr)))
+            (if (elfeed-score--match-text match-text feed-text match-type)
+                (setq match t)))
+          (setq rule-feeds (cdr rule-feeds)))
+        (if flag match (not match)))
+    t))
+
 (defun elfeed-score--concatenate-authors (authors-list)
   "Given AUTHORS-LIST, list of plists; return string of all authors concatenated."
   (mapconcat (lambda (author) (plist-get author :name)) authors-list ", "))
@@ -890,8 +1129,10 @@ or nil, and is presumably a tag scoping for a scoring rule."
 		         (value      (elfeed-score-title-rule-value score-title))
 		         (match-type (elfeed-score-title-rule-type  score-title))
              (tag-rule   (elfeed-score-title-rule-tags  score-title))
+             (feed-rule  (elfeed-score-title-rule-feeds score-title))
              (got-match (and
                          (elfeed-score--match-tags (elfeed-entry-tags entry) tag-rule)
+                         (elfeed-score--match-feeds (elfeed-entry-feed entry) feed-rule)
                          (elfeed-score--match-text match-text title match-type))))
         (if got-match
             (progn
@@ -900,7 +1141,9 @@ adding %d to its score"
                                 (elfeed-score-title-rule-text score-title) got-match
                                 (elfeed-entry-id entry) title value)
 		          (setq score (+ score value))
-              (setf (elfeed-score-title-rule-date score-title) (float-time))))))
+              (setf (elfeed-score-title-rule-date score-title) (float-time))
+              (setf (elfeed-score-title-rule-hits score-title)
+                    (1+ (elfeed-score-title-rule-hits score-title)))))))
     score))
 
 (defun elfeed-score--score-on-authors (entry)
@@ -912,8 +1155,10 @@ adding %d to its score"
 		         (value      (elfeed-score-authors-rule-value score-authors))
 		         (match-type (elfeed-score-authors-rule-type  score-authors))
              (tag-rule   (elfeed-score-authors-rule-tags  score-authors))
+             (feed-rule  (elfeed-score-authors-rule-feeds score-authors))
              (got-match (and
                          (elfeed-score--match-tags (elfeed-entry-tags entry) tag-rule)
+                         (elfeed-score--match-feeds (elfeed-entry-feed entry) feed-rule)
                          (elfeed-score--match-text match-text authors-string match-type))))
         (if got-match
             (progn
@@ -922,7 +1167,9 @@ adding %d to its score"
                                 (elfeed-score-authors-rule-text score-authors) got-match
                                 (elfeed-entry-id entry) authors-string value)
 		          (setq score (+ score value))
-              (setf (elfeed-score-authors-rule-date score-authors) (float-time))))))
+              (setf (elfeed-score-authors-rule-date score-authors) (float-time))
+              (setf (elfeed-score-authors-rule-hits score-authors)
+                    (1+ (elfeed-score-authors-rule-hits score-authors)))))))
     score))
 
 
@@ -935,15 +1182,7 @@ adding %d to its score"
 		         (value      (elfeed-score-feed-rule-value score-feed))
 		         (match-type (elfeed-score-feed-rule-type  score-feed))
              (attr       (elfeed-score-feed-rule-attr  score-feed))
-             (feed-text (cond
-                         ((eq attr 't)
-                          (elfeed-feed-title feed))
-                         ((eq attr 'u)
-                          (elfeed-feed-url feed))
-                         ((eq attr 'a)
-                          (elfeed-feed-author feed))
-                         (t
-                          (error "Unknown feed attribute %s" attr))))
+             (feed-text (elfeed-score--get-feed-attr feed attr))
              (tag-rule   (elfeed-score-feed-rule-tags  score-feed))
              (got-match (and
                          (elfeed-score--match-tags (elfeed-entry-tags entry) tag-rule)
@@ -955,7 +1194,9 @@ adding %d to its score"
                                 feed-text got-match (elfeed-entry-id entry)
                                 (elfeed-entry-title entry) value)
 		          (setq score (+ score value))
-		          (setf (elfeed-score-feed-rule-date score-feed) (float-time))))))
+		          (setf (elfeed-score-feed-rule-date score-feed) (float-time))
+              (setf (elfeed-score-feed-rule-hits score-feed)
+                    (1+ (elfeed-score-feed-rule-hits score-feed)))))))
     score))
 
 (defun elfeed-score--score-on-content (entry)
@@ -968,9 +1209,11 @@ adding %d to its score"
 		             (value        (elfeed-score-content-rule-value score-content))
 		             (match-type   (elfeed-score-content-rule-type  score-content))
                  (tag-rule     (elfeed-score-content-rule-tags  score-content))
+                 (feed-rule    (elfeed-score-content-rule-feeds score-content))
                  (got-match    (and
                                 (elfeed-score--match-tags (elfeed-entry-tags entry)
                                                           tag-rule)
+                                (elfeed-score--match-feeds (elfeed-entry-feed entry) feed-rule)
                                 (elfeed-score--match-text match-text
                                                           content match-type))))
             (if got-match
@@ -982,7 +1225,9 @@ adding %d to its score"
                                     value)
 		              (setq score (+ score value))
 		              (setf (elfeed-score-content-rule-date score-content)
-                        (float-time)))))))
+                        (float-time))
+                  (setf (elfeed-score-content-rule-hits score-content)
+                        (1+ (elfeed-score-content-rule-hits score-content))))))))
     score))
 
 (defun elfeed-score--score-on-title-or-content (entry)
@@ -995,17 +1240,21 @@ adding %d to its score"
 		         (value      (elfeed-score-title-or-content-rule-title-value score-title))
 		         (match-type (elfeed-score-title-or-content-rule-type        score-title))
              (tag-rule   (elfeed-score-title-or-content-rule-tags        score-title))
+             (feed-rule  (elfeed-score-title-or-content-rule-feeds       score-title))
              (got-match (and
                          (elfeed-score--match-tags (elfeed-entry-tags entry) tag-rule)
+                         (elfeed-score--match-feeds (elfeed-entry-feed entry) feed-rule)
                          (elfeed-score--match-text match-text title match-type))))
         (if got-match
             (progn
-              (elfeed-score-log 'debug "title-or-conent rule '%s' matched text '%s' in the \
+              (elfeed-score-log 'debug "title-or-content rule '%s' matched text '%s' in the \
 title of entry '%s'('%s'); adding %d to its score"
                                 match-text got-match (elfeed-entry-id entry) title value)
 		          (setq score (+ score value))
               (setf (elfeed-score-title-or-content-rule-date score-title)
-                    (float-time))))))
+                    (float-time))
+              (setf (elfeed-score-title-or-content-rule-hits score-title)
+                    (1+ (elfeed-score-title-or-content-rule-hits score-title)))))))
     (if content
         (dolist (score-content elfeed-score--title-or-content-rules)
 	        (let* ((match-text (elfeed-score-title-or-content-rule-text score-content))
@@ -1013,10 +1262,11 @@ title of entry '%s'('%s'); adding %d to its score"
                          score-content))
 		             (match-type (elfeed-score-title-or-content-rule-type
                               score-content))
-                 (tag-rule (elfeed-score-title-or-content-rule-tags score-content))
+                 (tag-rule (elfeed-score-title-or-content-rule-tags    score-content))
+                 (feed-rule  (elfeed-score-title-or-content-rule-feeds score-content))
                  (got-match (and
-                             (elfeed-score--match-tags (elfeed-entry-tags entry)
-                                                       tag-rule)
+                             (elfeed-score--match-tags (elfeed-entry-tags entry) tag-rule)
+                             (elfeed-score--match-feeds (elfeed-entry-feed entry) feed-rule)
                              (elfeed-score--match-text match-text content match-type))))
             (if got-match
                 (progn
@@ -1026,7 +1276,9 @@ content of entry %s('%s'); adding %d to its score"
                                     (elfeed-entry-title entry) value)
 		              (setq score (+ score value))
 		              (setf (elfeed-score-title-or-content-rule-date score-content)
-                        (float-time)))))))
+                        (float-time))
+                  (setf (elfeed-score-title-or-content-rule-hits score-content)
+                        (1+ (elfeed-score-title-or-content-rule-hits score-content))))))))
     score))
 
 (defun elfeed-score--score-on-tags (entry)
@@ -1045,10 +1297,10 @@ adding %d to its score"
                                 (elfeed-entry-id entry)
                                 (elfeed-entry-title entry) rule-value)
               (setq score (+ score rule-value))
-              (setf (elfeed-score-tag-rule-date score-tags) (float-time))))))
+              (setf (elfeed-score-tag-rule-date score-tags) (float-time))
+              (setf (elfeed-score-tag-rule-hits score-tags)
+                    (1+ (elfeed-score-tag-rule-hits score-tags)))))))
     score))
-
-
 
 (defun elfeed-score--adjust-tags (entry score)
   "Run all tag adjustment rules against ENTRY for score SCORE."
@@ -1068,20 +1320,26 @@ adding %d to its score"
 %s(%s); adding tag(s) %s"
                                     rule-tags score (elfeed-entry-id entry)
                                     (elfeed-entry-title entry) actual-tags)
-                  (apply 'elfeed-tag entry actual-tags))
+                  (apply 'elfeed-tag entry actual-tags)
+                  (setf (elfeed-score-adjust-tags-rule-date adj-tags) (float-time))
+                  (setf (elfeed-score-adjust-tags-rule-hits adj-tags)
+                        (1+ (elfeed-score-adjust-tags-rule-hits adj-tags))))
               (progn
                 ;; else rm `actual-tags'
                 (elfeed-score-log 'debug "Tag adjustment rule %s matched score %d for entry \
 %s(%s); removing tag(s) %s"
                                   rule-tags score (elfeed-entry-id entry)
                                   (elfeed-entry-title entry) actual-tags)
-                (apply 'elfeed-untag entry actual-tags))))))))
+                (apply 'elfeed-untag entry actual-tags)
+                (setf (elfeed-score-adjust-tags-rule-date adj-tags) (float-time))
+                (setf (elfeed-score-adjust-tags-rule-hits adj-tags)
+                      (1+ (elfeed-score-adjust-tags-rule-hits adj-tags))))))))))
 
 (defun elfeed-score--score-entry (entry)
   "Score an Elfeed ENTRY.
 
-This function will return the entry's score, udpate it's meta-data, and
-udpate the \"last matched\" time of the salient rules."
+This function will return the entry's score, update it's meta-data, and
+update the \"last matched\" time of the salient rules."
 
   (let ((score (+ elfeed-score-default-score
                   (elfeed-score--score-on-title            entry)
@@ -1125,52 +1383,46 @@ udpate the \"last matched\" time of the salient rules."
           (print-length nil))
 	    (pp-to-string
 	     (list
-	      (list 'version 4)
+	      (list 'version 5)
         (append
          '("title")
 	       (mapcar
 	        (lambda (x)
-            (let ((body
-                   (list
-                    (elfeed-score-title-rule-text  x)
-                    (elfeed-score-title-rule-value x)
-                    (elfeed-score-title-rule-type  x)
-                    (elfeed-score-title-rule-date  x)))
-                  (tags (elfeed-score-title-rule-tags x)))
-              (if tags
-                  (append body (list tags))
-                body)))
+            (list
+             (elfeed-score-title-rule-text  x)
+             (elfeed-score-title-rule-value x)
+             (elfeed-score-title-rule-type  x)
+             (elfeed-score-title-rule-date  x)
+             (elfeed-score-title-rule-tags  x)
+             (elfeed-score-title-rule-hits  x)
+             (elfeed-score-title-rule-feeds x)))
 	        elfeed-score--title-rules))
         (append
          '("content")
 	       (mapcar
 	        (lambda (x)
-            (let ((body
-		               (list
-		                (elfeed-score-content-rule-text  x)
-		                (elfeed-score-content-rule-value x)
-		                (elfeed-score-content-rule-type  x)
-		                (elfeed-score-content-rule-date  x)))
-                  (tags (elfeed-score-content-rule-tags x)))
-              (if tags
-                  (append body (list tags))
-                body)))
+            (list
+		         (elfeed-score-content-rule-text  x)
+		         (elfeed-score-content-rule-value x)
+		         (elfeed-score-content-rule-type  x)
+		         (elfeed-score-content-rule-date  x)
+             (elfeed-score-content-rule-tags  x)
+             (elfeed-score-content-rule-hits  x)
+             (elfeed-score-content-rule-feeds x)))
 	        elfeed-score--content-rules))
         (append
          '("title-or-content")
          (mapcar
           (lambda (x)
-            (let ((body
-                   (list
-                    (elfeed-score-title-or-content-rule-text x)
-                    (elfeed-score-title-or-content-rule-title-value x)
-                    (elfeed-score-title-or-content-rule-content-value x)
-                    (elfeed-score-title-or-content-rule-type x)
-                    (elfeed-score-title-or-content-rule-date x)))
-                  (tags (elfeed-score-title-or-content-rule-tags x)))
-              (if tags
-                  (append body (list tags))
-                body)))
+            (list
+             (elfeed-score-title-or-content-rule-text x)
+             (elfeed-score-title-or-content-rule-title-value x)
+             (elfeed-score-title-or-content-rule-content-value x)
+             (elfeed-score-title-or-content-rule-type x)
+             (elfeed-score-title-or-content-rule-date x)
+             (elfeed-score-title-or-content-rule-tags x)
+             (elfeed-score-title-or-content-rule-hits x)
+             (elfeed-score-title-or-content-rule-feeds x)))
           elfeed-score--title-or-content-rules))
         (append
          '("tag")
@@ -1179,38 +1431,34 @@ udpate the \"last matched\" time of the salient rules."
             (list
              (elfeed-score-tag-rule-tags  x)
              (elfeed-score-tag-rule-value x)
-             (elfeed-score-tag-rule-date  x)))
+             (elfeed-score-tag-rule-date  x)
+             (elfeed-score-tag-rule-hits  x)))
           elfeed-score--tag-rules))
         (append
          '("authors")
 	       (mapcar
 	        (lambda (x)
-            (let ((body
-                   (list
-                    (elfeed-score-authors-rule-text  x)
-                    (elfeed-score-authors-rule-value x)
-                    (elfeed-score-authors-rule-type  x)
-                    (elfeed-score-authors-rule-date  x)))
-                  (tags (elfeed-score-authors-rule-tags x)))
-              (if tags
-                  (append body (list tags))
-                body)))
+            (list
+             (elfeed-score-authors-rule-text  x)
+             (elfeed-score-authors-rule-value x)
+             (elfeed-score-authors-rule-type  x)
+             (elfeed-score-authors-rule-date  x)
+             (elfeed-score-authors-rule-tags  x)
+             (elfeed-score-authors-rule-hits  x)
+             (elfeed-score-authors-rule-feeds x)))
 	        elfeed-score--authors-rules))
         (append
          '("feed")
 	       (mapcar
 	        (lambda (x)
-            (let ((body
-		               (list
-		                (elfeed-score-feed-rule-text  x)
-		                (elfeed-score-feed-rule-value x)
-		                (elfeed-score-feed-rule-type  x)
-                    (elfeed-score-feed-rule-attr  x)
-		                (elfeed-score-feed-rule-date  x)))
-                  (tags (elfeed-score-feed-rule-tags x)))
-              (if tags
-                  (append body (list tags))
-                body)))
+            (list
+		         (elfeed-score-feed-rule-text  x)
+		         (elfeed-score-feed-rule-value x)
+		         (elfeed-score-feed-rule-type  x)
+             (elfeed-score-feed-rule-attr  x)
+		         (elfeed-score-feed-rule-date  x)
+             (elfeed-score-feed-rule-tags  x)
+             (elfeed-score-feed-rule-hits  x)))
 	        elfeed-score--feed-rules))
         (list 'mark elfeed-score--score-mark)
         (append
@@ -1220,7 +1468,8 @@ udpate the \"last matched\" time of the salient rules."
             (list
              (elfeed-score-adjust-tags-rule-threshold x)
              (elfeed-score-adjust-tags-rule-tags      x)
-             (elfeed-score-adjust-tags-rule-date      x)))
+             (elfeed-score-adjust-tags-rule-date      x)
+             (elfeed-score-adjust-tags-rule-hits      x)))
           elfeed-score--adjust-tags-rules))))))
    nil score-file))
 

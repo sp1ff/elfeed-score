@@ -1,3 +1,10 @@
+2020-10-30  Michael Herstine  <sp1ff@pobox.com>
+
+	Scoping rules by feed.
+	This commit implements a new feature: scoping rules by feed.
+
+	It also adds a "hit count" to all rules.
+
 2020-10-25  Michael Herstine  <sp1ff@pobox.com>
 
 	BUGFIX: issue #4
