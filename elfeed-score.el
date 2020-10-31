@@ -3,7 +3,7 @@
 ;; Copyright (C) 2019-2020 Michael Herstine <sp1ff@pobox.com>
 
 ;; Author: Michael Herstine <sp1ff@pobox.com>
-;; Version: 0.5.3
+;; Version: 0.5.4
 ;; Package-Requires: ((emacs "24.4") (elfeed "3.3.0"))
 ;; Keywords: news
 ;; URL: https://github.com/sp1ff/elfeed-score
@@ -39,7 +39,7 @@
 
 (require 'elfeed-search)
 
-(defconst elfeed-score-version "0.5.3")
+(defconst elfeed-score-version "0.5.4")
 
 (defgroup elfeed-score nil
   "Gnus-style scoring for Elfeed entries."
@@ -1087,7 +1087,7 @@ or nil, and is presumably a tag scoping for a scoring rule."
   (cond
    ((eq attr 't) (elfeed-feed-title feed))
    ((eq attr 'u) (elfeed-feed-url feed))
-   ((eq attr 'a) (elfeed-feed-author -feed))
+   ((eq attr 'a) (elfeed-feed-author feed))
    (t (error "Unknown feed attribute %s" attr))))
 
 (defun elfeed-score--match-feeds (entry-feed feed-rule)
@@ -1594,6 +1594,7 @@ This implementation is derived from `elfeed-search-print-entry--default'."
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; functions for rule maintenance
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun elfeed-score--get-last-match-date (rule)
   "Retrieve the time at which RULE was last matched.
@@ -1621,17 +1622,53 @@ RULE may be any rule struct."
 	   (otherwise (error "Unknown rule type %S" rule)))))
     (or date 0.0)))
 
+(defun elfeed-score--get-hits (rule)
+  "Retrieve the number of times RULE has matched an entry.
+
+Note that RULE may be an instance of any rule structure."
+
+  (let ((hits
+         (cl-typecase rule
+	         (elfeed-score-title-rule
+	          (elfeed-score-title-rule-hits rule))
+	         (elfeed-score-feed-rule
+	          (elfeed-score-feed-rule-hits rule))
+	         (elfeed-score-content-rule
+	          (elfeed-score-content-rule-hits rule))
+	         (elfeed-score-title-or-content-rule
+	          (elfeed-score-title-or-content-rule-hits rule))
+	         (elfeed-score-authors-rule
+	          (elfeed-score-authors-rule-hits rule))
+	         (elfeed-score-tag-rule
+	          (elfeed-score-tag-rule-hits rule))
+	         (elfeed-score-adjust-tags-rule
+	          (elfeed-score-adjust-tags-rule-hits rule))
+	         (otherwise (error "Unknown rule type %S" rule)))))
+    (or hits 0)))
+
 (defun elfeed-score--sort-rules-by-last-match (rules)
   "Sort RULES in decreasing order of last match.
 
 Note that RULES need not be homogeneous; it may contain rule
-structs of any kind undertood by
+structs of any kind understood by
 `elfeed-score--get-last-match-date'."
   (sort
    rules
    (lambda (lhs rhs)
      (> (elfeed-score--get-last-match-date lhs)
         (elfeed-score--get-last-match-date rhs)))))
+
+(defun elfeed-score--sort-rules-by-hits (rules)
+  "Sort RULES in decreasing order of match hits.
+
+Note that RULES need not be homogeneous; it may contain rule
+structs of any kind understood by
+`elfeed-score--get-hits'."
+  (sort
+   rules
+   (lambda (lhs rhs)
+     (> (elfeed-score--get-hits lhs)
+        (elfeed-score--get-hits rhs)))))
 
 (defun elfeed-score--pp-rule-to-string (rule)
   "Pretty-print RULE; return as a string."
@@ -1672,6 +1709,25 @@ structs of any kind undertood by
 	        (insert (format fmt (car x) (cdr x))))
         (special-mode)))))
 
+(defun elfeed-score--display-rules-by-match-hits (rules title)
+  "Sort RULES in decreasing order of match hits; display results as TITLE."
+  (let ((rules (elfeed-score--sort-rules-by-hits rules))
+	      (results '())
+	      (max-text 0)
+        (max-hits 0))
+    (cl-dolist (rule rules)
+      (let* ((pp (elfeed-score--pp-rule-to-string rule))
+	           (lp (length pp))
+             (hits (elfeed-score--get-hits rule)))
+	      (if (> lp max-text) (setq max-text lp))
+        (if (> hits max-hits) (setq max-hits hits))
+	      (setq results (append results (list (cons hits pp))))))
+    (with-current-buffer-window title nil nil
+      (let ((fmt (format "%%%dd: %%-%ds\n" (ceiling (log max-hits 10)) max-text)))
+	      (cl-dolist (x results)
+	        (insert (format fmt (car x) (cdr x))))
+        (special-mode)))))
+
 (defun elfeed-score--rules-for-keyword (key)
   "Retrieve the list of rules corresponding to keyword KEY."
   (cond
@@ -1700,27 +1756,64 @@ only that category of rules:
     :tag
     :adjust-tags
 
-Finally, CATEGORY may be a list of symbols in the preceeding
+Finally, CATEGORY may be a list of symbols in the preceding
 list, in which case the union of the corresponding rule
 categories will be displayed."
 
   (interactive)
   (let ((rules
-	 (cond
-	  ((not category)
-	   (append elfeed-score--title-rules elfeed-score--feed-rules
-		   elfeed-score--content-rules
-		   elfeed-score--title-or-content-rules
-		   elfeed-score--authors-rules elfeed-score--tag-rules
-		   elfeed-score--adjust-tags-rules))
-	  ((symbolp category)
-	   (elfeed-score--rules-for-keyword category))
-	  ((listp category)
-	   (cl-loop for sym in category
-		    collect (elfeed-score--rules-for-keyword sym)))
-	  (t
-	   (error "Invalid argument %S" category)))))
+	       (cond
+	        ((not category)
+	         (append elfeed-score--title-rules elfeed-score--feed-rules
+		               elfeed-score--content-rules
+		               elfeed-score--title-or-content-rules
+		               elfeed-score--authors-rules elfeed-score--tag-rules
+		               elfeed-score--adjust-tags-rules))
+	        ((symbolp category)
+	         (elfeed-score--rules-for-keyword category))
+	        ((listp category)
+	         (cl-loop for sym in category
+		                collect (elfeed-score--rules-for-keyword sym)))
+	        (t
+	         (error "Invalid argument %S" category)))))
     (elfeed-score--display-rules-by-last-match rules "elfeed-score Rules by Last Match")))
+
+(defun elfeed-score-display-rules-by-match-hits (&optional category)
+  "Display all scoring rules in descending order of match hits.
+
+CATEGORY may be used to narrow the scope of rules displayed.  If
+nil, display all rules.  If one of the following symbols, display
+only that category of rules:
+
+    :title
+    :feed
+    :content
+    :title-or-content
+    :authors
+    :tag
+    :adjust-tags
+
+Finally, CATEGORY may be a list of symbols in the preceding
+list, in which case the union of the corresponding rule
+categories will be displayed."
+
+  (interactive)
+  (let ((rules
+	       (cond
+	        ((not category)
+	         (append elfeed-score--title-rules elfeed-score--feed-rules
+		               elfeed-score--content-rules
+		               elfeed-score--title-or-content-rules
+		               elfeed-score--authors-rules elfeed-score--tag-rules
+		               elfeed-score--adjust-tags-rules))
+	        ((symbolp category)
+	         (elfeed-score--rules-for-keyword category))
+	        ((listp category)
+	         (cl-loop for sym in category
+		                collect (elfeed-score--rules-for-keyword sym)))
+	        (t
+	         (error "Invalid argument %S" category)))))
+    (elfeed-score--display-rules-by-match-hits rules "elfeed-score Rules by Match Hits")))
 
 (provide 'elfeed-score)
 

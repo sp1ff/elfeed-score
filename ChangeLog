@@ -1,5 +1,7 @@
 2020-10-31  Michael Herstine  <sp1ff@pobox.com>
 
+	Add reporting on rules by number of match hits.
+
 	Add the ability to report rules by last match date.
 
 2020-10-30  Michael Herstine  <sp1ff@pobox.com>

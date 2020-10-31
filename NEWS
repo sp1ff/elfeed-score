@@ -1,5 +1,12 @@
 elfeed-score News -- history of user-visible changes -*- outline -*-
 
+* Changes in elfeed-score 0.5.4
+
+** New Features
+
+*** Reporting on which rules have matched most frequently
+
+Adds an interactive function `elfeed-score-display-rules-by-match-hits'.
 * Changes in elfeed-score 0.5.3
 
 ** New Features

@@ -2,7 +2,7 @@
 #+DESCRIPTION: Gnus-style scoring for Elfeed
 #+AUTHOR: Sp1ff
 #+EMAIL: sp1ff@pobox.com
-#+DATE: <2020-10-31 Sat 15:11>
+#+DATE: <2020-10-31 Sat 17:50>
 #+AUTODATE: t
 #+OPTIONS: toc:nil org-md-headline-style:setext *:t ^:nil
 
@@ -15,7 +15,7 @@
 
 [[https://github.com/skeeto/elfeed][Elfeed]] is an extensible web feed reader for Emacs. By default, it will display entries in reverse chronological order. This package defines a bit of metadata for each of your feed entries: a "score". A score is an integer (negative or positive), and higher scores denote entries of greater interest to you. This package also (optionally) installs a new sort function, so that Elfeed will display entries with higher scores before entries with lower scores (entries with the same scores will still be sorted in reverse chronological order). It also provides an entry display function for the search buffer that displays each entry's score, should you choose to install it.
 
-While you can manually assign a score to an entry, you will likely find it more convenient to create rules for scoring that will be automatically applied to each new entry every time you update Elfeed. You can score against title, feed, content & authors by defining strings that will be matched against those attributes by substring, regexp or whole-word match. You can also score against the presence or absence of tags. Rules (other than the last sort) can be scoped by Elfeed entry tags, so that a rule will only be applied if an entry has certain tags (or does not have certain tags). Rules may also be scoped by feed (so that a rule will only be applied to entries from certain feeds). Each rule defines an integral value, and the rules are applied in order of definition. The new entry's score begins at zero, and is adjusted by the value defined by each matching scoring rule.
+While you can manually assign a score to an entry, you will likely find it more convenient to create rules for scoring that will be automatically applied to each new entry every time you update Elfeed. You can score against title, feed, content & authors by defining strings that will be matched against those attributes by substring, regexp or whole-word match. You can also score against the presence or absence of tags. Rules (other than the last sort) can be scoped by Elfeed entry tags, so that a rule will only be applied if an entry has certain tags (or does not have certain tags). Rules (other than those that apply to an entry's feed) may also be scoped by feed, so that a rule will only be applied to entries from certain feeds. Each rule defines an integral value, and the rules are applied in order of definition. The new entry's score begins at zero, and is adjusted by the value defined by each matching scoring rule.
 
 For instance, here's a subset of my scoring file at the moment:
 
@@ -66,8 +66,8 @@ You can, if you wish, install from source as well:
 
 #+BEGIN_EXAMPLE
 cd /tmp
-curl -L --output=elfeed-score-0.5.3.tar.gz https://github.com/sp1ff/elfeed-score/archive/0.5.3.tar.gz
-tar xvf elfeed-score-0.5.3.tar.gz && cd elfeed-score-0.5.3
+curl -L --output=elfeed-score-0.5.4.tar.gz https://github.com/sp1ff/elfeed-score/archive/0.5.4.tar.gz
+tar xvf elfeed-score-0.5.4.tar.gz && cd elfeed-score-0.5.4
 ./configure
 make
 sudo make install
@@ -80,9 +80,9 @@ The unit tests require some macros defined by the [[https://github.com/skeeto/el
 #+BEGIN_EXAMPLE
 cd /tmp
 git clone https://github.com/skeeto/elfeed.git
-curl -L --output=elfeed-score-0.5.3.tar.gz https://github.com/sp1ff/elfeed-score/archive/0.5.3.tar.gz
-tar xvf elfeed-score-0.5.3.tar.gz && cd elfeed-score-0.5.3
-export EMACSLOADPATH=/tmp/elfeed-score-0.5.3:/tmp/elfeed/tests:$EMACSLOADPATH
+curl -L --output=elfeed-score-0.5.4.tar.gz https://github.com/sp1ff/elfeed-score/archive/0.5.4.tar.gz
+tar xvf elfeed-score-0.5.4.tar.gz && cd elfeed-score-0.5.4
+export EMACSLOADPATH=/tmp/elfeed-score-0.5.4:/tmp/elfeed/tests:$EMACSLOADPATH
 ./configure
 make
 make check
@@ -94,16 +94,16 @@ Unless you already use =EMACSLOADPATH=, this likely won't work as written-- you'
 
 ** Score File Format
 
-The score file (=~/.emacs.d/elfeed.score= by default) is an Emacs Lisp form that evaluates to an association list. Comments are as per usual. The current format recognizes seven keys:
+The score file (=~/.emacs.d/elfeed.score= by default) is an Emacs Lisp form that evaluates to an association list. Comments are as per usual. The current format recognizes eight keys:
 
-    - "title": the value associated with this is a list of rules matching text against the entry title
-    - "content": a list of rules matching text against the entry content
-    - "title-or-content": a list of rules matching against both entry title & content
-    - "feed": a list of rules matching text against the entry feed
-    - "authors": a list of rules matching text against the name of the entry's author. If the entry has multiple authors the rules match against the string formed by concatenating the authors' names together with ", " as a delimiter.
-    - "tag": a list of rules matching against entry tags
-    - "adjust-tags": a list of rules to be applied *after* an entry is scored; they can add or remove tags based on the score being above or below given thresholds
-    - =mark=: an integer which, if greater than an entry's final score, will result in the entry being marked as read (in other words, if your rules have lowered an entry's scores below this level, don't even display it in the Elfeed search buffer)
+    1. "title": the value associated with this is a list of rules matching text against the entry title
+    2. "content": a list of rules matching text against the entry content
+    3. "title-or-content": a list of rules matching against both entry title & content
+    4. "feed": a list of rules matching text against the entry feed
+    5. "authors": a list of rules matching text against the name of the entry's author. If the entry has multiple authors the rules match against the string formed by concatenating the authors' names together with ", " as a delimiter.
+    6. "tag": a list of rules matching against entry tags
+    7. "adjust-tags": a list of rules to be applied *after* an entry is scored; they can add or remove tags based on the score being above or below given thresholds
+    8. =mark=: an integer which, if greater than an entry's final score, will result in the entry being marked as read (in other words, if your rules have lowered an entry's scores below this level, don't even display it in the Elfeed search buffer)
 
 Title & content rules are defined by a list of length seven:
 
@@ -135,7 +135,7 @@ I've found myself defining duplicate rules for both title & content, albeit with
       ("california" 150 100 s nil (t . (@daily @politics)))))
 #+END_EXAMPLE
 
-defines a rule that will perform a substring match for "california" against both the entry title and content.  A match found in the title adds 150 to the score, and a match found in the content adds 100.  The rule will only be applied, however,
+defines a rule that will perform a substring match for "california" against both the entry title and content. A match found in the title adds 150 to the score, and a match found in the content adds 100. The rule will only be applied, however,
 to entries whose tags contain =@daily=, =@politics= or both.
 
 Scoring against the entry's feed is done similarly, but may be done against the feed title, the feed URL, or the feed author. This is indicated by adding a new element at index 3 which may be one of =t= , =u= or =a= (for title, URL, or author, respectively).
@@ -145,6 +145,7 @@ Scoring against the entry's tags is similar, but is done with a three tuple:
     1. the tags whose presense or absence will trigger the rule. This is specified as a cons cell =(switch . tags)= where =switch= is either =t= or =nil= and =tags= is either a tag or a list of tags. If =switch= is =t=, the rule will apply to any entry tagged with one or more of the tags listed in =tags=. Conversely, if =switch= is =nil=, the rule will match entries who have none of the tags in =tags=.
     2. the value by which the entry's score shall be adjusted if this rule matches
     3. the last time this rule matched an entry, in seconds since Unix epoch. This element is optional, need not be supplied by the score file author, and will be automatically kept up-to-date by the package.
+    4. the number of times this rule has matched an entry; again, this will be kept up-to-date by the package.
 
 So, for example, the following rules:
 
@@ -175,6 +176,7 @@ Adjust-tags rules are given by a three-tuple:
     1. the threshold at which the rule shall apply; this is defined by a cons cell =(switch . threshold)=. =switch= may be =t= or =nil= and =threshold= is the threshold against which each entry's score shall be compared. If =switch= is =t=, the rule applies if the score is greater than or equal to =threshold=; if =switch= is =nil= the rule applies if score is less than or equal to =threshold=.
     2. the tags to be added or removed; also defined by a cons cell =(switch . tags)=. If =switch= is =t= & the rule applies, =tags= (either a single tag or a list of tags) will be added to the entry; if =switch= is =nil=, they will be removed
     3. the last time this rule matched an entry, in seconds since Unix epoch. This element is optional, need not be supplied by the score file author, and will be automatically kept up-to-date by the package.
+    4. the number of times this rule has matched an entry
 
 For example, the following rules:
 
@@ -191,26 +193,26 @@ For example, the following rules:
 will add the tag ='a= to all entries whose score is 1000 or more, and remove tag ='b= from all entries whose score is -1000 or less.
 *** Tag Scoping Rules
 
-Limiting rules by entry tags involves the use of a cons cell of the form:
+Many types of rules can be customized to only be applied to an entry in the presence or absence of certain tags. Limiting rules by entry tags involves the use of a cons cell of the form:
 
 #+BEGIN_EXAMPLE
 (BOOLEAN . (TAG...))
 #+END_EXAMPLE
 
-The =car= is a boolean, and the =cdr= is a list of tags.  If the former is =t=, the rule will only be applied if the entry has at least one of the tags listed.  If the boolean value is =nil=, the rule will only apply if the entry has *none* of the tags listed.
+The =car= is a boolean, and the =cdr= is a list of tags.  If the former is =t=, the rule will only be applied if the entry has at least one of the tags listed. If the boolean value is =nil=, the rule will only apply if the entry has *none* of the tags listed.
 
 This only applies to title, content, title-or-content, authors & feed-based rules.
 *** Feed Scoping Rules
 
-Limiting rules by entry feeds involves the use of a cons cell of the form:
+Many types of rules can be customized to only be applied to an entry if is (or is not) part of one or more feeds. Limiting rules by entry feeds involves the use of a cons cell of the form:
 
 #+BEGIN_EXAMPLE
 (BOOLEAN . ((ATTR MATCH-TYPE MATCH-TEXT)...))
 #+END_EXAMPLE
 
-The =car= is a boolean, and the =cdr= is a list of three-tuples. If the former is =t=, the rule will only be applied if the entry's feed matches at least one of the selectors listed. If the boolean is =nil=, the rule will only apply if the entry's feed matches *none* of the selectors listed.
+The =car= is a boolean, and the =cdr= is a list of three-tuples, each of which is a "feed selector". If the former is =t=, the rule will only be applied if the entry's feed matches at least one of the selectors listed. If the boolean is =nil=, the rule will only apply if the entry's feed matches *none* of the selectors listed.
 
-Each three-tuple, or selector specifies the feed attribute (=t= for title, =u= for URL, or =a= for author) to be matched, the match type (=s=, =S=, =r=, =R=, =w=, or =W=, as per usual) specifies the match type, and the text to be matched. So, for instance, ='(t s "foo")= will carry out a case-insensitive substring match of "foo" against the feed title.
+Each three-tuple, or selector, specifies the feed attribute (=t= for title, =u= for URL, or =a= for author) to be matched, the match type (=s=, =S=, =r=, =R=, =w=, or =W=, as per usual) specifies the match type, and the text to be matched. So, for instance, ='(t s "foo")= will carry out a case-insensitive substring match of "foo" against the feed title.
 
 This only applies to title, content, title-or-content & authors rules.
 ** Using elfeed-score
@@ -251,13 +253,11 @@ Finally, you can configure score logging by setting the variable =elfeed-score-l
 
 * Status and Roadmap
 
-I'm using [[https://github.com/sp1ff/elfeed-score][elfeed-score]] day in & day out for my RSS reading, but this is a preliminary release (the version number, 0.N, was chosen to suggest this).
+I've been using [[https://github.com/sp1ff/elfeed-score][elfeed-score]] day in & day out for my RSS reading for almost a year now. I wrote a post on how [[https://github.com/sp1ff/elfeed-score][elfeed-score]] works, along with the process of submitting code to MELPA, [[https://www.unwoundstack.com/blog/scoring-elfeed-entries.html][here]]. [[https://github.com/C-J-Cundy][Chris]] wrote a post on how he uses it to [[https://cundy.me/post/elfeed/][manage ArXiv RSS Feeds]]. The current version number (0.N) was chosen to suggest a preliminary release, but I'm thinking about calling this 1.0 soon.
 
 Things I may want to do in the future:
 
     - add some kind of feature to age out rules that haven't matched in a long time
-    - capture which entries are actually opened & which ones are manually marked read without bothering to read them; see if I can "learn" from that information (something like Gnus Adaptive Scoring)
-
-I wrote a post on how [[https://github.com/sp1ff/elfeed-score][elfeed-score]] works, along with the process of submitting code to MELPA, [[https://www.unwoundstack.com/blog/scoring-elfeed-entries.html][here]].
+    - capture which entries are actually opened, which ones are manually marked read without bothering to read them, and which are never touched; see if I can "learn" from that information (something like Gnus Adaptive Scoring)
 
 Bugs, comments, issues, PRs, feature requests &c welcome at [[mailto:sp1ff@pobox.com][sp1ff@pobox.com]].
