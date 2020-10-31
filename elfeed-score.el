@@ -3,8 +3,8 @@
 ;; Copyright (C) 2019-2020 Michael Herstine <sp1ff@pobox.com>
 
 ;; Author: Michael Herstine <sp1ff@pobox.com>
-;; Version: 0.5.2
-;; Package-Requires: ((emacs "24.1") (elfeed "3.3.0") (cl-lib "0.6.1"))
+;; Version: 0.5.3
+;; Package-Requires: ((emacs "24.4") (elfeed "3.3.0"))
 ;; Keywords: news
 ;; URL: https://github.com/sp1ff/elfeed-score
 
@@ -39,7 +39,7 @@
 
 (require 'elfeed-search)
 
-(defconst elfeed-score-version "0.5.2")
+(defconst elfeed-score-version "0.5.3")
 
 (defgroup elfeed-score nil
   "Gnus-style scoring for Elfeed entries."
@@ -521,7 +521,7 @@ defining a single rule for both.
     - hits :: the number of times since upgrading to score file
               version 5 that this rule has been matched
 
-    - - feeds :: cons cell of the form (A . B) where A is either t
+    - feeds :: cons cell of the form (A . B) where A is either t
                or nil and B is a list of three-tuples. Each
                three-tuple will be matched against an entry's
                feed:
@@ -1320,7 +1320,7 @@ adding %d to its score"
 %s(%s); adding tag(s) %s"
                                     rule-tags score (elfeed-entry-id entry)
                                     (elfeed-entry-title entry) actual-tags)
-                  (apply 'elfeed-tag entry actual-tags)
+                  (apply #'elfeed-tag entry actual-tags)
                   (setf (elfeed-score-adjust-tags-rule-date adj-tags) (float-time))
                   (setf (elfeed-score-adjust-tags-rule-hits adj-tags)
                         (1+ (elfeed-score-adjust-tags-rule-hits adj-tags))))
@@ -1330,7 +1330,7 @@ adding %d to its score"
 %s(%s); removing tag(s) %s"
                                   rule-tags score (elfeed-entry-id entry)
                                   (elfeed-entry-title entry) actual-tags)
-                (apply 'elfeed-untag entry actual-tags)
+                (apply #'elfeed-untag entry actual-tags)
                 (setf (elfeed-score-adjust-tags-rule-date adj-tags) (float-time))
                 (setf (elfeed-score-adjust-tags-rule-hits adj-tags)
                       (1+ (elfeed-score-adjust-tags-rule-hits adj-tags))))))))))
@@ -1591,6 +1591,136 @@ This implementation is derived from `elfeed-search-print-entry--default'."
       (setq elfeed-search-print-entry-function elfeed-score--old-print-entry-function))
   (remove-hook 'elfeed-new-entry-hook #'elfeed-score--score-entry))
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; functions for rule maintenance
+
+(defun elfeed-score--get-last-match-date (rule)
+  "Retrieve the time at which RULE was last matched.
+
+Return the time, in seconds since epoch, at which RULE was most
+recently matched against an entry (floating point).  Note that
+RULE may be any rule struct."
+
+  (let ((date
+	 (cl-typecase rule
+	   (elfeed-score-title-rule
+	    (elfeed-score-title-rule-date rule))
+	   (elfeed-score-feed-rule
+	    (elfeed-score-feed-rule-date rule))
+	   (elfeed-score-content-rule
+	    (elfeed-score-content-rule-date rule))
+	   (elfeed-score-title-or-content-rule
+	    (elfeed-score-title-or-content-rule-date rule))
+	   (elfeed-score-authors-rule
+	    (elfeed-score-authors-rule-date rule))
+	   (elfeed-score-tag-rule
+	    (elfeed-score-tag-rule-date rule))
+	   (elfeed-score-adjust-tags-rule
+	    (elfeed-score-adjust-tags-rule-date rule))
+	   (otherwise (error "Unknown rule type %S" rule)))))
+    (or date 0.0)))
+
+(defun elfeed-score--sort-rules-by-last-match (rules)
+  "Sort RULES in decreasing order of last match.
+
+Note that RULES need not be homogeneous; it may contain rule
+structs of any kind undertood by
+`elfeed-score--get-last-match-date'."
+  (sort
+   rules
+   (lambda (lhs rhs)
+     (> (elfeed-score--get-last-match-date lhs)
+        (elfeed-score--get-last-match-date rhs)))))
+
+(defun elfeed-score--pp-rule-to-string (rule)
+  "Pretty-print RULE; return as a string."
+  (cl-typecase rule
+    (elfeed-score-title-rule
+     (format "title{%s}" (elfeed-score-title-rule-text rule)))
+    (elfeed-score-feed-rule
+     (format "feed{%s}" (elfeed-score-feed-rule-text rule)))
+    (elfeed-score-content-rule
+     (format "content{%s}" (elfeed-score-content-rule-text rule)))
+    (elfeed-score-title-or-content-rule
+     (format "title-or-content{%s}" (elfeed-score-title-or-content-rule-text rule)))
+    (elfeed-score-authors-rule
+     (format "authors{%s}" (elfeed-score-authors-rule-text rule)))
+    (elfeed-score-tag-rule
+     (format "tag{%s}" (prin1-to-string (elfeed-score-tag-rule-tags rule))))
+    (elfeed-score-adjust-tags-rule
+     (format "adjust-tags{%s}" (prin1-to-string (elfeed-score-adjust-tags-rule-tags rule))))
+    (otherwise (error "Don't know how to pretty-print %S" rule))))
+
+(defun elfeed-score--display-rules-by-last-match (rules title)
+  "Sort RULES in decreasing order of last match; display results as TITLE."
+  (let ((rules (elfeed-score--sort-rules-by-last-match rules))
+	      (results '())
+	      (max-text 0))
+    (cl-dolist (rule rules)
+      (let* ((pp (elfeed-score--pp-rule-to-string rule))
+	           (lp (length pp)))
+	      (if (> lp max-text) (setq max-text lp))
+	      (setq
+	       results
+	       (append
+          results
+          (list (cons (format-time-string "%a, %d %b %Y %T %Z" (elfeed-score--get-last-match-date rule)) pp))))))
+    (with-current-buffer-window title nil nil
+      (let ((fmt (format "%%28s: %%-%ds\n" max-text)))
+	      (cl-dolist (x results)
+	        (insert (format fmt (car x) (cdr x))))
+        (special-mode)))))
+
+(defun elfeed-score--rules-for-keyword (key)
+  "Retrieve the list of rules corresponding to keyword KEY."
+  (cond
+   ((eq key :title) elfeed-score--title-rules)
+   ((eq key :feed) elfeed-score--feed-rules)
+   ((eq key :content) elfeed-score--content-rules)
+   ((eq key :title-or-content) elfeed-score--title-or-content-rules)
+   ((eq key :authors) elfeed-score--authors-rules)
+   ((eq key :tag) elfeed-score--tag-rules)
+   ((eq key :adjust-tags) elfeed-score--adjust-tags-rules)
+   (t
+    (error "Unknown keyword %S" key))))
+
+(defun elfeed-score-display-rules-by-last-match (&optional category)
+  "Display all scoring rules in descending order of last match.
+
+CATEGORY may be used to narrow the scope of rules displayed.  If
+nil, display all rules.  If one of the following symbols, display
+only that category of rules:
+
+    :title
+    :feed
+    :content
+    :title-or-content
+    :authors
+    :tag
+    :adjust-tags
+
+Finally, CATEGORY may be a list of symbols in the preceeding
+list, in which case the union of the corresponding rule
+categories will be displayed."
+
+  (interactive)
+  (let ((rules
+	 (cond
+	  ((not category)
+	   (append elfeed-score--title-rules elfeed-score--feed-rules
+		   elfeed-score--content-rules
+		   elfeed-score--title-or-content-rules
+		   elfeed-score--authors-rules elfeed-score--tag-rules
+		   elfeed-score--adjust-tags-rules))
+	  ((symbolp category)
+	   (elfeed-score--rules-for-keyword category))
+	  ((listp category)
+	   (cl-loop for sym in category
+		    collect (elfeed-score--rules-for-keyword sym)))
+	  (t
+	   (error "Invalid argument %S" category)))))
+    (elfeed-score--display-rules-by-last-match rules "elfeed-score Rules by Last Match")))
 
 (provide 'elfeed-score)
 

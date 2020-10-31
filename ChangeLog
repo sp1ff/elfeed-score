@@ -1,3 +1,7 @@
+2020-10-31  Michael Herstine  <sp1ff@pobox.com>
+
+	Add the ability to report rules by last match date.
+
 2020-10-30  Michael Herstine  <sp1ff@pobox.com>
 
 	Scoping rules by feed.
