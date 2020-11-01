@@ -2,7 +2,7 @@
 #+DESCRIPTION: Gnus-style scoring for Elfeed
 #+AUTHOR: Sp1ff
 #+EMAIL: sp1ff@pobox.com
-#+DATE: <2020-10-31 Sat 17:50>
+#+DATE: <2020-11-01 Sun 08:13>
 #+AUTODATE: t
 #+OPTIONS: toc:nil org-md-headline-style:setext *:t ^:nil
 
@@ -15,7 +15,7 @@
 
 [[https://github.com/skeeto/elfeed][Elfeed]] is an extensible web feed reader for Emacs. By default, it will display entries in reverse chronological order. This package defines a bit of metadata for each of your feed entries: a "score". A score is an integer (negative or positive), and higher scores denote entries of greater interest to you. This package also (optionally) installs a new sort function, so that Elfeed will display entries with higher scores before entries with lower scores (entries with the same scores will still be sorted in reverse chronological order). It also provides an entry display function for the search buffer that displays each entry's score, should you choose to install it.
 
-While you can manually assign a score to an entry, you will likely find it more convenient to create rules for scoring that will be automatically applied to each new entry every time you update Elfeed. You can score against title, feed, content & authors by defining strings that will be matched against those attributes by substring, regexp or whole-word match. You can also score against the presence or absence of tags. Rules (other than the last sort) can be scoped by Elfeed entry tags, so that a rule will only be applied if an entry has certain tags (or does not have certain tags). Rules (other than those that apply to an entry's feed) may also be scoped by feed, so that a rule will only be applied to entries from certain feeds. Each rule defines an integral value, and the rules are applied in order of definition. The new entry's score begins at zero, and is adjusted by the value defined by each matching scoring rule.
+While you can manually assign a score to an entry, you will likely find it more convenient to create rules for scoring that will be automatically applied to each new entry every time you update Elfeed. You can score against title, feed, content & authors by defining strings that will be matched against those attributes by substring, regexp or whole-word match. You can score against the feed (on the basis of title, URL, or feed author). You can also score against the presence or absence of tags. Rules (other than the last sort) can be scoped by Elfeed entry tags, so that a rule will only be applied if an entry has certain tags (or does not have certain tags). Rules (other than those that apply to an entry's feed or tags) may also be scoped by feed, so that a rule will only be applied to entries from certain feeds. Each rule defines an integral value, and the rules are applied in order of definition. The new entry's score begins at zero, and is adjusted by the value defined by each matching scoring rule.
 
 For instance, here's a subset of my scoring file at the moment:
 
@@ -47,7 +47,7 @@ Like Gnus scoring, this may look like Lisp code, but it is not directly eval'd. 
 
 * Prerequisites
 
-This package was developed against [[https://github.com/skeeto/elfeed][Elfeed]] 3.3.0, which itself requires Emacs 24.3 and cURL.
+This package requires Emacs 24.4, and was developed against [[https://github.com/skeeto/elfeed][Elfeed]] 3.3.0, which itself requires cURL.
 
 * Installing
 
@@ -62,17 +62,19 @@ The easiest way to install elfeed-score is [[https://github.com/melpa/melpa][MEL
       (define-key elfeed-search-mode-map "=" elfeed-score-map)))
 #+END_SRC
 
-You can, if you wish, install from source as well:
+You can, if you wish, install from source as well. The =make= step passes the =--batch= flag when compiling, so if the [[https://github.com/skeeto/elfeed][elfeed]] files are not installed somewhere in Emacs' default load path (if, say, they're in =~/emacs.d/elpa=), you'll need to set =EMACSLOADPATH= to pick it up; for instance:
 
 #+BEGIN_EXAMPLE
 cd /tmp
-curl -L --output=elfeed-score-0.5.4.tar.gz https://github.com/sp1ff/elfeed-score/archive/0.5.4.tar.gz
-tar xvf elfeed-score-0.5.4.tar.gz && cd elfeed-score-0.5.4
+curl -L --output=elfeed-score-0.5.5.tar.gz https://github.com/sp1ff/elfeed-score/archive/0.5.5.tar.gz
+tar xvf elfeed-score-0.5.5.tar.gz && cd elfeed-score-0.5.5
+export EMACSLOADPATH=$HOME/.emacs.d/elpa/elfeed-20200209.1942:$EMACSLOADPATH
 ./configure
 make
 sudo make install
 #+END_EXAMPLE
 
+Unless you already use =EMACSLOADPATH=, this isn't likely to work as written-- you'll need to work out exactly how to tell Emacs to pick-up the rest of its LISP files. On my Ubuntu 18.04 system, =EMACSLOADPATH=$HOME/.emacs.d/elpa/elfeed-20200209.1942:/usr/share/emacs/25.2/lisp= works.
 ** Running the Unit Tests
 
 The unit tests require some macros defined by the [[https://github.com/skeeto/elfeed][Elfeed]] test suite, which is not distributed with the MELPA package. Therefore, you'll need to clone the Elfeed git repo & develop against that:
@@ -80,15 +82,15 @@ The unit tests require some macros defined by the [[https://github.com/skeeto/el
 #+BEGIN_EXAMPLE
 cd /tmp
 git clone https://github.com/skeeto/elfeed.git
-curl -L --output=elfeed-score-0.5.4.tar.gz https://github.com/sp1ff/elfeed-score/archive/0.5.4.tar.gz
-tar xvf elfeed-score-0.5.4.tar.gz && cd elfeed-score-0.5.4
-export EMACSLOADPATH=/tmp/elfeed-score-0.5.4:/tmp/elfeed/tests:$EMACSLOADPATH
+curl -L --output=elfeed-score-0.5.5.tar.gz https://github.com/sp1ff/elfeed-score/archive/0.5.5.tar.gz
+tar xvf elfeed-score-0.5.5.tar.gz && cd elfeed-score-0.5.5
+export EMACSLOADPATH=/tmp/elfeed-score-0.5.5:/tmp/elfeed:/tmp/elfeed/tests:$EMACSLOADPATH
 ./configure
 make
 make check
 #+END_EXAMPLE
 
-Unless you already use =EMACSLOADPATH=, this likely won't work as written-- you'll need to work out exactly how to tell Emacs to pickup Elfeed from your git repo instead of wherever you've got it installed. If you're running the unit tests, I assume you can get this working.
+Again, unless you already use =EMACSLOADPATH=, you'll need to set =EMACSLOADPATH= appropriately to your system, something like =EMACSLOADPATH=/tmp/elfeed-score-0.5.5:/tmp/elfeed:/tmp/elfeed/tests:/usr/share/emacs/25.2/lisp=.
 
 * Getting Started
 
@@ -204,7 +206,7 @@ The =car= is a boolean, and the =cdr= is a list of tags.  If the former is =t=, 
 This only applies to title, content, title-or-content, authors & feed-based rules.
 *** Feed Scoping Rules
 
-Many types of rules can be customized to only be applied to an entry if is (or is not) part of one or more feeds. Limiting rules by entry feeds involves the use of a cons cell of the form:
+Many types of rules can be customized to only be applied to an entry if it is (or is not) part of one or more feeds. Limiting rules by entry feeds involves the use of a cons cell of the form:
 
 #+BEGIN_EXAMPLE
 (BOOLEAN . ((ATTR MATCH-TYPE MATCH-TEXT)...))

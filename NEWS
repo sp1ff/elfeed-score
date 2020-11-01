@@ -1,5 +1,8 @@
 elfeed-score News -- history of user-visible changes -*- outline -*-
 
+* Changes in elfeed-score 0.5.5
+
+Documentation changes to the README prior to the 0.5.5 release.
 * Changes in elfeed-score 0.5.4
 
 ** New Features
@@ -24,7 +27,7 @@ You can now scope a rule by feed, analagously to tags.
 *** Rules now record hit counts
 
 Each rule will keep track of how many times it has matched; good for figuring out which rules are useful.
-** Bug fixes
+** Bug Fixes
 
 **** `elfeed-score--parse-authors-rule-sexps' was deserializing incorrectly
 

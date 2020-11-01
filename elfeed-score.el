@@ -3,7 +3,7 @@
 ;; Copyright (C) 2019-2020 Michael Herstine <sp1ff@pobox.com>
 
 ;; Author: Michael Herstine <sp1ff@pobox.com>
-;; Version: 0.5.4
+;; Version: 0.5.5
 ;; Package-Requires: ((emacs "24.4") (elfeed "3.3.0"))
 ;; Keywords: news
 ;; URL: https://github.com/sp1ff/elfeed-score
@@ -39,7 +39,7 @@
 
 (require 'elfeed-search)
 
-(defconst elfeed-score-version "0.5.4")
+(defconst elfeed-score-version "0.5.5")
 
 (defgroup elfeed-score nil
   "Gnus-style scoring for Elfeed entries."
@@ -1171,7 +1171,6 @@ adding %d to its score"
               (setf (elfeed-score-authors-rule-hits score-authors)
                     (1+ (elfeed-score-authors-rule-hits score-authors)))))))
     score))
-
 
 (defun elfeed-score--score-on-feed (entry)
   "Run all feed scoring rules against ENTRY; return the summed values."
