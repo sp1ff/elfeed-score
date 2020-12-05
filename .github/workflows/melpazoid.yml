@@ -22,6 +22,5 @@ jobs:
         pip install ~/melpazoid
     - name: Run
       env:
-        # RECIPE is your recipe as written for MELPA:
-        RECIPE: (shx :repo "sp1ff/elfeed-score" :fetcher github)
+        RECIPE: (elfeed-score :repo "sp1ff/elfeed-score" :fetcher github)
       run: echo $GITHUB_REF && make -C ~/melpazoid

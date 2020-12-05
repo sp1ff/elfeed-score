@@ -3,7 +3,7 @@
 ;; Copyright (C) 2019-2020 Michael Herstine <sp1ff@pobox.com>
 
 ;; Author: Michael Herstine <sp1ff@pobox.com>
-;; Version: 0.6.0
+;; Version: 0.6.1
 ;; Package-Requires: ((emacs "24.4") (elfeed "3.3.0"))
 ;; Keywords: news
 ;; URL: https://github.com/sp1ff/elfeed-score
@@ -39,7 +39,7 @@
 
 (require 'elfeed-search)
 
-(defconst elfeed-score-version "0.6.0")
+(defconst elfeed-score-version "0.6.1")
 
 (defgroup elfeed-score nil
   "Gnus-style scoring for Elfeed entries."
@@ -1503,34 +1503,34 @@ update the \"last matched\" time of the salient rules."
 (defun elfeed-score--pp-rule-match-to-string (match)
   "Pretty-print a rule explanation MATCH & return the resulting string."
 
-  ;; The first element of MATCH will always be a rule of some kind:
-  (let ((rule (car match)))
-    (cl-typecase rule
-      (elfeed-score-title-rule
-       (format "title{%s}: \"%s\": %d" (elfeed-score-title-rule-text rule)
-               (nth 1 match) (elfeed-score-title-rule-value rule)))
-      (elfeed-score-feed-rule
-       (format "feed{%s}: \"%s\", %d" (elfeed-score-feed-rule-text rule)
-               (nth 1 match) (elfeed-score-feed-rule-value rule)))
-    (elfeed-score-content-rule
-     (format "content{%s}: \"%s\", %d" (elfeed-score-content-rule-text rule)
-             (nth 1 match) (elfeed-score-content-rule-value rule)))
-    (elfeed-score-title-or-content-rule
-     (format "title-or-content{%s}: \"%s\" (%s), %d"
-             (elfeed-score-title-or-content-rule-text rule)
-             (nth 1 match)
-             (if (nth 2 match) "title" "content")
-             (if (nth 2 match)
-                 (elfeed-score-title-or-content-rule-title-value rule)
-               (elfeed-score-title-or-content-rule-content-value rule))))
-    (elfeed-score-authors-rule
-     (format "authors{%s}: \"%s\", %d" (elfeed-score-authors-rule-text rule)
-             (nth 1 match) (elfeed-score-authors-rule-value rule)))
-    (elfeed-score-tag-rule
-     (format "tag{%s}: \"%s\", %d"
-             (prin1-to-string (elfeed-score-tag-rule-tags rule))
-             (nth 1 match) (elfeed-score-tag-rule-value rule)))
-    (otherwise (error "Don't know how to pretty-print %S" rule)))))
+  (if (listp match)
+      (let ((rule (car match)))
+        (cl-typecase rule
+          (elfeed-score-title-rule
+           (format "title{%s}: \"%s\": %d" (elfeed-score-title-rule-text rule)
+                   (nth 1 match) (elfeed-score-title-rule-value rule)))
+          (elfeed-score-feed-rule
+           (format "feed{%s}: \"%s\", %d" (elfeed-score-feed-rule-text rule)
+                   (nth 1 match) (elfeed-score-feed-rule-value rule)))
+          (elfeed-score-content-rule
+           (format "content{%s}: \"%s\", %d" (elfeed-score-content-rule-text rule)
+                   (nth 1 match) (elfeed-score-content-rule-value rule)))
+          (elfeed-score-title-or-content-rule
+           (format "title-or-content{%s}: \"%s\" (%s), %d"
+                   (elfeed-score-title-or-content-rule-text rule)
+                   (nth 1 match)
+                   (if (nth 2 match) "title" "content")
+                   (if (nth 2 match)
+                       (elfeed-score-title-or-content-rule-title-value rule)
+                     (elfeed-score-title-or-content-rule-content-value rule))))
+          (elfeed-score-authors-rule
+           (format "authors{%s}: \"%s\", %d" (elfeed-score-authors-rule-text rule)
+                   (nth 1 match) (elfeed-score-authors-rule-value rule)))
+          (otherwise (error "Don't know how to pretty-print %S" rule))))
+    ;; Must be a tag-rule match
+    (format "tag{%s}: %d"
+            (prin1-to-string (elfeed-score-tag-rule-tags match))
+            (elfeed-score-tag-rule-value match))))
 
 (defun elfeed-score-explain-entry ()
   "Explain an Elfeed ENTRY.

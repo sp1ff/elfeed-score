@@ -1,5 +1,10 @@
 elfeed-score News -- history of user-visible changes -*- outline -*-
 
+* Changes in elfeed-score 0.6.1
+
+** Bug Fixes
+
+*** 'elfeed-score--pp-rule-match-to-string' wasn't handling tag rules correctly
 * Changes in elfeed-score 0.6.0
 
 ** New Features
