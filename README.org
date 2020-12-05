@@ -2,7 +2,7 @@
 #+DESCRIPTION: Gnus-style scoring for Elfeed
 #+AUTHOR: Sp1ff
 #+EMAIL: sp1ff@pobox.com
-#+DATE: <2020-11-01 Sun 08:13>
+#+DATE: <2020-12-04 Fri 20:06>
 #+AUTODATE: t
 #+OPTIONS: toc:nil org-md-headline-style:setext *:t ^:nil
 
@@ -66,8 +66,8 @@ You can, if you wish, install from source as well. The =make= step passes the =-
 
 #+BEGIN_EXAMPLE
 cd /tmp
-curl -L --output=elfeed-score-0.5.5.tar.gz https://github.com/sp1ff/elfeed-score/archive/0.5.5.tar.gz
-tar xvf elfeed-score-0.5.5.tar.gz && cd elfeed-score-0.5.5
+curl -L --output elfeed-score-0.6.0.tar.gz https://github.com/sp1ff/elfeed-score/releases/download/0.6.0/elfeed-score-0.6.0.tar.gz
+tar xvf elfeed-score-0.6.0.tar.gz && cd elfeed-score-0.6.0
 export EMACSLOADPATH=$HOME/.emacs.d/elpa/elfeed-20200209.1942:$EMACSLOADPATH
 ./configure
 make

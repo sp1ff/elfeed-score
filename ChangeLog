@@ -1,3 +1,25 @@
+2020-12-04  Michael Herstine  <sp1ff@pobox.com>
+
+	'elfeed-score-explain'
+	This commit addresses #5 -- "Feature Request: `elfeed-score-explain`
+	function" by re-factoring the scoring routines to apply an arbitrary
+	lambda on all matches. The scoring functions have been re-worked to
+	use this framework: on match, they just add the relevant value to
+	the entry score. I then introduced a new function corresponding
+	to each scoring function-- an "explain" variant. It walks the relevant
+	scoring rules, but records matches instead of totalling up a score.
+
+	Finally, I implemented 'elfeed-score-explain'-- an interactive function
+	that will print out the matches in a dedicated buffer.
+
+	Finally, I added two GitHub actions:
+
+	    1. one that runs Chris Raynor's (@riscy) "melpazoid" linter against
+	       all commits & PRs
+
+	     2. a release workflow that will create a GitHub release whenever
+	        a release is tagged (copied shamlessly from Burnt Sushi)
+
 2020-11-01  Michael Herstine  <sp1ff@pobox.com>
 
 	Documentation updates prior to releasing 0.5.5.

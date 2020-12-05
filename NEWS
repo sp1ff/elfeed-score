@@ -1,5 +1,12 @@
 elfeed-score News -- history of user-visible changes -*- outline -*-
 
+* Changes in elfeed-score 0.6.0
+
+** New Features
+
+*** 'elfeed-score-explain'
+
+Produce a human-readable explanation of an entry's score.
 * Changes in elfeed-score 0.5.5
 
 Documentation changes to the README prior to the 0.5.5 release.

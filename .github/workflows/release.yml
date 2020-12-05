@@ -1,0 +1,130 @@
+# Setting up a release workflow for `elfeed-score'. Much thanks to
+# BurntShushi from whom I shamelessly copied a lot of this
+# <https://github.com/BurntSushi/ripgrep/blob/master/.github/workflows/release.yml>
+name: release
+on:
+  # allow this workflow to be triggered manually, which is what this
+  # event allegedly does
+  workflow_dispatch:
+  # Modifying the push event with 'branches' and 'tags' seems to be an OR operation (i.e. the workflow
+  # will run if either on branch release-infra *or* it has a tag of n.n.n)
+  push:
+    # Un-comment this for testing
+    # branches:
+    #   - release-infra
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+'
+
+jobs:
+  # This job will create the GitHub release
+  create-release:
+    name: create-release
+    runs-on: ubuntu-latest
+    # Un-comment this for testing
+    # env:
+    #   RELEASE_VERSION: 0.6.1
+    #   RELEASE_VERSION: 0.0.1
+    steps:
+      - name: Create artifacts directory
+        run: mkdir artifacts
+
+      - name: Get the release version from the tag
+        if: env.RELEASE_VERSION == ''
+        run: |
+          # https://github.community/t5/GitHub-Actions/How-to-get-just-the-tag-name/m-p/32167/highlight/true#M1027
+          echo "RELEASE_VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+          echo "version is: ${{ env.RELEASE_VERSION }}"
+      - name: Create GitHub release
+        id: release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ env.RELEASE_VERSION }}
+          release_name: ${{ env.RELEASE_VERSION }}
+
+      - name: Save release upload URL to artifact
+        run: echo "${{ steps.release.outputs.upload_url }}" > artifacts/release-upload-url
+
+      - name: Save version number to artifact
+        run: echo "${{ env.RELEASE_VERSION }}" > artifacts/release-version
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v1
+        with:
+          name: artifacts
+          path: artifacts
+
+  # This job will actually create the artifacts I want to include with the release
+  build-release:
+    name: build-release
+    needs: ['create-release']
+    runs-on: ubuntu-latest
+    - name: Checkout repo
+      uses: actions/checkout@v2
+
+    - name: Get release download URL
+      uses: actions/download-artifact@v1
+      with:
+        name: artifacts
+        path: artifacts
+
+    - name: Set release upload URL and release version
+      shell: bash
+      run: |
+        release_upload_url="$(cat artifacts/release-upload-url)"
+        echo "RELEASE_UPLOAD_URL=$release_upload_url" >> $GITHUB_ENV
+        echo "release upload url: $RELEASE_UPLOAD_URL"
+        release_version="$(cat artifacts/release-version)"
+        echo "RELEASE_VERSION=$release_version" >> $GITHUB_ENV
+        echo "release version: $RELEASE_VERSION"
+
+    - name: Install tooling
+      shell: bash
+      run: |
+          pwd
+          set -x
+          sudo apt-get install -y autoconf automake emacs
+
+    - name: Configure elfeed-score
+      shell: bash
+      run: |
+        set -x
+        ./bootstrap && ./configure
+
+    - name: Build elfeed-score
+      run: |
+        make all dist
+        echo "DISTRO_BZ2=elfeed-score-${{ env.RELEASE_VERSION }}.tar.bz2" >> $GITHUB_ENV
+        echo "DISTRO_GZ=elfeed-score-${{ env.RELEASE_VERSION }}.tar.gz" >> $GITHUB_ENV
+        echo "DISTRO_XZ=elfeed-score-${{ env.RELEASE_VERSION }}.tar.xz" >> $GITHUB_ENV
+
+    - name: Upload bzip2 tarball
+      uses: actions/upload-release-asset@v1.0.1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ env.RELEASE_UPLOAD_URL }}
+        asset_path: ${{ env.DISTRO_BZ2 }}
+        asset_name: ${{ env.DISTRO_BZ2 }}
+        asset_content_type: application/octet-stream
+
+    - name: Upload gzip tarball
+      uses: actions/upload-release-asset@v1.0.1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ env.RELEASE_UPLOAD_URL }}
+        asset_path: ${{ env.DISTRO_GZ }}
+        asset_name: ${{ env.DISTRO_GZ }}
+        asset_content_type: application/octet-stream
+
+    - name: Upload xzip tarball
+      uses: actions/upload-release-asset@v1.0.1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ env.RELEASE_UPLOAD_URL }}
+        asset_path: ${{ env.DISTRO_XZ }}
+        asset_name: ${{ env.DISTRO_XZ }}
+        asset_content_type: application/octet-stream
