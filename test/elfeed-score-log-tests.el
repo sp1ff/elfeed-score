@@ -19,14 +19,11 @@
 
 ;;; Commentary:
 
-;; These tests require 'elfeed-db-tests.
+;; None.
 
 ;;; Code:
 
-;;(require 'elfeed-db)
-;;(require 'elfeed-lib)
 (require 'elfeed-score)
-;;(require 'elfeed-db-tests)
 
 (defun elfeed-score-log-tests--log-buffer-text ()
   "Retrieve the contents of the log buffer as a string."

@@ -3,7 +3,7 @@
 ;; Copyright (C) 2019-2020 Michael Herstine <sp1ff@pobox.com>
 
 ;; Author: Michael Herstine <sp1ff@pobox.com>
-;; Version: 0.6.1
+;; Version: 0.6.2
 ;; Package-Requires: ((emacs "24.4") (elfeed "3.3.0"))
 ;; Keywords: news
 ;; URL: https://github.com/sp1ff/elfeed-score
@@ -39,7 +39,7 @@
 
 (require 'elfeed-search)
 
-(defconst elfeed-score-version "0.6.1")
+(defconst elfeed-score-version "0.6.2")
 
 (defgroup elfeed-score nil
   "Gnus-style scoring for Elfeed entries."
@@ -83,7 +83,7 @@ for (format width alignment).  Possible alignments are :left and
   :type '(list string integer (choice (const :left) (const :right))))
 
 (defcustom elfeed-score-explanation-buffer-name
-  "*elfeed-score-explanation*"
+  "*elfeed-score-explanations*"
   "Name of the buffer to be used for scoring explanations."
   :group 'elfeed-score
   :type 'string)
@@ -340,6 +340,25 @@ formatting.  This implementation is based on that of
                either foo or bar\"."
   text value type date tags (hits 0) feeds)
 
+(cl-defstruct (elfeed-score-title-explanation
+               (:constructor nil)
+               (:constructor elfeed-score-make-title-explanation))
+  "An explanation of a title rule match."
+  matched-text rule)
+
+(defun elfeed-score-pp-title-explanation (match)
+  "Pretty-print MATCH to string."
+  (let ((rule (elfeed-score-title-explanation-rule match)))
+    (format "title{%s}: \"%s\": %d"
+            (elfeed-score-title-rule-text rule)
+            (elfeed-score-title-explanation-matched-text match)
+            (elfeed-score-title-rule-value rule))))
+
+(defun elfeed-score-title-explanation-contrib (match)
+  "Return the score contribution due to MATCH."
+  (elfeed-score-title-rule-value
+   (elfeed-score-title-explanation-rule match)))
+
 (cl-defstruct (elfeed-score-feed-rule
                (:constructor nil)
                (:constructor elfeed-score-feed-rule--create))
@@ -374,6 +393,26 @@ formatting.  This implementation is based on that of
     - hits :: the number of times since upgrading to score file
               version 5 that this rule has been matched"
   text value type attr date tags (hits 0))
+
+(cl-defstruct (elfeed-score-feed-explanation
+               (:constructor nil)
+               (:constructor elfeed-score-make-feed-explanation))
+  "An explanation of a feed rule match"
+  matched-text rule)
+
+(defun elfeed-score-pp-feed-explanation (match)
+  "Pretty-print MATCH to string."
+  (let ((rule (elfeed-score-feed-explanation-rule match)))
+    (format "feed{%s/%s}: \"%s\": %d"
+            (elfeed-score-feed-rule-attr rule)
+            (elfeed-score-feed-rule-text rule)
+            (elfeed-score-feed-explanation-matched-text match)
+            (elfeed-score-feed-rule-value rule))))
+
+(defun elfeed-score-feed-explanation-contrib (match)
+  "Return the score contribution due to MATCH."
+  (elfeed-score-feed-rule-value
+   (elfeed-score-feed-explanation-rule match)))
 
 (cl-defstruct (elfeed-score-content-rule
                (:constructor nil)
@@ -430,6 +469,25 @@ formatting.  This implementation is based on that of
                means \"do not apply this rule if the feed is
                either foo or bar\"."
   text value type date tags (hits 0) feeds)
+
+(cl-defstruct (elfeed-score-content-explanation
+               (:constructor nil)
+               (:constructor elfeed-score-make-content-explanation))
+  "An explanation of a matched content rule."
+  matched-text rule)
+
+(defun elfeed-score-content-explanation-contrib (match)
+  "Return the score contribution due to MATCH."
+  (elfeed-score-content-rule-value
+   (elfeed-score-content-explanation-rule match)))
+
+(defun elfeed-score-pp-content-explanation (match)
+  "Pretty-print MATCH to string."
+  (let ((rule (elfeed-score-content-explanation-rule match)))
+    (format "content{%s}: \"%s\": %d"
+            (elfeed-score-content-rule-text rule)
+            (elfeed-score-content-explanation-matched-text match)
+            (elfeed-score-content-rule-value rule))))
 
 (cl-defstruct (elfeed-score-title-or-content-rule
                (:constructor nil)
@@ -495,6 +553,31 @@ defining a single rule for both.
                either foo or bar\"."
   text title-value content-value type date tags (hits 0) feeds)
 
+(cl-defstruct (elfeed-score-title-or-content-explanation
+               (:constructor nil)
+               (:constructor elfeed-score-make-title-or-content-explanation))
+  "An explanation of a title-or-content rule match."
+  matched-text rule attr)
+
+(defun elfeed-score-pp-title-or-content-explanation (match)
+  "Pretty-print MATCH to string."
+  (let ((rule (elfeed-score-title-or-content-explanation-rule match))
+        (attr (elfeed-score-title-or-content-explanation-attr match)))
+    (format "title-or-content{%s/%s}: \"%s\": %d"
+            attr
+            (elfeed-score-title-or-content-rule-text rule)
+            (elfeed-score-title-or-content-explanation-matched-text match)
+            (if (eq 't attr)
+                (elfeed-score-title-or-content-rule-title-value rule)
+              (elfeed-score-title-or-content-rule-content-value rule)))))
+
+(defun elfeed-score-title-or-content-explanation-contrib (match)
+  "Return the score contribution due to MATCH."
+  (let ((rule (elfeed-score-title-or-content-explanation-rule match)))
+    (if (eq 't (elfeed-score-title-or-content-explanation-attr match))
+        (elfeed-score-title-or-content-rule-title-value rule)
+      (elfeed-score-title-or-content-rule-content-value rule))))
+
 (cl-defstruct (elfeed-score-authors-rule
                (:constructor nil)
                (:constructor elfeed-score-authors-rule--create))
@@ -552,6 +635,25 @@ defining a single rule for both.
                either foo or bar\"."
   text value type date tags (hits 0) feeds)
 
+(cl-defstruct (elfeed-score-authors-explanation
+               (:constructor nil)
+               (:constructor elfeed-score-make-authors-explanation))
+  "An explanation of an authors rule match"
+  matched-text rule)
+
+(defun elfeed-score-pp-authors-explanation (match)
+  "Pretty-print MATCH to string."
+  (let ((rule (elfeed-score-authors-explanation-rule match)))
+    (format "authors{%s} \"%s\": %d"
+            (elfeed-score-authors-rule-text rule)
+            (elfeed-score-authors-explanation-matched-text match)
+            (elfeed-score-authors-rule-value rule))))
+
+(defun elfeed-score-authors-explanation-contrib (match)
+  "Return the score contribution due to MATCH."
+  (elfeed-score-authors-rule-value
+   (elfeed-score-authors-explanation-rule match)))
+
 (cl-defstruct (elfeed-score-tag-rule
                (:constructor nil)
                (:constructor elfeed-score-tag-rule--create))
@@ -576,6 +678,24 @@ defining a single rule for both.
     - hits :: the number of times since upgrading to score file
               version 5 that this rule has been matched"
   tags value date (hits 0))
+
+(cl-defstruct (elfeed-score-tags-explanation
+               (:constructor nil)
+               (:constructor elfeed-score-make-tags-explanation))
+  "An explanation of a tags rule match."
+  rule)
+
+(defun elfeed-score-pp-tags-explanation (match)
+  "Pretty-print MATCH to string."
+  (let ((rule (elfeed-score-tags-explanation-rule match)))
+    (format "tags{%s}: %d"
+            (elfeed-score-tag-rule-tags rule)
+            (elfeed-score-tag-rule-value rule))))
+
+(defun elfeed-score-tags-explanation-contrib (match)
+  "Return the score contribution due to MATCH."
+  (elfeed-score-tag-rule-value
+   (elfeed-score-tags-explanation-rule match)))
 
 (cl-defstruct (elfeed-score-adjust-tags-rule
                (:constructor nil)
@@ -1144,12 +1264,12 @@ ON-MATCH will be invoked with the matching rule & the matchted text."
 The explanation will be a list of two-tuples (i.e. a list with
 two elements), one for each matching rule.  The first element of
 each two-tuple will be the matching rule & the second the
-matchted text."
+matched text."
   (let ((hits '()))
     (elfeed-score--apply-title-rules
      entry
      (lambda (rule matched-text)
-       (setq hits (cons (list rule matched-text) hits))))
+       (setq hits (cons (elfeed-score-make-title-explanation :matched-text matched-text :rule rule) hits))))
     hits))
 
 (defun elfeed-score--score-on-title (entry)
@@ -1205,7 +1325,7 @@ two-tuple will be the rule & the second the matched text."
     (elfeed-score--apply-authors-rules
      entry
      (lambda (rule match-text)
-       (setq hits (cons (list rule match-text) hits))))
+       (setq hits (cons (elfeed-score-make-authors-explanation :matched-text match-text :rule rule) hits))))
     hits))
 
 (defun elfeed-score--score-on-authors (entry)
@@ -1256,7 +1376,7 @@ will be the rule that matched & the second the matched text."
     (elfeed-score--apply-feed-rules
      entry
      (lambda (rule match-text)
-       (setq hits (cons (list rule match-text) hits))))
+       (setq hits (cons (elfeed-score-make-feed-explanation :matched-text match-text :rule rule) hits))))
     hits))
 
 (defun elfeed-score--score-on-feed (entry)
@@ -1309,7 +1429,7 @@ the matched text."
     (elfeed-score--apply-content-rules
      entry
      (lambda (rule match-text)
-       (setq hits (cons (list rule match-text) hits))))
+       (setq hits (cons (elfeed-score-make-content-explanation :matched-text match-text :rule rule) hits))))
     hits))
 
 (defun elfeed-score--score-on-content (entry)
@@ -1375,7 +1495,12 @@ for a title match & nil for a content match."
     (elfeed-score--apply-title-or-content-rules
      entry
      (lambda (rule match-text title-match)
-       (setq hits (cons (list rule match-text title-match) hits))))
+       (setq
+        hits
+        (cons
+         (elfeed-score-make-title-or-content-explanation
+          :matched-text match-text :rule rule :attr (if title-match 't 'c))
+         hits))))
     hits))
 
 (defun elfeed-score--score-on-title-or-content (entry)
@@ -1424,7 +1549,7 @@ On match, ON-MATCH will be called with the matching rule."
     (elfeed-score--apply-tag-rules
      entry
      (lambda (rule)
-       (setq hits (cons rule hits))))
+       (setq hits (cons (elfeed-score-make-tags-explanation :rule rule) hits))))
     hits))
 
 (defun elfeed-score--score-on-tags (entry)
@@ -1503,36 +1628,42 @@ update the \"last matched\" time of the salient rules."
 (defun elfeed-score--pp-rule-match-to-string (match)
   "Pretty-print a rule explanation MATCH & return the resulting string."
 
-  (if (listp match)
-      (let ((rule (car match)))
-        (cl-typecase rule
-          (elfeed-score-title-rule
-           (format "title{%s}: \"%s\": %d" (elfeed-score-title-rule-text rule)
-                   (nth 1 match) (elfeed-score-title-rule-value rule)))
-          (elfeed-score-feed-rule
-           (format "feed{%s}: \"%s\", %d" (elfeed-score-feed-rule-text rule)
-                   (nth 1 match) (elfeed-score-feed-rule-value rule)))
-          (elfeed-score-content-rule
-           (format "content{%s}: \"%s\", %d" (elfeed-score-content-rule-text rule)
-                   (nth 1 match) (elfeed-score-content-rule-value rule)))
-          (elfeed-score-title-or-content-rule
-           (format "title-or-content{%s}: \"%s\" (%s), %d"
-                   (elfeed-score-title-or-content-rule-text rule)
-                   (nth 1 match)
-                   (if (nth 2 match) "title" "content")
-                   (if (nth 2 match)
-                       (elfeed-score-title-or-content-rule-title-value rule)
-                     (elfeed-score-title-or-content-rule-content-value rule))))
-          (elfeed-score-authors-rule
-           (format "authors{%s}: \"%s\", %d" (elfeed-score-authors-rule-text rule)
-                   (nth 1 match) (elfeed-score-authors-rule-value rule)))
-          (otherwise (error "Don't know how to pretty-print %S" rule))))
-    ;; Must be a tag-rule match
-    (format "tag{%s}: %d"
-            (prin1-to-string (elfeed-score-tag-rule-tags match))
-            (elfeed-score-tag-rule-value match))))
+  (cl-typecase match
+    (elfeed-score-title-explanation
+     (elfeed-score-pp-title-explanation match))
+    (elfeed-score-feed-explanation
+     (elfeed-score-pp-feed-explanation match))
+    (elfeed-score-content-explanation
+     (elfeed-score-pp-content-explanation match))
+    (elfeed-score-title-or-content-explanation
+     (elfeed-score-pp-title-or-content-explanation match))
+    (elfeed-score-authors-explanation
+     (elfeed-score-pp-authors-explanation match))
+    (elfeed-score-tags-explanation
+     (elfeed-score-pp-tags-explanation match))
+    (t
+     (error "Don't know how to pretty-print %S" match))))
 
-(defun elfeed-score-explain-entry ()
+(defun elfeed-score--get-match-contribution (match)
+  "Retrieve the score contribution for MATCH."
+
+  (cl-typecase match
+    (elfeed-score-title-explanation
+     (elfeed-score-title-explanation-contrib match))
+    (elfeed-score-feed-explanation
+     (elfeed-score-feed-explanation-contrib match))
+    (elfeed-score-content-explanation
+     (elfeed-score-content-explanation-contrib match))
+    (elfeed-score-title-or-content-explanation
+     (elfeed-score-title-or-content-explanation-contrib match))
+    (elfeed-score-authors-explanation
+     (elfeed-score-authors-explanation-contrib match))
+    (elfeed-score-tags-explanation
+     (elfeed-score-tags-explanation-contrib match))
+    (t
+     (error "Don't know how to evaluate %S" match))))
+
+(defun elfeed-score-explain-entry (entry)
   "Explain an Elfeed ENTRY.
 
 This function will apply all scoring rules to an entry, but will
@@ -1543,26 +1674,46 @@ ENTRY were to be scored, presumably for purposes of debugging or
 understanding of scoring rules."
   (interactive)
 
-  ;; Generate the list of matching rules...
-  (let* ((entry (elfeed-search-selected t))
-         (matches
+  ;; Generate the list of matching rules
+  (let* ((matches
           (append
            (elfeed-score--explain-title            entry)
            (elfeed-score--explain-feed             entry)
            (elfeed-score--explain-content          entry)
            (elfeed-score--explain-title-or-content entry)
            (elfeed-score--explain-authors          entry)
-           (elfeed-score--explain-tags             entry))))
+           (elfeed-score--explain-tags             entry)))
+         (candidate-score
+          (cl-reduce
+           '+
+           matches
+           :key #'elfeed-score--get-match-contribution
+           :initial-value elfeed-score-default-score)))
     (with-current-buffer-window
         elfeed-score-explanation-buffer-name
         nil nil
-      (insert (format "\"%s\" matches %d rules:\n"
-                      (elfeed-entry-title entry) (length matches)))
-      (cl-dolist (match matches)
-        (insert
-         (format
-          "%s\n"
-          (elfeed-score--pp-rule-match-to-string match)))))))
+      (goto-char (point-max))
+      (insert (format "\"%s\" matches %d rules"(elfeed-entry-title entry) (length matches)))
+      (if (> (length matches) 0)
+          (progn
+            (insert (format " for a score of %d:\n" candidate-score))
+            (cl-dolist (match matches)
+              (insert
+               (format
+                "%s\n"
+                (elfeed-score--pp-rule-match-to-string match)))))))))
+
+(defun elfeed-score-explain (&optional ignore-region)
+  "Score some entries.
+
+Score all the selected entries, unless IGNORE-REGION is non-nil,
+in which case only the entry under point will be scored.  If the
+region is not active, only the entry under point will be scored."
+  (interactive)
+  (let ((entries (elfeed-search-selected ignore-region)))
+    (dolist (entry entries)
+      (elfeed-score-explain-entry entry))
+    (elfeed-search-update t)))
 
 (define-obsolete-function-alias 'elfeed-score/load-score-file
   'elfeed-score-load-score-file "0.2.0" "Move to standard-compliant naming.")
@@ -1728,7 +1879,8 @@ region is not active, only the entry under point will be scored."
       (define-key map "l" #'elfeed-score-load-score-file)
       (define-key map "s" #'elfeed-score-score)
       (define-key map "v" #'elfeed-score-score-search)
-      (define-key map "w" #'elfeed-score-write-score-file)))
+      (define-key map "w" #'elfeed-score-write-score-file)
+      (define-key map "x" #'elfeed-score-explain)))
   "Keymap for `elfeed-score' commands.")
 
 (defvar elfeed-score--old-sort-function nil

@@ -1,3 +1,7 @@
+2020-12-13  Michael Herstine  <sp1ff@pobox.com>
+
+	Re-implemented the "explain" feature & added unit tests.
+
 2020-12-05  Michael Herstine  <sp1ff@pobox.com>
 
 	BUGFIX: 'elfeed-score--pp-rule-match-to-string' wasn't handling tag rules correctly.

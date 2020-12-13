@@ -1,5 +1,12 @@
 elfeed-score News -- history of user-visible changes -*- outline -*-
 
+* Changes in elfeed-score 0.6.2
+
+** New Features
+
+*** Score explanations changed slightly
+
+Re-implemented.
 * Changes in elfeed-score 0.6.1
 
 ** Bug Fixes

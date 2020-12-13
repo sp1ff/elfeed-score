@@ -6,7 +6,8 @@ TESTS = elfeed-score-tests		\
 	elfeed-score-test-tag-rules	\
 	elfeed-score-log-tests		\
 	elfeed-score-test-feed-rules    \
-	elfeed-score-test-maintenance
+	elfeed-score-test-maintenance   \
+        test-explanations
 
 dist_noinst_LISP = elfeed-score-tests.el		\
 		   elfeed-score-test-serde.el		\
@@ -14,12 +15,7 @@ dist_noinst_LISP = elfeed-score-tests.el		\
 		   elfeed-score-test-tag-rules.el	\
 		   elfeed-score-log-tests.el		\
 		   elfeed-score-test-feed-rules.el      \
-		   elfeed-score-test-maintenance.el
+		   elfeed-score-test-maintenance.el     \
+                   test-explanations.el
 
-EXTRA_DIST = elfeed-score-tests			\
-	     elfeed-score-test-serde		\
-	     elfeed-score-test-scoring          \
-	     elfeed-score-test-tag-rules	\
-	     elfeed-score-log-tests		\
-	     elfeed-score-test-feed-rules       \
-	     elfeed-score-test-maintenance
+EXTRA_DIST = $(TESTS)
