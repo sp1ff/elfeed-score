@@ -3,7 +3,7 @@
 ;; Copyright (C) 2019-2020 Michael Herstine <sp1ff@pobox.com>
 
 ;; Author: Michael Herstine <sp1ff@pobox.com>
-;; Version: 0.6.3
+;; Version: 0.6.4
 ;; Package-Requires: ((emacs "24.4") (elfeed "3.3.0"))
 ;; Keywords: news
 ;; URL: https://github.com/sp1ff/elfeed-score
@@ -39,7 +39,7 @@
 
 (require 'elfeed-search)
 
-(defconst elfeed-score-version "0.6.3")
+(defconst elfeed-score-version "0.6.4")
 
 (defgroup elfeed-score nil
   "Gnus-style scoring for Elfeed entries."
@@ -1672,7 +1672,6 @@ last-matched timestamp in the matching rules); instead, it will
 provide a human-readable description of what would happen if
 ENTRY were to be scored, presumably for purposes of debugging or
 understanding of scoring rules."
-  (interactive)
 
   ;; Generate the list of matching rules
   (let* ((matches

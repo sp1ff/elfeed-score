@@ -1,5 +1,10 @@
 elfeed-score News -- history of user-visible changes -*- outline -*-
 
+* Changes in elfeed-score 0.6.4
+
+** Bug Fixes
+
+*** `elfeed-score-explain-entry' is no longer interactive
 * Changes in elfeed-score 0.6.3
 
 ** New Features

@@ -1,4 +1,4 @@
-AC_INIT([elfeed-score], [0.6.3], [sp1ff@pobox.com], [elfeed-score], [https://github.com/sp1ff/elfeed-score])
+AC_INIT([elfeed-score], [0.6.4], [sp1ff@pobox.com], [elfeed-score], [https://github.com/sp1ff/elfeed-score])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_SRCDIR([./elfeed-score.el])
 
