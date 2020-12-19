@@ -3,7 +3,7 @@
 ;; Copyright (C) 2019-2020 Michael Herstine <sp1ff@pobox.com>
 
 ;; Author: Michael Herstine <sp1ff@pobox.com>
-;; Version: 0.6.2
+;; Version: 0.6.3
 ;; Package-Requires: ((emacs "24.4") (elfeed "3.3.0"))
 ;; Keywords: news
 ;; URL: https://github.com/sp1ff/elfeed-score
@@ -39,7 +39,7 @@
 
 (require 'elfeed-search)
 
-(defconst elfeed-score-version "0.6.2")
+(defconst elfeed-score-version "0.6.3")
 
 (defgroup elfeed-score nil
   "Gnus-style scoring for Elfeed entries."

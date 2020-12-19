@@ -1,3 +1,7 @@
+2020-12-19  Michael Herstine  <sp1ff@pobox.com>
+
+	Docs-only commit: updated the README with new installation instructions & a mention of 'elfeed-score-explain-entry'.
+
 2020-12-13  Michael Herstine  <sp1ff@pobox.com>
 
 	Re-implemented the "explain" feature & added unit tests.

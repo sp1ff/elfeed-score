@@ -2,12 +2,14 @@
 #+DESCRIPTION: Gnus-style scoring for Elfeed
 #+AUTHOR: Sp1ff
 #+EMAIL: sp1ff@pobox.com
-#+DATE: <2020-12-13 Sun 14:29>
+#+DATE: <2020-12-19 Sat 11:58>
 #+AUTODATE: t
 #+OPTIONS: toc:nil org-md-headline-style:setext *:t ^:nil
 
 [[https://melpa.org/#/elfeed-score][file:https://melpa.org/packages/elfeed-score-badge.svg]]
 [[https://stable.melpa.org/#/elfeed-score][file:https://stable.melpa.org/packages/elfeed-score-badge.svg]]
+[[https://github.com/sp1ff/elfeed-score/workflows/melpazoid/badge.svg][file:https://github.com/sp1ff/elfeed-score/workflows/melpazoid/badge.svg]]
+
 
 * Introduction
 
@@ -62,19 +64,19 @@ The easiest way to install elfeed-score is [[https://github.com/melpa/melpa][MEL
       (define-key elfeed-search-mode-map "=" elfeed-score-map)))
 #+END_SRC
 
-You can, if you wish, install from source as well. The =make= step passes the =--batch= flag when compiling, so if the [[https://github.com/skeeto/elfeed][elfeed]] files are not installed somewhere in Emacs' default load path (if, say, they're in =~/emacs.d/elpa=), you'll need to set =EMACSLOADPATH= to pick it up; for instance:
+You can also download Autotools source distributions, as well. The =make= step passes the =--batch= flag when compiling, so if the [[https://github.com/skeeto/elfeed][elfeed]] files are not installed somewhere in Emacs' default load path (if, say, they're in =~/emacs.d/elpa=), you'll need to set =EMACSLOADPATH= to pick it up; for instance:
 
 #+BEGIN_EXAMPLE
 cd /tmp
-curl -L --output elfeed-score-0.6.2.tar.gz https://github.com/sp1ff/elfeed-score/releases/download/0.6.2/elfeed-score-0.6.2.tar.gz
-tar xvf elfeed-score-0.6.2.tar.gz && cd elfeed-score-0.6.2
+curl -L --output elfeed-score-0.6.3.tar.gz https://github.com/sp1ff/elfeed-score/releases/download/0.6.3/elfeed-score-0.6.3.tar.gz
+tar xvf elfeed-score-0.6.3.tar.gz && cd elfeed-score-0.6.3
 export EMACSLOADPATH=$HOME/.emacs.d/elpa/elfeed-20200209.1942:$EMACSLOADPATH
 ./configure
 make
 sudo make install
 #+END_EXAMPLE
 
-Unless you already use =EMACSLOADPATH=, this isn't likely to work as written-- you'll need to work out exactly how to tell Emacs to pick-up the rest of its LISP files. On my Ubuntu 18.04 system, =EMACSLOADPATH=$HOME/.emacs.d/elpa/elfeed-20200209.1942:/usr/share/emacs/25.2/lisp= works.
+Unless you already use =EMACSLOADPATH= as part of your usual invocation of Emacs, this isn't likely to work as written-- you'll need to work out exactly how to tell Emacs to pick-up the rest of its LISP files. On an old Ubuntu 18.04 system, =EMACSLOADPATH=$HOME/.emacs.d/elpa/elfeed-20200209.1942:/usr/share/emacs/25.2/lisp= works.
 ** Running the Unit Tests
 
 The unit tests require some macros defined by the [[https://github.com/skeeto/elfeed][Elfeed]] test suite, which is not distributed with the MELPA package. Therefore, you'll need to clone the Elfeed git repo & develop against that:
@@ -82,16 +84,20 @@ The unit tests require some macros defined by the [[https://github.com/skeeto/el
 #+BEGIN_EXAMPLE
 cd /tmp
 git clone https://github.com/skeeto/elfeed.git
-curl -L --output=elfeed-score-0.5.5.tar.gz https://github.com/sp1ff/elfeed-score/archive/0.5.5.tar.gz
-tar xvf elfeed-score-0.5.5.tar.gz && cd elfeed-score-0.5.5
-export EMACSLOADPATH=/tmp/elfeed-score-0.5.5:/tmp/elfeed:/tmp/elfeed/tests:$EMACSLOADPATH
+curl -L --output=elfeed-score-0.6.3.tar.gz https://github.com/sp1ff/elfeed-score/releases/download/0.6.3/elfeed-score-0.6.3.tar.gz
+tar xvf elfeed-score-0.6.3.tar.gz && cd elfeed-score-0.6.3
+export EMACSLOADPATH=/tmp/elfeed-score-0.6.3:/tmp/elfeed:/tmp/elfeed/tests:$EMACSLOADPATH
 ./configure
 make
 make check
+sudo make install
 #+END_EXAMPLE
 
-Again, unless you already use =EMACSLOADPATH=, you'll need to set =EMACSLOADPATH= appropriately to your system, something like =EMACSLOADPATH=/tmp/elfeed-score-0.5.5:/tmp/elfeed:/tmp/elfeed/tests:/usr/share/emacs/25.2/lisp=.
+Again, unless you already use =EMACSLOADPATH=, you'll need to set =EMACSLOADPATH= appropriately to your system, something like =EMACSLOADPATH=/tmp/elfeed-score-0.6.3:/tmp/elfeed:/tmp/elfeed/tests:/usr/share/emacs/25.2/lisp=.
 
+** Building form source
+
+Finally, you can of course just clone this repo & build there. All the previous caveats regarding finding the =elfeed= files and the =elfeed= test files apply. Make sure to run =./bootstrap= after you clone the repo.
 * Getting Started
 
 ** Score File Format
@@ -251,8 +257,10 @@ You can optionally arrange to have the scores displayed in the search buffer:
 
 This is not turned on by =elfeed-score-enable=; you will need to set this manually. However, =elfeed-score-unload= will remove it, if it's there.
 
-Finally, you can configure score logging by setting the variable =elfeed-score-log-level=. By default it will be ='warn= (which will produce very little output). Other possible settings are ='debug=, ='info=, and ='error=.  To trouble-shoot a balky rule, type =(setq elfeed-score-log-level 'debug)=, re-score your current view, and switch to buffer =*elfeed-score*=.
+You can configure score logging by setting the variable =elfeed-score-log-level=. By default it will be ='warn= (which will produce very little output). Other possible settings are ='debug=, ='info=, and ='error=.  To trouble-shoot a balky rule, type =(setq elfeed-score-log-level 'debug)=, re-score your current view, and switch to buffer =*elfeed-score*=.
 
+Finally, if you've got an entry that's not being scored in the manner you expect, you can ask [[https://github.com/sp1ff/elfeed-score][elfeed-score]] to explain itself by selecting the offending entry & invoking =elfeed-score-explain-entry= ("= x" by default); it will display a new buffer listing which entry attributes matched which rules (if any).
+ 
 * Status and Roadmap
 
 I've been using [[https://github.com/sp1ff/elfeed-score][elfeed-score]] day in & day out for my RSS reading for almost a year now. I wrote a post on how [[https://github.com/sp1ff/elfeed-score][elfeed-score]] works, along with the process of submitting code to MELPA, [[https://www.unwoundstack.com/blog/scoring-elfeed-entries.html][here]]. [[https://github.com/C-J-Cundy][Chris]] wrote a post on how he uses it to [[https://cundy.me/post/elfeed/][manage ArXiv RSS Feeds]]. The current version number (0.N) was chosen to suggest a preliminary release, but I'm thinking about calling this 1.0 soon.
