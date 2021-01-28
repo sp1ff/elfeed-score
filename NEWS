@@ -1,5 +1,14 @@
 elfeed-score News -- history of user-visible changes -*- outline -*-
 
+* Changes in elfeed-score 0.6.5
+
+** Bug Fixes
+
+*** "Some typos" fixed-- Issue #6
+*** `elfeed-score-explain' now correctly documented-- Issue #9
+
+** New Features
+*** Better validation on read of score file-- Issue #7
 * Changes in elfeed-score 0.6.4
 
 ** Bug Fixes

@@ -1,6 +1,6 @@
 ;;; elfeed-score-test-serde.el --- ERT tests for elfeed-score SERDE  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2020 Michael Herstine <sp1ff@pobox.com>
+;; Copyright (C) 2020-2021 Michael Herstine <sp1ff@pobox.com>
 
 ;; Author: Michael Herstine <sp1ff@pobox.com>
 
@@ -329,6 +329,16 @@
                                (elfeed-score-tag-rule--create
                                 :tags '(nil . z)
                                 :value -1)))))))
+
+(ert-deftest elfeed-score-test-issue-7 ()
+  "Check that the error in issue #7 is caught."
+
+  (let* ((score-entries
+          '((version 5)
+            ("authors" nil)))
+         (score-text (pp-to-string score-entries))
+         (score-file (make-temp-file "elfeed-score-test-" nil nil score-text)))
+    (should-error (elfeed-score--parse-score-file score-file))))
 
 (provide 'elfeed-score-test-serde)
 

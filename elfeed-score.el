@@ -1,9 +1,9 @@
 ;;; elfeed-score.el --- Gnus-style scoring for Elfeed  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2019-2020 Michael Herstine <sp1ff@pobox.com>
+;; Copyright (C) 2019-2021 Michael Herstine <sp1ff@pobox.com>
 
 ;; Author: Michael Herstine <sp1ff@pobox.com>
-;; Version: 0.6.4
+;; Version: 0.6.5
 ;; Package-Requires: ((emacs "24.4") (elfeed "3.3.0"))
 ;; Keywords: news
 ;; URL: https://github.com/sp1ff/elfeed-score
@@ -39,7 +39,7 @@
 
 (require 'elfeed-search)
 
-(defconst elfeed-score-version "0.6.4")
+(defconst elfeed-score-version "0.6.5")
 
 (defgroup elfeed-score nil
   "Gnus-style scoring for Elfeed entries."
@@ -285,8 +285,30 @@ formatting.  This implementation is based on that of
        (string)))))
 
 (cl-defstruct (elfeed-score-title-rule
+               ;; Disable the default ctor (the name violates Emacs
+               ;; package naming conventions)
                (:constructor nil)
-               (:constructor elfeed-score-title-rule--create))
+               ;; Abuse the &aux keyword to validate our parameters; I
+               ;; can only specify type in the slot description if I
+               ;; specify a default value for the slot, which doesn't
+               ;; always make sense.
+               (:constructor
+                elfeed-score-title-rule--create
+                (&key text value type date tags (hits 0) feeds
+                      &aux
+                      (_
+                       (unless (and (stringp text) (> (length text) 0))
+                         (error "Title rule text must be a non-empty string"))
+                       (unless (numberp value)
+                         (error "Title rule value must be a number"))
+                       (unless (and (symbolp type)
+                                    (or (eq type 's)
+                                        (eq type 'S)
+                                        (eq type 'r)
+                                        (eq type 'R)
+                                        (eq type 'w)
+                                        (eq type 'W)))
+                         (error "Title type must be one of '{s,S,r,R,wW}"))))))
   "Rule for scoring against entry titles.
 
     - text :: The rule's match text; either a string or a regular
@@ -360,8 +382,34 @@ formatting.  This implementation is based on that of
    (elfeed-score-title-explanation-rule match)))
 
 (cl-defstruct (elfeed-score-feed-rule
+               ;; Disable the default ctor (the name violates Emacs
+               ;; package naming conventions)
                (:constructor nil)
-               (:constructor elfeed-score-feed-rule--create))
+               ;; Abuse the &aux keyword to validate our parameters; I
+               ;; can only specify type in the slot description if I
+               ;; specify a default value for the slot, which doesn't
+               ;; always make sense.
+               (:constructor
+                elfeed-score-feed-rule--create
+                (&key text value type attr date tags (hits 0)
+                      &aux
+                      (_
+                       (unless (and (stringp text) (> (length text) 0))
+                         (error "Feed rule text must be a non-empty string"))
+                       (unless (numberp value)
+                         (error "Feed rule value must be a number"))
+                       (unless (and (symbolp type)
+                                    (or (eq type 's)
+                                        (eq type 'S)
+                                        (eq type 'r)
+                                        (eq type 'R)
+                                        (eq type 'w)
+                                        (eq type 'W)))
+                         (error "Feed type must be one of '{s,S,r,R,wW}"))
+                       (unless (and (symbolp attr)
+                                    (or (eq type 't)
+                                        (eq type 'u)))
+                         (error "Feed attribute must be one of '{t,u}"))))))
   "Rule for scoring against entry feeds.
 
     - text :: The rule's match text; either a string or a regular
@@ -415,8 +463,30 @@ formatting.  This implementation is based on that of
    (elfeed-score-feed-explanation-rule match)))
 
 (cl-defstruct (elfeed-score-content-rule
+               ;; Disable the default ctor (the name violates Emacs
+               ;; package naming conventions)
                (:constructor nil)
-               (:constructor elfeed-score-content-rule--create))
+               ;; Abuse the &aux keyword to validate our parameters; I
+               ;; can only specify type in the slot description if I
+               ;; specify a default value for the slot, which doesn't
+               ;; always make sense.
+               (:constructor
+                elfeed-score-content-rule--create
+                (&key text value type date tags (hits 0) feeds
+                      &aux
+                      (_
+                       (unless (and (stringp text) (> (length text) 0))
+                         (error "Content rule text must be a non-empty string"))
+                       (unless (numberp value)
+                         (error "Content rule value must be a number"))
+                       (unless (and (symbolp type)
+                                    (or (eq type 's)
+                                        (eq type 'S)
+                                        (eq type 'r)
+                                        (eq type 'R)
+                                        (eq type 'w)
+                                        (eq type 'W)))
+                         (error "Content type must be one of '{s,S,r,R,wW}"))))))
   "Rule for scoring against entry content
 
     - text :: The rule's match text; either a string or a regular
@@ -490,8 +560,37 @@ formatting.  This implementation is based on that of
             (elfeed-score-content-rule-value rule))))
 
 (cl-defstruct (elfeed-score-title-or-content-rule
+               ;; Disable the default ctor (the name violates Emacs
+               ;; package naming conventions)
                (:constructor nil)
-               (:constructor elfeed-score-title-or-content-rule--create))
+               ;; Abuse the &aux keyword to validate our parameters; I
+               ;; can only specify type in the slot description if I
+               ;; specify a default value for the slot, which doesn't
+               ;; always make sense.
+               (:constructor
+                elfeed-score-title-or-content-rule--create
+                (&key text title-value content-value type date tags
+                      (hits 0) feeds
+                      &aux
+                      (_
+                       (unless (and (stringp text) (> (length text) 0))
+                         (error "Title-or-content rule text must be a \
+non-empty string"))
+                       (unless (numberp title-value)
+                         (error "Title-or-content rule title value must \
+be a number"))
+                       (unless (numberp content-value)
+                         (error "Title-or-content rule content value must \
+be a number"))
+                       (unless (and (symbolp type)
+                                    (or (eq type 's)
+                                        (eq type 'S)
+                                        (eq type 'r)
+                                        (eq type 'R)
+                                        (eq type 'w)
+                                        (eq type 'W)))
+                         (error "Title-or-content type must be one of \
+'{s,S,r,R,wW}"))))))
   "Rule for scoring the same text against both entry title & content.
 
 I found myself replicating the same rule for both title &
@@ -579,8 +678,31 @@ defining a single rule for both.
       (elfeed-score-title-or-content-rule-content-value rule))))
 
 (cl-defstruct (elfeed-score-authors-rule
+               ;; Disable the default ctor (the name violates Emacs
+               ;; package naming conventions)
                (:constructor nil)
-               (:constructor elfeed-score-authors-rule--create))
+               ;; Abuse the &aux keyword to validate our parameters; I
+               ;; can only specify type in the slot description if I
+               ;; specify a default value for the slot, which doesn't
+               ;; always make sense.
+               (:constructor
+                elfeed-score-authors-rule--create
+                (&key text value type date tags (hits 0) feeds
+                      &aux
+                      (_
+                       (unless (and (stringp text) (> (length text) 0))
+                         (error "Authors rule text must be a non-empty string"))
+                       (unless (numberp value)
+                         (error "Authors rule value must be a number"))
+                       (unless (and (symbolp type)
+                                    (or (eq type 's)
+                                        (eq type 'S)
+                                        (eq type 'r)
+                                        (eq type 'R)
+                                        (eq type 'w)
+                                        (eq type 'W)))
+                         (error "Authors rulle type must be one of \
+'{s,S,r,R,w,W}"))))))
   "Rule for scoring against the names of all the authors
 
     - text :: The rule's match text; either a string or a regular
@@ -655,8 +777,22 @@ defining a single rule for both.
    (elfeed-score-authors-explanation-rule match)))
 
 (cl-defstruct (elfeed-score-tag-rule
+               ;; Disable the default ctor (the name violates Emacs
+               ;; package naming conventions)
                (:constructor nil)
-               (:constructor elfeed-score-tag-rule--create))
+               ;; Abuse the &aux keyword to validate our parameters; I
+               ;; can only specify type in the slot description if I
+               ;; specify a default value for the slot, which doesn't
+               ;; always make sense.
+               (:constructor
+                elfeed-score-tag-rule--create
+                (&key tags value date (hits 0)
+                      &aux
+                      (_
+                       (unless (and (listp tags))
+                         (error "Tags rules must begin with a cons cell"))
+                       (unless (numberp value)
+                         (error "Tags rule value must be a number"))))))
   "Rule for scoring based on the presence or absence of a tag or tags.
 
     - tags :: cons cell of the form (A . B) where A is either t
@@ -698,8 +834,23 @@ defining a single rule for both.
    (elfeed-score-tags-explanation-rule match)))
 
 (cl-defstruct (elfeed-score-adjust-tags-rule
+               ;; Disable the default ctor (the name violates Emacs
+               ;; package naming conventions)
                (:constructor nil)
-               (:constructor elfeed-score-adjust-tags-rule--create))
+               ;; Abuse the &aux keyword to validate our parameters; I
+               ;; can only specify type in the slot description if I
+               ;; specify a default value for the slot, which doesn't
+               ;; always make sense.
+               (:constructor
+                elfeed-score-adjust-tags-rule--create
+                (&key threshold tags date (hits 0)
+                      &aux
+                      (_
+                       (unless (listp threshold)
+                         (error "Adjust tags rules must begin with a cons cell"))
+                       (unless (listp tags)
+                         (error "Adjust tags rules must specify tags with \
+a cons cell"))))))
   "Rule for adjusting tags based on score.
 
     - threshold :: a cons cell of the form (A . B) where A is a
@@ -1703,11 +1854,12 @@ understanding of scoring rules."
                 (elfeed-score--pp-rule-match-to-string match)))))))))
 
 (defun elfeed-score-explain (&optional ignore-region)
-  "Score some entries.
+  "Explain why some entries were scored the way they were.
 
-Score all the selected entries, unless IGNORE-REGION is non-nil,
-in which case only the entry under point will be scored.  If the
-region is not active, only the entry under point will be scored."
+Explain the scores for all the selected entries, unless
+IGNORE-REGION is non-nil, in which case only the entry under
+point will be explained.  If the region is not active, only the
+entry under point will be explained."
   (interactive)
   (let ((entries (elfeed-search-selected ignore-region)))
     (dolist (entry entries)

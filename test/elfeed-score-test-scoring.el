@@ -1,6 +1,6 @@
 ;;; elfeed-score-test-scoring.el --- ERT tests for elfeed-score scoring  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2020 Michael Herstine <sp1ff@pobox.com>
+;; Copyright (C) 2020-2021 Michael Herstine <sp1ff@pobox.com>
 
 ;; Author: Michael Herstine <sp1ff@pobox.com>
 
@@ -354,8 +354,9 @@ tags scoping."
                       (elfeed-score-authors-rule--create
                        :text "john hancock" :value 1
                        :type 's :tags '(t . (splat)))))
-               (score (elfeed-score--score-entry entry))
-               (should (eq 1 (elfeed-score-authors-rule-hits (car elfeed-score--authors-rules)))))
+               (score (elfeed-score--score-entry entry)))
+          (should
+           (eq 1 (elfeed-score-authors-rule-hits (car elfeed-score--authors-rules))))
           (should (eq score 2))))))))
 
 (ert-deftest elfeed-score-test-missed-match-20200217 ()

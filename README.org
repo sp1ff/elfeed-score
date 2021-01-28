@@ -2,7 +2,7 @@
 #+DESCRIPTION: Gnus-style scoring for Elfeed
 #+AUTHOR: Sp1ff
 #+EMAIL: sp1ff@pobox.com
-#+DATE: <2020-12-19 Sat 15:53>
+#+DATE: <2021-01-29 Fri 07:38>
 #+AUTODATE: t
 #+OPTIONS: toc:nil org-md-headline-style:setext *:t ^:nil
 
@@ -21,7 +21,7 @@ While you can manually assign a score to an entry, you will likely find it more 
 
 For instance, here's a subset of my scoring file at the moment:
 
-#+BEGIN_EXAMPLE
+#+BEGIN_SRC elisp
   ;;; Elfeed score file                                     -*- lisp -*-
   (("title"
     ("OPEN THREAD" -1000 S 1576681345.4086394)
@@ -37,13 +37,13 @@ For instance, here's a subset of my scoring file at the moment:
     ("Julia Evans" 100 s t 1576808786.4092398)
     ("National Weather Service" 400 S t 1576808786.1117532)
     ("emacs-news – sacha chua" 350 S t 1576808785.3807983))
-   ("author"
-    ("Leto Sapunar" 500 S t 1597068910.0))
+   ("authors"
+     ("Jim Geraghty" 500 s 1611757856.1711636 nil 150 nil))
    ("tag"
     ((t . reddit-question)
      750 nil))
    (mark -2500))
-#+END_EXAMPLE
+#+END_SRC
 
 Like Gnus scoring, this may look like Lisp code, but it is not directly eval'd. It will be read by the Lisp reader, so it must at least be a valid Lisp s-expression. You can find details below.
 
@@ -68,8 +68,8 @@ You can also download Autotools source distributions, as well. The =make= step p
 
 #+BEGIN_EXAMPLE
 cd /tmp
-curl -L --output elfeed-score-0.6.4.tar.gz https://github.com/sp1ff/elfeed-score/releases/download/0.6.4/elfeed-score-0.6.4.tar.gz
-tar xvf elfeed-score-0.6.4.tar.gz && cd elfeed-score-0.6.4
+curl -L --output elfeed-score-0.6.5.tar.gz https://github.com/sp1ff/elfeed-score/releases/download/0.6.5/elfeed-score-0.6.5.tar.gz
+tar xvf elfeed-score-0.6.5.tar.gz && cd elfeed-score-0.6.5
 export EMACSLOADPATH=$HOME/.emacs.d/elpa/elfeed-20200209.1942:$EMACSLOADPATH
 ./configure
 make
@@ -84,16 +84,16 @@ The unit tests require some macros defined by the [[https://github.com/skeeto/el
 #+BEGIN_EXAMPLE
 cd /tmp
 git clone https://github.com/skeeto/elfeed.git
-curl -L --output=elfeed-score-0.6.4.tar.gz https://github.com/sp1ff/elfeed-score/releases/download/0.6.4/elfeed-score-0.6.4.tar.gz
-tar xvf elfeed-score-0.6.4.tar.gz && cd elfeed-score-0.6.4
-export EMACSLOADPATH=/tmp/elfeed-score-0.6.4:/tmp/elfeed:/tmp/elfeed/tests:$EMACSLOADPATH
+curl -L --output=elfeed-score-0.6.5.tar.gz https://github.com/sp1ff/elfeed-score/releases/download/0.6.5/elfeed-score-0.6.5.tar.gz
+tar xvf elfeed-score-0.6.5.tar.gz && cd elfeed-score-0.6.5
+export EMACSLOADPATH=/tmp/elfeed-score-0.6.5:/tmp/elfeed:/tmp/elfeed/tests:$EMACSLOADPATH
 ./configure
 make
 make check
 sudo make install
 #+END_EXAMPLE
 
-Again, unless you already use =EMACSLOADPATH=, you'll need to set =EMACSLOADPATH= appropriately to your system, something like =EMACSLOADPATH=/tmp/elfeed-score-0.6.4:/tmp/elfeed:/tmp/elfeed/tests:/usr/share/emacs/25.2/lisp=.
+Again, unless you already use =EMACSLOADPATH=, you'll need to set =EMACSLOADPATH= appropriately to your system, something like =EMACSLOADPATH=/tmp/elfeed-score-0.6.5:/tmp/elfeed:/tmp/elfeed/tests:/usr/share/emacs/25.2/lisp=.
 
 ** Building form source
 
@@ -257,7 +257,7 @@ You can optionally arrange to have the scores displayed in the search buffer:
 
 This is not turned on by =elfeed-score-enable=; you will need to set this manually. However, =elfeed-score-unload= will remove it, if it's there.
 
-You can configure score logging by setting the variable =elfeed-score-log-level=. By default it will be ='warn= (which will produce very little output). Other possible settings are ='debug=, ='info=, and ='error=.  To trouble-shoot a balky rule, type =(setq elfeed-score-log-level 'debug)=, re-score your current view, and switch to buffer =*elfeed-score*=.
+You can configure score logging by setting the variable =elfeed-score-log-level=. By default it will be ='warn= (which will produce very little output). Other possible settings are ='debug=, ='info=, and ='error=.  To trouble-shoot a balky rule, type =(setq elfeed-score-log-level 'debug)=, re-score your current view (== s=), and switch to buffer =*elfeed-score*=.
 
 Finally, if you've got an entry that's not being scored in the manner you expect, you can ask [[https://github.com/sp1ff/elfeed-score][elfeed-score]] to explain itself by selecting the offending entry & invoking =elfeed-score-explain-entry= ("= x" by default); it will display a new buffer listing which entry attributes matched which rules (if any).
  

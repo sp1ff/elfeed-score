@@ -1,3 +1,19 @@
+2021-01-29  Michael Herstine  <sp1ff@pobox.com>
+
+	Address issue #7.
+	This comes down to better validation on loading of score file.
+	I updated the constructor to use (arguably abuse) the '&aux'
+	CL keyword to validate the parmaters.
+
+2021-01-27  Michael Herstine  <sp1ff@pobox.com>
+
+	Fix issue #9.
+	Correct the 'elfeed-score-explain' docstring.
+
+	Fix issue #6.
+	Correct the bad "authors" clause in the sample 'elfeed.score' in
+	the README. Thank Firmin for noting this.
+
 2020-12-19  Michael Herstine  <sp1ff@pobox.com>
 
 	Address a final nit in issue #2: make 'elfeed-score-explain-entry' non-interactive.
