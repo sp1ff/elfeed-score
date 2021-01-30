@@ -1,18 +1,36 @@
+2021-01-31  Michael Herstine  <sp1ff@pobox.com>
+
+	Re-factor 'elfeed-score.el'.
+	'elfeed-score.el' has grown to over 2K lines. Consequently, it
+	has become difficult to read, maintain & reason about. This commit:
+
+	    - breaks 'elfeed-score.el' up into several smaller files
+	    - changes the variable & function names in these new files to
+	      begin with their new prefix:
+	      - public symbols have aliases defined
+	      - private symols were just renamed-- if you were accessing
+	        these symbols in your code, it will break(!)
+
+	All lints now pass, as well as all unit tests. Still, this is a
+	major, breaking change & is not ready for release, yet.
+
 2021-01-29  Michael Herstine  <sp1ff@pobox.com>
 
-	Address issue #7.
-	This comes down to better validation on loading of score file.
-	I updated the constructor to use (arguably abuse) the '&aux'
-	CL keyword to validate the parmaters.
+	Squashing commits fixing assorted issues raised by firmart:
+	  - Fix issue #6.
 
-2021-01-27  Michael Herstine  <sp1ff@pobox.com>
+	    Correct the bad "authors" clause in the sample 'elfeed.score' in
+	    the README. Thank Firmin for noting this.
 
-	Fix issue #9.
-	Correct the 'elfeed-score-explain' docstring.
+	  - Fix issue #9.
 
-	Fix issue #6.
-	Correct the bad "authors" clause in the sample 'elfeed.score' in
-	the README. Thank Firmin for noting this.
+	    Correct the 'elfeed-score-explain' docstring.
+
+	  - Address issue #7.
+
+	    This comes down to better validation on loading of score file.
+	    I updated the constructor to use (arguably abuse) the '&aux'
+	    CL keyword to validate the parmeters.
 
 2020-12-19  Michael Herstine  <sp1ff@pobox.com>
 

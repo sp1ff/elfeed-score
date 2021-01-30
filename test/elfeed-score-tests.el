@@ -74,13 +74,13 @@ is convenient for testing scoring)."
 (defmacro with-elfeed-score-test (&rest body)
   "Run BODY with a fresh, empty set of scoring rules."
   (declare (indent defun))
-  `(let ((elfeed-score--title-rules nil)
-         (elfeed-score--feed-rules nil)
-         (elfeed-score--content-rules nil)
-         (elfeed-score--title-or-content-rules nil)
-         (elfeed-score--tag-rules nil)
-         (elfeed-score--adjust-tags-rules nil)
-         (elfeed-score--score-mark nil))
+  `(let ((elfeed-score-serde--title-rules nil)
+         (elfeed-score-serde--feed-rules nil)
+         (elfeed-score-serde--content-rules nil)
+         (elfeed-score-serde--title-or-content-rules nil)
+         (elfeed-score-serde--tag-rules nil)
+         (elfeed-score-serde--adjust-tags-rules nil)
+         (elfeed-score-serde--score-mark nil))
      (progn ,@body)))
 
 (ert-deftest elfeed-score-test-test-sort ()
@@ -128,12 +128,12 @@ is convenient for testing scoring)."
     (should (equal (elfeed-score-format-score 11) "   11 "))))
 
 (ert-deftest elfeed-score-test-match-tags ()
-  "Test `elfeed-score--match-tags'."
+  "Test `elfeed-score-scoring--match-tags'."
 
-  (should (eq t   (elfeed-score--match-tags '(foo bar) '(t . (foo)))))
-  (should (eq t   (elfeed-score--match-tags '(foo bar) nil)))
-  (should (eq nil (elfeed-score--match-tags '(foo bar) '(t . (splat)))))
-  (should (eq nil (elfeed-score--match-tags '(foo bar) '(nil . (foo))))))
+  (should (eq t   (elfeed-score-scoring--match-tags '(foo bar) '(t . (foo)))))
+  (should (eq t   (elfeed-score-scoring--match-tags '(foo bar) nil)))
+  (should (eq nil (elfeed-score-scoring--match-tags '(foo bar) '(t . (splat)))))
+  (should (eq nil (elfeed-score-scoring--match-tags '(foo bar) '(nil . (foo))))))
 
 (provide 'elfeed-score-tests)
 

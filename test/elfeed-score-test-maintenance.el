@@ -41,17 +41,17 @@
              :text "Hancock" :value 1 :type 's :date 1604184127.0
              :hits 123)))
 
-    (should (equal (elfeed-score--get-last-match-date r1) 0.0))
-    (should (equal (elfeed-score--get-last-match-date r2) 0.0))
-    (should (equal (elfeed-score--get-last-match-date r3) 1604184127.0))
-    (should (equal (elfeed-score--get-last-match-date r4) 1604184127.0))
-    (should (equal (elfeed-score--get-last-match-date r5) 1604184127.0))
+    (should (equal (elfeed-score-maint--get-last-match-date r1) 0.0))
+    (should (equal (elfeed-score-maint--get-last-match-date r2) 0.0))
+    (should (equal (elfeed-score-maint--get-last-match-date r3) 1604184127.0))
+    (should (equal (elfeed-score-maint--get-last-match-date r4) 1604184127.0))
+    (should (equal (elfeed-score-maint--get-last-match-date r5) 1604184127.0))
 
-    (should (equal (elfeed-score--get-hits r1) 0))
-    (should (equal (elfeed-score--get-hits r2) 0))
-    (should (equal (elfeed-score--get-hits r3) 123))
-    (should (equal (elfeed-score--get-hits r4) 123))
-    (should (equal (elfeed-score--get-hits r5) 123))))
+    (should (equal (elfeed-score-maint--get-hits r1) 0))
+    (should (equal (elfeed-score-maint--get-hits r2) 0))
+    (should (equal (elfeed-score-maint--get-hits r3) 123))
+    (should (equal (elfeed-score-maint--get-hits r4) 123))
+    (should (equal (elfeed-score-maint--get-hits r5) 123))))
 
 (provide 'elfeed-score-test-maintenace)
 

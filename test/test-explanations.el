@@ -31,29 +31,29 @@
   "Basic tests for `elfeed-score' explanations."
   (with-elfeed-test
    (let* ((feed (elfeed-score-test-generate-feed "foo"))
-          (elfeed-score-explanation-buffer-name "*explanation-smoke-tests*")
+          (elfeed-score-scoring-explanation-buffer-name "*explanation-smoke-tests*")
           (entry (elfeed-score-test-generate-entry
                   feed "bar" "Lorem ipsum"
                   :authors '((:name "John Hancock"))
                   :tags '(a b c))))
      (elfeed-db-add entry)
      (with-elfeed-score-test
-      (let* ((elfeed-score--title-rules
+      (let* ((elfeed-score-serde--title-rules
               (list (elfeed-score-title-rule--create :text "bar" :value 1 :type 's)))
-             (elfeed-score--content-rules
+             (elfeed-score-serde--content-rules
               (list (elfeed-score-content-rule--create :text "lorem" :value 1 :type 's)))
-             (elfeed-score--title-or-content-rules
+             (elfeed-score-serde--title-or-content-rules
               (list (elfeed-score-title-or-content-rule--create :text "bar"
                                                                 :title-value 1
                                                                 :content-value 1
                                                                 :type 's)))
-             (elfeed-score--feed-rules
+             (elfeed-score-serde--feed-rules
               (list (elfeed-score-feed-rule--create :text "foo" :value 1 :type 's :attr 't)))
-             (elfeed-score--authors-rules
+             (elfeed-score-serde--authors-rules
               (list (elfeed-score-authors-rule--create :text "hancock" :value 1 :type 's)))
-             (elfeed-score--tag-rules
+             (elfeed-score-serde--tag-rules
               (list (elfeed-score-tag-rule--create :tags '(b c d) :value 1))))
-        (elfeed-score-explain-entry entry)
+        (elfeed-score-scoring-explain-entry entry)
         (let ((text
                (with-current-buffer "*explanation-smoke-tests*"
                  (buffer-string))))

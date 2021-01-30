@@ -30,14 +30,14 @@
 (require 'elfeed-score-tests)
 
 (ert-deftest elfeed-score-test-feed-rules-match-feeds ()
-  "Smoke tests for `elfeed-score--match-feeds'."
+  "Smoke tests for `elfeed-score-scoring--match-feeds'."
 
   (with-elfeed-test
    (let ((feed (elfeed-score-test-generate-feed "feed" "http://www.feed.com/rss")))
-     (should (elfeed-score--match-feeds feed '(t (u s "bar.com")  (t s "fee"))))
-     (should (not (elfeed-score--match-feeds feed '(nil (u s "bar.com")  (t s "fee")))))
-     (should (elfeed-score--match-feeds feed '(t t s "fee")))
-     (should (not (elfeed-score--match-feeds feed '(nil (t s "fee"))))))))
+     (should (elfeed-score-scoring--match-feeds feed '(t (u s "bar.com")  (t s "fee"))))
+     (should (not (elfeed-score-scoring--match-feeds feed '(nil (u s "bar.com")  (t s "fee")))))
+     (should (elfeed-score-scoring--match-feeds feed '(t t s "fee")))
+     (should (not (elfeed-score-scoring--match-feeds feed '(nil (t s "fee"))))))))
 
 (ert-deftest elfeed-score-test-feed-rules-smoke ()
   "Smoke tests for feed-scoped rules."
@@ -48,12 +48,12 @@
             (entry (elfeed-score-test-generate-entry feed title "some content")))
        (elfeed-db-add entry)
        (with-elfeed-score-test
-        (let* ((elfeed-score--title-rules
+        (let* ((elfeed-score-serde--title-rules
                 (list
                  (elfeed-score-title-rule--create
                   :text "foo" :value 1 :type 's
                   :feeds '(t . ((u s "quux.com") (t s "feed"))))))
-               (score (elfeed-score--score-entry entry)))
+               (score (elfeed-score-scoring--score-entry entry)))
           (should (eq 1 score))))))))
 
 (provide 'elfeed-score-test-feed-rules)

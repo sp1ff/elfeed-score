@@ -1,5 +1,18 @@
 elfeed-score News -- history of user-visible changes -*- outline -*-
 
+* Changes in elfeed-score 0.7.0
+
+** User-visible Changes
+
+*** elfeed-score.el re-factored
+
+Heretofore, `elfeed-score' was a single-file package. As the
+file has grown to over 2K lines, it became increasingly
+difficult to read & reason about. Beginning with the 0.7
+series, I've broken it up into several smaller, hopefully
+more manageable files.
+
+Numerous functions & variables were renamed to begin with their new package prefix. In the case of public symbols, aliases were introduced so code using the old names will receive a warning about using anobsolete variable or function. However, private symbols were simply renamed-- if you wrote code accessing private symbols, this change will break your code.
 * Changes in elfeed-score 0.6.5
 
 ** Bug Fixes

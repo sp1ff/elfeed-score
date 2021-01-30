@@ -42,7 +42,7 @@
             (mark -2500)))
          (score-text (pp-to-string score-entries))
          (score-file (make-temp-file "elfeed-score-test-" nil nil score-text))
-         (score-entries-2 (elfeed-score--parse-score-file score-file)))
+         (score-entries-2 (elfeed-score-serde--parse-score-file score-file)))
     (should (equal score-entries-2
                    (list :mark -2500
                          :feeds (list (elfeed-score-feed-rule--create
@@ -72,7 +72,7 @@
             (mark -2500)))
          (score-text (pp-to-string score-entries))
          (score-file (make-temp-file "elfeed-score-test-" nil nil score-text))
-         (score-entries-2 (elfeed-score--parse-score-file score-file)))
+         (score-entries-2 (elfeed-score-serde--parse-score-file score-file)))
     (should (equal score-entries-2
                    (list :mark -2500
                          :feeds (list (elfeed-score-feed-rule--create
@@ -107,7 +107,7 @@
             (mark -2500)))
          (score-text (pp-to-string score-entries))
          (score-file (make-temp-file "elfeed-score-test-" nil nil score-text))
-         (score-entries-2 (elfeed-score--parse-score-file score-file)))
+         (score-entries-2 (elfeed-score-serde--parse-score-file score-file)))
        (should (equal score-entries-2
                       (list :mark -2500
                             :feeds (list (elfeed-score-feed-rule--create
@@ -143,7 +143,7 @@
             (mark -2500)))
          (score-text (pp-to-string score-entries))
          (score-file (make-temp-file "elfeed-score-test-" nil nil score-text))
-         (score-entries-2 (elfeed-score--parse-score-file score-file)))
+         (score-entries-2 (elfeed-score-serde--parse-score-file score-file)))
        (should (equal score-entries-2
                       (list :mark -2500
                             :adjust-tags nil
@@ -183,7 +183,7 @@
             (mark -2500)))
          (score-text (pp-to-string score-entries))
          (score-file (make-temp-file "elfeed-score-test-" nil nil score-text))
-         (score-entries-2 (elfeed-score--parse-score-file score-file)))
+         (score-entries-2 (elfeed-score-serde--parse-score-file score-file)))
     (should (equal score-entries-2
                    (list :mark -2500
                          :adjust-tags
@@ -237,7 +237,7 @@
             (mark -2500)))
          (score-text (pp-to-string score-entries))
          (score-file (make-temp-file "elfeed-score-test-" nil nil score-text))
-         (score-entries-2 (elfeed-score--parse-score-file score-file)))
+         (score-entries-2 (elfeed-score-serde--parse-score-file score-file)))
     (should (equal score-entries-2
                    (list :mark -2500
                          :adjust-tags
@@ -292,7 +292,7 @@
             (mark -2500)))
          (score-text (pp-to-string score-entries))
          (score-file (make-temp-file "elfeed-score-test-" nil nil score-text))
-         (score-entries-2 (elfeed-score--parse-score-file score-file)))
+         (score-entries-2 (elfeed-score-serde--parse-score-file score-file)))
     (should (equal score-entries-2
                    (list
                     :mark -2500
@@ -338,7 +338,7 @@
             ("authors" nil)))
          (score-text (pp-to-string score-entries))
          (score-file (make-temp-file "elfeed-score-test-" nil nil score-text)))
-    (should-error (elfeed-score--parse-score-file score-file))))
+    (should-error (elfeed-score-serde--parse-score-file score-file))))
 
 (provide 'elfeed-score-test-serde)
 
