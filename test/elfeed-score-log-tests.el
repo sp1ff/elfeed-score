@@ -53,26 +53,36 @@
 
   (kill-buffer (elfeed-score-log-buffer))
   (let ((elfeed-score-log-level 'info)
-        (elfeed-score-max-log-buffer-size 2))
+        (elfeed-score-log-max-buffer-size 2))
     (elfeed-score-log 'info "line 1")
-    (should (string-match
-             "^\\[[-0-9: ]\\{19\\}\\] \\[info\\]: line 1
+    (should
+     (eq
+      0
+      (string-match
+       "^\\[[-0-9: ]\\{19\\}\\] \\[info\\]: line 1
 $"
-             (elfeed-score-log-tests--log-buffer-text)))
+       (elfeed-score-log-tests--log-buffer-text))))
     (should (eq (elfeed-score-log-tests--log-buffer-lines) 2))
     (elfeed-score-log 'info "line 2")
-    (should (string-match
-             "^\\[[-0-9: ]\\{19\\}\\] \\[info\\]: line 1
+    (should
+     (eq
+      0
+      (string-match
+       "^\\[[-0-9: ]\\{19\\}\\] \\[info\\]: line 1
 \\[[-0-9: ]\\{19\\}\\] \\[info\\]: line 2
 $"
-             (elfeed-score-log-tests--log-buffer-text)))
+       (elfeed-score-log-tests--log-buffer-text))))
     (should (eq (elfeed-score-log-tests--log-buffer-lines) 3))
     (elfeed-score-log 'info "line 3")
-    (should (string-match
-             "^\\[[-0-9: ]\\{19\\}\\] \\[info\\]: line 2
+    (should
+     (eq
+      0
+      (string-match
+       "^\\[[-0-9: ]\\{19\\}\\] \\[info\\]: line 2
 \\[[-0-9: ]\\{19\\}\\] \\[info\\]: line 3
 $"
-             (elfeed-score-log-tests--log-buffer-text)))
+       (elfeed-score-log-tests--log-buffer-text))))
+    (message "buffer: ``%s''" (elfeed-score-log-tests--log-buffer-text))
     (should (eq (elfeed-score-log-tests--log-buffer-lines) 3))))
 
 (provide 'elfeed-score-log-tests)

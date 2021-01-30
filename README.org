@@ -2,7 +2,7 @@
 #+DESCRIPTION: Gnus-style scoring for Elfeed
 #+AUTHOR: Sp1ff
 #+EMAIL: sp1ff@pobox.com
-#+DATE: <2021-02-25 Thu 07:53>
+#+DATE: <2021-02-25 Thu 07:58>
 #+AUTODATE: t
 #+OPTIONS: toc:nil org-md-headline-style:setext *:t ^:nil
 
@@ -73,8 +73,8 @@ You can also download Autotools source distributions, as well. The =make= step p
 
 #+BEGIN_EXAMPLE
 cd /tmp
-curl -L --output elfeed-score-0.6.5.tar.gz https://github.com/sp1ff/elfeed-score/releases/download/0.6.5/elfeed-score-0.6.5.tar.gz
-tar xvf elfeed-score-0.6.5.tar.gz && cd elfeed-score-0.6.5
+curl -L --output elfeed-score-0.7.0.tar.gz https://github.com/sp1ff/elfeed-score/releases/download/0.7.0/elfeed-score-0.7.0.tar.gz
+tar xvf elfeed-score-0.7.0.tar.gz && cd elfeed-score-0.7.0
 export EMACSLOADPATH=$HOME/.emacs.d/elpa/elfeed-20200209.1942:$EMACSLOADPATH
 ./configure
 make
@@ -89,16 +89,16 @@ The unit tests require some macros defined by the [[https://github.com/skeeto/el
 #+BEGIN_EXAMPLE
 cd /tmp
 git clone https://github.com/skeeto/elfeed.git
-curl -L --output=elfeed-score-0.6.5.tar.gz https://github.com/sp1ff/elfeed-score/releases/download/0.6.5/elfeed-score-0.6.5.tar.gz
-tar xvf elfeed-score-0.6.5.tar.gz && cd elfeed-score-0.6.5
-export EMACSLOADPATH=/tmp/elfeed-score-0.6.5:/tmp/elfeed:/tmp/elfeed/tests:$EMACSLOADPATH
+curl -L --output=elfeed-score-0.7.0.tar.gz https://github.com/sp1ff/elfeed-score/releases/download/0.7.0/elfeed-score-0.7.0.tar.gz
+tar xvf elfeed-score-0.7.0.tar.gz && cd elfeed-score-0.7.0
+export EMACSLOADPATH=/tmp/elfeed-score-0.7.0:/tmp/elfeed:/tmp/elfeed/tests:$EMACSLOADPATH
 ./configure
 make
 make check
 sudo make install
 #+END_EXAMPLE
 
-Again, unless you already use =EMACSLOADPATH=, you'll need to set =EMACSLOADPATH= appropriately to your system, something like =EMACSLOADPATH=/tmp/elfeed-score-0.6.5:/tmp/elfeed:/tmp/elfeed/tests:/usr/share/emacs/25.2/lisp=.
+Again, unless you already use =EMACSLOADPATH=, you'll need to set =EMACSLOADPATH= appropriately to your system, something like =EMACSLOADPATH=/tmp/elfeed-score-0.7.0:/tmp/elfeed:/tmp/elfeed/tests:/usr/share/emacs/25.2/lisp=.
 
 ** Building form source
 

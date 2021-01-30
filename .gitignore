@@ -11,3 +11,8 @@ configure
 README.md
 env.sh
 smoke-test.el
+.pkg-tmp
+*.tar
+*.tar.bz2
+*.tar.gz
+*.tar.xz
