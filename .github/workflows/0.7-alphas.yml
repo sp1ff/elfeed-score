@@ -6,14 +6,11 @@ on:
   # allow this workflow to be triggered manually, which is what this
   # event allegedly does
   workflow_dispatch:
-  # Modifying the push event with 'branches' and 'tags' seems to be an OR operation (i.e. the workflow
-  # will run if either on branch release-infra *or* it has a tag of n.n.n)
   push:
-    # Un-comment this for testing
-    # branches:
-    #   - release-infra
-    tags:
-      - '[0-9]+.[0-9]+.[0-9]+'
+    # I can't seem to specify that this workflow should only run on branch '0.7'
+    # *and* on pushing a tag.
+    branches:
+      - 0.7
 
 jobs:
   # This job will create the GitHub release
@@ -28,26 +25,33 @@ jobs:
       - name: Create artifacts directory
         run: mkdir artifacts
 
-      - name: Get the release version from the tag
+      - name: Get the release version from configure.ac
         if: env.RELEASE_VERSION == ''
         run: |
-          # https://github.community/t5/GitHub-Actions/How-to-get-just-the-tag-name/m-p/32167/highlight/true#M1027
-          echo "RELEASE_VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+          pwd
+          set -x
+          v=`awk '/^AC_INIT/ {print substr($2, 2, length($2)-3)}' configure.ac`
+          a=`awk '/^AC_INIT/ {print substr($2, 6, length($2)-7)}' configure.ac`
+          echo "RELEASE_VERSION=${v}" >> $GITHUB_ENV
+          echo "ALPHA_VERSION=${a}" >> $GITHUB_ENV
           echo "version is: ${{ env.RELEASE_VERSION }}"
+          echo "alpha version is: ${{ env.ALPHA_VERSION }}"
+
       - name: Create GitHub release
         id: release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ env.RELEASE_VERSION }}
-          release_name: ${{ env.RELEASE_VERSION }}
+          release_name: 0.7-alpha-${{ env.ALPHA_VERSION }}
 
       - name: Save release upload URL to artifact
         run: echo "${{ steps.release.outputs.upload_url }}" > artifacts/release-upload-url
 
       - name: Save version number to artifact
-        run: echo "${{ env.RELEASE_VERSION }}" > artifacts/release-version
+        run: |
+            echo "${{ env.RELEASE_VERSION }}" > artifacts/release-version
+            echo "${{ env.ALPHA_VERSION }}" > artifacts/alpha-version
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v1
@@ -78,7 +82,9 @@ jobs:
         echo "release upload url: $RELEASE_UPLOAD_URL"
         release_version="$(cat artifacts/release-version)"
         echo "RELEASE_VERSION=$release_version" >> $GITHUB_ENV
-        echo "release version: $RELEASE_VERSION"
+        alpha_version="$(cat artifacts/alpha-version)"
+        echo "ALPHA_VERSION=$alpha_version" >> $GITHUB_ENV
+        echo "alpha version: ${{ env.ALPHA_VERSION }}"
 
     - name: Install tooling
       shell: bash
@@ -103,7 +109,7 @@ jobs:
         echo "DISTRO_BZ2=elfeed-score-${{ env.RELEASE_VERSION }}.tar.bz2" >> $GITHUB_ENV
         echo "DISTRO_GZ=elfeed-score-${{ env.RELEASE_VERSION }}.tar.gz" >> $GITHUB_ENV
         echo "DISTRO_XZ=elfeed-score-${{ env.RELEASE_VERSION }}.tar.xz" >> $GITHUB_ENV
-        echo "DISTRO_PKG=elfeed-score${{ env.RELEASE_VERSION }}.tar >> $GITHUB_ENV
+        echo "DISTRO_PKG=elfeed-score-${{ env.RELEASE_VERSION }}.tar" >> $GITHUB_ENV
 
     - name: Upload bzip2 tarball
       uses: actions/upload-release-asset@v1.0.1
