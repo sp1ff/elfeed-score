@@ -16,3 +16,4 @@ smoke-test.el
 *.tar.bz2
 *.tar.gz
 *.tar.xz
+package-test.el

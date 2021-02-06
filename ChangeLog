@@ -1,3 +1,13 @@
+2021-02-05  Michael Herstine  <sp1ff@pobox.com>
+
+	Major re-work of the elfeed-score documentation.
+	This commit breaks-up the bloated README:
+
+	  - introductory information & installation instructions remain
+	    in the README
+	  - user documentation has been moved to a Texinfo manual
+	  - developer documentation has been moved to the project Wiki
+
 2021-01-31  Michael Herstine  <sp1ff@pobox.com>
 
 	Re-factor 'elfeed-score.el'.
