@@ -25,6 +25,9 @@ jobs:
       - name: Create artifacts directory
         run: mkdir artifacts
 
+      - name: Checkout repo
+        uses: actions/checkout@v2
+
       - name: Get the release version from configure.ac
         if: env.RELEASE_VERSION == ''
         run: |
@@ -66,9 +69,6 @@ jobs:
     needs: ['create-release']
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout repo
-      uses: actions/checkout@v2
-
     - name: Get release download URL
       uses: actions/download-artifact@v1
       with:
