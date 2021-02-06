@@ -1,7 +1,7 @@
 # Setting up a release workflow for `elfeed-score'. Much thanks to
 # BurntShushi from whom I shamelessly copied a lot of this
 # <https://github.com/BurntSushi/ripgrep/blob/master/.github/workflows/release.yml>
-name: release
+name: alphas
 on:
   # allow this workflow to be triggered manually, which is what this
   # event allegedly does
@@ -29,6 +29,7 @@ jobs:
         if: env.RELEASE_VERSION == ''
         run: |
           pwd
+          ls
           set -x
           v=`awk '/^AC_INIT/ {print substr($2, 2, length($2)-3)}' configure.ac`
           a=`awk '/^AC_INIT/ {print substr($2, 6, length($2)-7)}' configure.ac`
