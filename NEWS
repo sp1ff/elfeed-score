@@ -1,5 +1,18 @@
 elfeed-score News -- history of user-visible changes -*- outline -*-
 
+* Changes in elfeed-score 0.7.1
+
+** User-visible Changes
+
+*** elfeed-score documentation re-worked
+
+This build re-works the elfeed-score documentation, breaking
+up the README:
+
+  - introductory information & installation instructions remain
+    in the README
+  - user documentation has been moved to a Texinfo manual
+  - developer documentation has been moved to the project Wiki
 * Changes in elfeed-score 0.7.0
 
 ** User-visible Changes

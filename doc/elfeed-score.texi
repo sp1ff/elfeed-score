@@ -1,0 +1,1160 @@
+\input texinfo   @c -*- texinfo -*-
+@c %**start of header
+@setfilename elfeed-score.info
+@settitle elfeed-score
+@include version.texi
+@c %**end of header
+
+@dircategory Emacs
+@direntry
+* elfeed-score: (elfeed-score). Gnus-style scoring for elfeed.
+@end direntry
+
+@copying
+This manual corresponds to elfeed-score version @value{VERSION}.
+
+Copyright @copyright{} 2021 Michael Herstine <sp1ff@@pobox.com>
+
+@quotation
+Permission is granted to copy, distribute and/or modify this document
+under the terms of the GNU Free Documentation License, Version 1.3
+or any later version published by the Free Software Foundation;
+with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.
+A copy of the license is included in the section entitled ``GNU
+Free Documentation License''.
+
+A copy of the license is also available from the Free Software
+Foundation Web site at @url{https://www.gnu.org/licenses/fdl.html}.
+
+@end quotation
+
+This document was typeset with
+@uref{http://www.texinfo.org/, GNU Texinfo}.
+
+@end copying
+
+@c title & copyright-- won't appear in online output.
+@titlepage
+@title elfeed-score
+@subtitle Gnus-style scoring for Elfeed
+@author @email{sp1ff@@pobox.com}
+@page
+@vskip 0pt plus 1filll
+@insertcopying
+@end titlepage
+
+@c Output the table of the contents at the beginning.
+@contents
+
+@c ``top'' node-- this is the start of the online output, but doesn't
+@c appear in the printed manual
+@ifnottex
+@node Top
+@top elfeed-score
+
+Gnus-style scoring for Elfeed.
+
+This manual corresponds to elfeed-score version @value{VERSION}.
+
+@end ifnottex
+
+@c Generate the nodes for this menu with `C-c C-u C-m'.
+@menu
+* Introduction::
+* Getting Started::
+* The Score File::
+* Using elfeed-score::
+* Roadmap & Contributing::
+* Index::
+* Function Index::
+* Variable Index::
+@end menu
+
+@node Introduction
+@chapter Introduction
+
+@url{https://github.com/sp1ff/elfeed-score, elfeed-score} brings
+@url{https://gnus.org, Gnus}-style scoring to
+@url{https://github.com/skeeto/elfeed, elfeed}. If you're not sure
+what that means, you're in the right place. If you know @emph{exactly}
+what that means and you just want the technical details, you are also
+in the right place.
+
+If you are new to elfeed, elfeed-score, or
+@url{https://www.gnu.org/software/emacs/, Emacs} altogether... read
+on. This manual is intended to be read front-to-back by new users.
+
+If you are looking for technical details: for a list of elfeed-score
+functions, refer to the @ref{Function Index}. For a list of
+elfeed-score variables, see the @ref{Variable Index}. For detailed
+documentation on rule types, see @ref{Types of Rules, Rule Types}.
+
+For information on obtaining & installing elfeed-score, see the
+project @url{https://github.com/sp1ff/elfeed-score, README}. For
+information on building & hacking on elfeed-score, see the
+@url{https://github.com/sp1ff/elfeed-score/wiki, Wiki}.
+
+@node Getting Started
+@chapter Getting Started
+
+@c Generate the nodes for this menu with `C-c C-u C-m'.
+@menu
+* Scoring::
+* Starting elfeed-score::
+@end menu
+
+@node Scoring
+@section Scoring
+
+@url{https://github.com/skeeto/elfeed, elfeed} is an extensible RSS &
+Atom reader for Emacs. By default, it will display entries in reverse
+chronological order. This package defines a bit of metadata for each
+of your elfeed entries: a "score". A score is an integer (negative or
+positive), and higher scores denote entries of greater interest to
+you. This package also (optionally) installs a new sort function, so
+that Elfeed will display entries with higher scores before entries
+with lower scores (entries with the same scores will still be sorted
+in reverse chronological order). It also provides an entry display
+function for the search buffer that displays each entry's score,
+should you choose to install it.
+
+While you can manually assign a score to an entry, you will likely
+find it more convenient to create rules for scoring that will be
+automatically applied to each new entry every time you update
+Elfeed. You can score against title, feed, content & authors by
+defining strings that will be matched against those attributes by
+substring, regexp or whole-word match. You can score against the
+feed. You can also score against the presence or absence of tags. Most
+kinds of rules can be scoped by Elfeed entry tags, so that a rule will
+only be applied if an entry has certain tags (or does not have certain
+tags). Many kinds of rules may also be scoped by feed, so that a rule
+will only be applied to entries from certain feeds (or not from
+certain feeds). Each rule defines an integral value, and the rules are
+applied in order of definition. The new entry's score begins at
+@code{elfeed-score-scoring-default-score}, and is adjusted by the
+value defined by each matching scoring rule.
+
+@defvr {User Option} elfeed-score-scoring-default-score
+The default score for an elfeed entry.
+@end defvr
+
+For instance, here's a subset of my scoring file at the moment:
+
+@lisp
+;;; Elfeed score file                                     -*- lisp -*-
+(("title"
+  ("OPEN THREAD" -1000 S 1576681345.4086394)
+  ("raymond c\\(hen\\)?" 250 r 1576808786.1558545) (t .(@@dev)))
+ ("content"
+  ("type erasure" 500 s 1576808786.043517))
+ ("title-or-content"
+  ("california" 150 100 s 1576808786.4068587)
+  ("china" 150 100 w 1576808786.1848788))
+ ("feed"
+  ("Essays in Idleness" 250 S t 1576808786.1956885)
+  ("Irreal" 250 S t 1576808786.1765869)
+  ("Julia Evans" 100 s t 1576808786.4092398)
+  ("National Weather Service" 400 S t 1576808786.1117532)
+  ("emacs-news – sacha chua" 350 S t 1576808785.3807983))
+ ("authors"
+   ("Jim Geraghty" 500 s 1611757856.1711636 nil 150 nil))
+ ("tag"
+  ((t . reddit-question)
+   750 nil))
+ (mark -2500))
+@end lisp
+
+Like Gnus scoring, this may look like Lisp code, but it is not
+directly evaluated. It will be read by the Lisp reader, so it must at
+least be a valid Lisp s-expression.
+
+For details of how to form s-expressions elfeed-score will understand,
+see @ref{Score File Format, below, below}.
+
+@node Starting elfeed-score
+@section Starting elfeed-score
+
+@cindex starting elfeed-score
+@cindex elfeed-score initialization
+
+Once you've setup your score file, and assuming you've installed
+elfeed-score, begin or switch to your Emacs session and say:
+
+@lisp
+(require 'elfeed-score)
+@end lisp
+
+Just loading the library will *not* modify elfeed; you need to
+explicitly enable the package for that:
+
+@lisp
+(elfeed-score-enable)
+@end lisp
+
+This will install the new sort function & new entry hook, as well as
+read your score file. NB. @code{elfeed-score-enable} is autoloaded, so
+if you've installed this package in the usual way, you should be able
+to just invoke the function & have the package loaded & enabled
+automatically.
+
+@deffn Command elfeed-score-enable
+Install the new sort function & the new entry hook. Read the score
+file. With prefix arg do @emph{not} install the custom sort function.
+@end deffn
+
+Some elfeed users have already customized
+@code{elfeed-search-sort-function} and may not wish to have
+elfeed-score install a new one. @code{elfeed-score-enable} takes a
+prefix argument: if present, it will install the new entry hook &
+commence scoring, but will @emph{not} install the new sort
+function. Such users may refer to @code{elfeed-score-sort} if they
+would like to incorporate scoring into their sort functions.
+
+@deffn Utility elfeed-score-sort
+@code{elfeed-search-sort-function}-compliant function that will
+sort elfeed entries by score first, then timestamp.
+@end deffn
+
+The package defines a keymap, but does not bind it to any key. I like
+to set it to the @kbd{=} key:
+
+@lisp
+(define-key elfeed-search-mode-map "=" elfeed-score-map)
+@end lisp
+
+Now, only when you're in the elfeed-score search buffer, you can
+access elfeed-score commands on the @kbd{=} key.
+
+elfeed allows us to customize how entries are displayed in the elfeed
+search buffer through the variable
+@code{elfeed-search-print-entry-function}. Because users have
+customized this, elfeed-score does not alter this variable directly
+Rather, it offers a replacement implementation,
+@code{elfeed-score-print-entry}, should you wish to use it.
+
+@deffn Utility elfeed-score-print-entry
+Prefix each entry with its score when displayed in the elfeed
+search buffer.
+@end deffn
+
+Install it like so:
+
+@lisp
+(setq elfeed-search-print-entry-function #'elfeed-score-print-entry)
+@end lisp
+
+While this is not turned on by @code{elfeed-score-enable},
+@code{elfeed-score-unload} will remove it, if it's there.
+
+@deffn Command elfeed-score-unload
+Unload elfeed-score.
+@end deffn
+
+Even if you've customized the elfeed print function, if you would like
+to incorporate the score into your version, you can use the
+@code{elfeed-score-print-entry} implementation for inspiration.
+
+@node The Score File
+@chapter The Score File
+
+@cindex score file, introduction
+
+The rules for scoring are written down in the score file, a plain-text
+file containing a single Lisp form. The location of the score file is
+defined in @code{elfeed-score-serde-score-file}.
+
+@defvr {User Option} elfeed-score-serde-score-file
+The location at which scoring rules are maintained.
+
+The default value is @file{elfeed.score} in
+@code{user-emacs-directory}, which see @ref{Init File,
+user-emacs-directory, user-emacs-directory, elisp, Emacs Lisp}.
+@end defvr
+
+We'll go over the format in more detail @ref{Score File Format, below,
+below}.
+
+One important thing to note is that while the score file is initially
+hand-authored by the user, elfeed-score itself updates it. In other
+words, the score file is maintained collaboratively by the user and by
+elfeed-score.  The user is responsible for authoring
+rules. elfeed-score, on startup, will read the file into memory, and
+after each scoring operation, will write the contents back out to the
+scoring file, with attributes such as last match time and the number
+of matches for each rule updated. This means that if you update your
+rules by hand, you need to tell elfeed-score to re-load it before
+(re-)scoring any elfeed entries. You can do this by invoking
+@code{elfeed-score-load-score-file} (@kbd{= l}):
+
+@deffn Command elfeed-score-load-score-file
+Load the score file into the current session.
+@end deffn
+
+@node Score File Format
+@section Score File Format
+
+The score file is plain-text file containing a single Lisp form. Under
+the hood, elfeed-score opens your file, inserts its contents into a
+temporary buffer, and calls @code{read-from-string} (@pxref{Input
+Functions, read-from-string, read-from-string, elisp, Emacs Lisp}) on
+the contents.
+
+The form is a list of lists and each sub-list begins with a symbol or
+a string identifying that sub-list's nature & purpose. The sub-list
+identifiers elfeed-score recognizes are:
+
+@cindex score file entries
+
+@itemize
+@item
+@code{version}
+The sublist named by the symbol @code{version} contains the version of
+the score file format. You do not need to include this in your initial
+score file; it is written out automatically by
+elfeed-score. elfeed-score maintains backward compatibiliy in that
+score files in older format versions are still recognized. The most
+recent format version will always be used when the score file is
+updated, however. Also, an older elfeed-score will reject a more
+recent score file.
+
+@cindex score file version
+
+@item
+``title''
+The sublist named by the string ``title'' contains rules that
+match against elfeed entry titles, on which more below in @ref{title
+Rules}.
+
+@item
+``content''
+The sublist named by the string ``content'' contains rules that
+match against elfeed entry content, on which more below in @ref{content
+Rules}.
+
+@item
+``title-or-content''
+The sublist named by the string ``title-or-content'' contains rules
+that match against both entry title @emph{and} content, on which more
+below in @ref{title-or-content Rules}.
+
+@item
+``authors''
+This sublist contains rules that match against the entry author, on
+which more below in @ref{authors Rules}.
+
+@item
+``tag''
+This sublist contains rules that match against entries' tags;
+see @ref{tag Rules} below for more details.
+
+@item
+@cindex score file
+``feed''
+This sublist contains rules that match against entries' feed;
+see @ref{feed Rules} below for more details.
+
+@item
+``adjust-tags''
+This sublist contains rules that will be applied @emph{after} an
+entry's score has been computed and that add or remove tags based on
+that score.  Details below at @ref{adjust-tags Rules}.
+
+@item
+@code{mark}
+This sublist contains an integer; if an entry's final score is below
+this value, the entry will be marked as ``read''. Details below in
+@ref{mark Rule}.
+
+@end itemize
+
+@node Types of Rules
+@section Types of Rules
+
+@c Generate the nodes for this menu with `C-c C-u C-m'.
+@menu
+* title Rules::
+* content Rules::
+* title-or-content Rules::
+* feed Rules::
+* authors Rules::
+* tag Rules::
+* adjust-tags Rules::
+* mark Rule::
+@end menu
+
+@node title Rules
+@subsection title Rules
+
+@cindex title rules
+
+``title rules'' are rules that are matched against each entry's
+title. You may match by substring, regexp or whole word. The match may
+be case sensitive or case-insensitive. Of course, the rule needs to
+specify the amount to be added to an entry's score on successful
+match.
+
+In the score file (@pxref{The Score File}), title rules are
+represented by a list of length seven:
+
+@enumerate
+@item
+The match text
+This is a string.
+
+@item
+The match value
+This is an integer specifying the amount by which the entry's score
+should be adjusted, should the text match
+
+@item
+The match type
+
+@cindex match type
+
+@anchor{match-type}This is a symbol, and must be one of @code{s},
+@code{S}, @code{r}, @code{R}, @code{w} or @code{W} for
+case-insensitive substring match, case-sensitive substring match,
+case-insensitive regexp match or case-sensitive regexp match, and
+case-insensitive or case-sensitive whole word match, respectively.
+
+Note that regular expressions use Emacs Lisp regular expression syntax
+(@pxref{Regular Expressions, Regular Expressions, Regular Expressions,
+elisp, Emacs Lisp}).
+
+@cindex regular expression syntax
+
+Whole word matching just feeds the match text to
+@code{word-search-regexp} (@pxref{String Search, String Search, String
+Search, elisp, Emacs Lisp}) before doing a regexp search.
+
+@item
+Last match time
+
+The last time this rule matched an entry, in seconds since Unix
+epoch. When defining rules, this element & all those following are
+optional & need not be supplied by the score file author. This field
+will be automatically kept up-to-date by elfeed-score.
+
+@item
+Tag scoping rules
+
+You may wish to apply this rule only to entries that have certain tags
+(or that do @emph{not} have certain tags). @xref{Scoping Rules by
+Tags} for how to do that.
+
+@item
+Hit count
+
+The number of times this rule has matched an entry. This field will be
+automatically kept up-to-date by elfeed-score.
+
+@item
+Feed scoping rules
+
+You may wish to apply this rule only to entries that came from certain
+feeds (or did @emph{not} come from certain feeds).  @xref{Scoping
+Rules by Feed} for how to do that.
+
+@end enumerate
+
+So, for instance, the following rule:
+
+@lisp
+("title"
+  ("rust.*who.s hiring" 1500 r))
+@end lisp
+
+would match each entry's title against the regular expression
+``rust.*who.s hiring'' (without regard to case) and adds 1500 to the
+score of any entry that matches.
+
+Note that it takes advantage of the fact that only the first three
+elements are required.
+
+After this rule has been running for some time, and the rule has been
+updated by elfeed-score, it will be written down in the score file as
+something like this:
+
+@lisp
+("title"
+  ("rust.*who.s hiring" 1500 r 1612278560.2936354 nil 46 nil))
+@end lisp
+
+The additional elements indicate that this was last matched at
+Tuesday, February 2, 2021 3:09:20.293 PM UTC, it is not scoped to any
+particular tags, it has matched forty-six entries since it was
+created, and that it is not scoped to any particular feed(s).
+
+@node content Rules
+@subsection content Rules
+
+@cindex content rules
+
+``content rules'' are very similar to @ref{title Rules} except that
+they match against an entry's content rather than its title.  For that
+reason, this section will be very brief-- refer to @ref{title Rules}
+for the details of each element.
+
+In the score file (@pxref{The Score File}), content rules are
+represented by a list of length seven:
+
+@enumerate
+@item
+The match text
+
+@item
+The match value
+
+@item
+The match type as per @ref{match-type, above, above}.
+
+@item
+Last match time
+
+@item
+Tag scoping rules
+
+@item
+Hit count
+
+@item
+Feed scoping rules
+
+@end enumerate
+
+As @ref{title Rules, above, above}, only the first three elements are
+required, and elfeed-score will manage the last match time & hit
+count.
+
+@node title-or-content Rules
+@subsection title-or-content Rules
+
+@cindex title-or-content rules
+
+When searching for text in entries on which to score, it can be
+convenient to check both title @emph{and} content. Rather than
+repeating each rule in both the ``title'' and ``content'' elements of
+the score file, you can use ``title-or-content'' rules. These rules
+consist of eight elements, not seven:
+
+@enumerate
+@item
+The match text, as with title & content rules
+
+@item
+The title match value
+
+The value by which an entry's score will be adjusted when the @emph{title}
+matches. This allows different scoring values for title & content matches,
+on the assumption that a title match would be considered more significant.
+
+@item
+The content match value
+
+The value by which an entry's score will be adjusted when the
+@emph{content} matches.
+
+@item
+The match type as per @ref{match-type, above, above}.
+
+@item
+Last match time
+Again, this & all following elements are optional, and elfeed-score
+will keep this element up-to-date.
+
+@item
+Tag scoping rules
+
+@item
+Hit count
+
+@item
+Feed scoping rules
+
+@end enumerate
+
+Note that both entry attributes are checked, so both score values have
+the potential to added to any given entry.
+
+For instance, the following rule:
+
+@lisp
+("title-or-content"
+  ("california" 150 100 s))
+@end lisp
+
+would add 150 to any element who's title contains the string
+``california'', as well as 100 if its content also contains that text.
+
+@node feed Rules
+@subsection feed Rules
+
+@cindex feed rules
+
+You can adjust an entry's score on the basis of the feed that produced
+it with a ``feed'' rule. For instance I use this to prioritize certain
+sources.  A feed rule is defined by the following seven elements:
+
+@enumerate
+
+@item
+Match text
+The text to be matched against the feed title, URL or author
+
+@item
+Match value
+The value by which an entry's score will be adjusted should there be a
+match
+
+@item
+Match type
+The match type as per @ref{match-type, above, above}.
+
+@item
+Feed attribute
+One of the symbols @code{t}, @code{u} or @code{a} for title, URL, or
+author respectively; this determines the attribute of the feed against
+which this rule's text will be matched.
+
+@item
+Last match date
+The last time this rule matched, in seconds since Unix epoch. This
+element and all that follow it are optional. This element will be
+maintained by elfeed-score.
+
+@item
+Tag scoping rules
+You may wish to apply this rule only to entries that have certain tags
+(or that do @emph{not} have certain tags). See @ref{Scoping Rules by
+Tags, below, below} for how to do that.
+
+@item
+Hit count
+The number of times this rule has matched an entry. This field will be
+automatically kept up-to-date by elfeed-score.
+
+@end enumerate
+
+For example, this rule:
+
+@lisp
+("feed"
+  ("National Weather Service" 400 S t))
+@end lisp
+
+will check the feed title for each entry against the string ``National
+Weather Service'' (case will count). Should there be a match, the
+corresponding entry will have 400 added to its score.
+
+@node authors Rules
+@subsection authors Rules
+
+@cindex authors rules
+
+Some feeds are not produced by a single author. A feed that contains
+academic papers, for instance, may tag each entry with the authors of
+the paper to which that entry corresponds. You can score against an
+@emph{entry}'s authors with an authors rule.
+
+@enumerate
+@item
+The match text
+For each entry, if the ``authors'' meta-data is present, the authors'
+names will be concatenated (separated by ``, ``) and matched against
+this text for scoring purposes.
+
+@item
+The match value
+This is an integer specifying the amount by which the entry's score
+should be adjusted, should the text match 
+
+@item
+The match type
+
+@item
+Last match time
+
+The last time this rule matched an entry, in seconds since Unix
+epoch. When defining rules, this element & all those following are
+optional & need not be supplied by the score file author. This field
+will be automatically kept up-to-date by elfeed-score.
+
+@item
+Tag scoping rules
+
+You may wish to apply this rule only to entries that have certain tags
+(or that do @emph{not} have certain tags). See @ref{Scoping Rules by
+Tags, below, below} for how to do that.
+
+@item
+Hit count
+
+The number of times this rule has matched an entry. This field will be
+automatically kept up-to-date by elfeed-score.
+
+@item
+Feed scoping rules
+
+You may wish to apply this rule only to entries that came from certain
+feeds (or did @emph{not} come from certain feeds). See @ref{Scoping
+Rules by Feed, below, below} for how to do that.
+
+@end enumerate
+
+@node tag Rules
+@subsection tag Rules
+
+@cindex tag rules
+
+elfeed allows one to automatically tag new entries as they are
+discovered.  It can therefore be convenient to group entries that come
+from many different feeds but share a tag or tags. That is the purpose
+of ``tag'' rules.
+
+``tag'' rules are defined by a four-tuple:
+
+@enumerate
+
+@item
+Tags
+
+The tags whose presence or absence will trigger this rule. They are
+specified as a cons cell (@pxref{Cons Cell and List Types, cons cell,
+cons cell, elisp, Emacs Lisp}) of the form:
+
+@lisp
+(switch . tags)
+@end lisp
+
+@code{switch} is either @code{t} or @code{nil} and @code{tags} is
+either a tag (i.e. a symbol) or a list of tags. If @code{switch} is
+true, this rule will apply to any entry tagged with one or more tags
+listed in @code{tags}. Conversely, if @code{switch} is false, the rule
+will apply to entries who posses @emph{none} of the tags in
+@code{tags}.
+
+@item
+Match value
+The amount by which an entry's score shall be adjusted should this
+rule match.
+
+@item
+Last matched time
+The time, in seconds since Unix epoch, at which this rule last matched
+an entry. This and the next element are optional, and elfeed-score
+will keep this entry up-to-date.
+
+@item
+Hit count
+The number of times this rule has matched any entry. elfeed-score will
+keep this entry up-to-date.
+
+@end enumerate
+
+@node adjust-tags Rules
+@subsection adjust-tags Rules
+
+@cindex adjust-tags rules
+
+Until now, all the rules have been used to determine an entry's
+score. The ``adjust-tags'' rule (and the ``mark'' rule @ref{mark Rule,
+below, below}) act on entries @emph{after} their scores have been
+determined.
+
+The adust-tags rule was inspired by John Kitchin's article
+@url{https://kitchingroup.cheme.cmu.edu/blog/2017/01/05/Scoring-elfeed-articles/,
+Scoring Elfeed Articles}. He computes a score and adds one or two tags
+to entries whose score is sufficiently high. It always bothered me
+that elfeed-score couldn't do that, so in build 0.4.3, I added this
+rule type. These will add or remove tags based on whether the entry's
+score is above or below a given threshold.
+
+adjust-tags rules are given by a four-tuple:
+
+@enumerate
+
+@item
+The threshold at which the rule shall apply
+
+This is defined by a cons cell (@pxref{Cons Cell and List Types, cons
+cell, cons cell, elisp, Emacs Lisp}) of the form:
+
+@lisp
+(switch . threshold)
+@end lisp
+
+@code{switch} may be @code{t} or @code{nil} and @code{threshold} is
+the threshold against which each entry's score shall be compared. If
+@code{switch} is @code{t}, the rule applies if the score is greater
+than or equal to @code{threshold}; if @code{switch} is @code{nil} the rule
+applies if score is less than or equal to @code{threshold}.
+
+@item
+The tags to be added or removed
+
+This is also given by a cons cell
+
+@lisp
+(switch . tags)
+@end lisp
+
+If @code{switch} is @code{t} & the rule applies, @code{tags} (either a
+single tag or a list of tags) will be added to the entry; if
+@code{switch} is @code{nil}, they will be removed
+
+@item
+Last match time
+
+The last time this rule matched an entry, in seconds since Unix
+epoch. This element is optional, need not be supplied by the score
+file author, and will be automatically kept up-to-date by the package.
+
+@item
+Hit count
+
+The number of times this rule has matched an entry. This element is
+optional, need not be supplied by the score file author, and will be
+automatically kept up-to-date by the package.
+
+@end enumerate
+
+For example, the following rules:
+
+@lisp
+(("adjust-tags"
+  ((t . 1000) (t . a))
+  ((nil . -1000) (nil . b)))
+@end lisp
+
+will add the tag @code{'a} to all entries whose score is 1000 or more,
+and remove tag @code{'b} from all entries whose score is -1000 or
+less.
+
+
+@node mark Rule
+@subsection mark Rule
+
+@cindex mark rule
+
+Like the ``adjust-tag'' rule (@pxref{adjust-tags Rules, above, above},
+the mark rule operates on an entry after scoring has completed. If
+present, it simply specifies an integer; any entry whose score is
+below this number will be marked as read (in that it will have the
+@code{'unread} tag removed from it). Since bookmarked elfeed searches
+typically specify the @code{'unread} tag as a criterion, this
+essentially means ``if an entry's score is below this number, don't
+even show it to me.''
+
+Unlike the other rules, there may only be one mark rule.
+
+Example:
+
+@lisp
+(mark -2500)
+@end lisp
+
+@node Scoping Rule Application
+@section Scoping Rule Application
+
+@cindex scoping
+
+You may find that you only want some rules to @emph{not} be applied to
+every entry, but only in certain contexts. Many of the rules described
+above can be scoped to apply to only entries with certain tags, or to
+only entries from certain feeds.
+
+@c Generate the nodes for this menu with `C-c C-u C-m'.
+@menu
+* Scoping Rules by Tags::
+* Scoping Rules by Feed::
+@end menu
+
+@node Scoping Rules by Tags
+@subsection Scoping Rules by Tags
+
+@cindex rule scoping, tags
+
+``title'', ``content'', ``title-or-content'', ``authors'' & ``feed''
+rules can be scoped by tag (@pxref{Types of Rules}). In the
+description of each of these type of rules above, you will note a slot
+reserved for ``tag scoping rules''. In each case these rules are
+expressed as a cons cell of the form:
+
+@lisp
+(boolean . (tag...))
+@end lisp
+
+The car is a boolean, and the cdr is a list of tags.  If the former is
+@code{t}, the rule will only be applied if the entry has at least one
+of the tags listed. If the boolean value is @code{nil}, the rule will
+only apply if the entry has *none* of the tags listed.
+
+For instance, this is an entry in my score file at the time of this
+writing:
+
+@lisp
+("title-or-content
+  ("workspace" 150 75 s 1611937077.6047099
+   (t linux)
+   48 nil)
+@end lisp
+
+It performs a case-insensitive substring match against entry title and
+content, adding 150 & 75 points to an entry's score on match,
+respectively. It matched most recently at Friday, January 29, 2021
+8:17:57.604 AM PST, and has matched 48 times in total.
+
+Of particular interest here is the fact that it will only be applied
+to entries with the tag @code{'linux}, since ``workspace'' is fairly
+generic term, and I am only specific interested in the term as it
+applies to Linux window managers.
+
+@node Scoping Rules by Feed
+@subsection Scoping Rules by Feed
+
+@cindex rule scoping, feed
+
+``title'', ``content'', ``title-or-content'' & ``authors'' rules can
+also be scoped by feed; that is, you can arrange to have such rules
+only apply to entries from certain feeds (or apply only to entries
+@emph{not} from certain feeds) (@pxref{Types of Rules}).
+
+Each of these rule types reserves a slot in their definiotn for ``feed
+scope rules''. Such fules are expressed as a cons cell:
+
+@lisp
+(boolean . ((attr match-type matex-text)...))
+@end lisp
+
+The car is a boolean, and the cdr is a list of feed selectors.  If the
+former is @code{t}, the rule will only be applied if the entry's feed
+matches at least one of the selectors listed. If the boolean value is
+@code{nil}, the rule will only apply if the entry's feed matches
+@emph{none} of the selectors listed.
+
+Each selector is itself a three-tuple consisting of:
+
+@enumerate
+
+@item
+Feed attribute
+One of the symbols @code{t}, @code{u} or @code{a} for title, URL, or
+author respectively; this determines the attribute of the feed against
+which this rule's text will be matched.
+
+@item
+Match type
+The match type as per @ref{match-type, above, above}.
+
+@item
+Match text
+
+@end enumerate
+
+Example:
+
+@lisp
+("title"
+  ("foo" 100 s nil nil 0
+   (t . ((t S "Bar")))))
+@end lisp
+
+This defines a title rule @xref{title Rules} that checks for a
+substring matching ``foo'' in the entry title and adds 100 points to
+its score on match.  However, it will @emph{only} match entries
+originating from feeds whose title contains the string ``Bar''
+(case-sensitive).
+
+@node A Complete Score File
+@section A Complete Score File
+
+@cindex complete score file, example
+
+This is a small subset of my current score file at the time of this
+writing. Working score files tend to grow much larger than this
+(@pxref{Rule Maintenance} below), but it is a complete example.
+
+@lisp
+;;; Elfeed score file                                     -*- lisp -*-
+((version 5)
+ ("title"
+  ("rust.*who.s hiring" 1500 r 1612278560.2936354 nil 46 nil)
+  ("Microsoft Security Response Center" 1500 s nil nil 0 nil))
+ ("content"
+  ("/u/I_am_dom_" 250 s 1592054264.5130005
+   (t @@china)
+   0 nil))
+ ("title-or-content"
+  ("california" 150 100 s 1612451934.031678 nil 3077 nil)
+  ("melpa" 250 150 s 1612363625.193721
+   (t @@dev @@emacs)
+   108 nil)
+  ("workspace" 150 75 s 1612451475.3151736
+   (t linux)
+   50 nil))
+ ("tag"
+  ((t . reddit-question)
+   750 1602258238.98633 0))
+ ("authors"
+  ("Jim Geraghty" 500 s 1612451618.429526 nil 172 nil))
+ ("feed"
+  ("Hacker News" 150 S t 1612451901.966745 nil 985))
+ (mark -2500)
+ ("adjust-tags"))
+@end lisp
+
+@node Using elfeed-score
+@chapter Using elfeed-score
+
+@cindex using
+
+@c Generate the nodes for this menu with `C-c C-u C-m'.
+@menu
+* Startup in Detail::
+* Asking elfeed-score How It's Scoring an Entry::
+* Rule Maintenance::
+@end menu
+
+@node Startup in Detail
+@section Startup in Detail
+
+Once you've setup your score file (@pxref{The Score File}), and
+started elfeed-score (@pxref{Starting elfeed-score}), any @emph{new}
+entries will be scored automatically, but the entries already in your
+database have not yet been scored. Scoring is idempotent in that
+scoring an entry more than once will always result in it having the
+same score assigned. This means you can load an Elfeed search, and
+then, in the Elfeed search buffer @code{*elfeed-search*}, score all
+results with @code{elfeed-score-score-search}, or @kbd{= v}. When the
+command completes, the view will be re-sorted by score. Your score
+file will also have been updated on disk (to record the last time that
+each rule matched).
+
+@deffn Command elfeed-score-score-search
+Score the current set of search results.
+@end deffn
+
+You can configure score logging by setting the variable
+@code{elfeed-score-log-level}.
+
+@defvr {User Option} elfeed-score-log-log-level
+Level at which `elfeed-score' shall log; may be one of 'debug, 'info,
+'warn, or 'error.
+@end defvr
+
+By default it will be @code{'warn}, which will produce very little
+output. To trouble-shoot a balky rule, type
+
+@lisp
+(setq elfeed-score-log-log-level 'debug)
+@end lisp
+
+re-score your current view (@kbd{= s}), and switch to buffer
+@code{*elfeed-score*}.
+
+You can also trouble-shoot rules using the ``explain'' feature
+@ref{Asking elfeed-score How It's Scoring an Entry, below, below}.
+
+@node Asking elfeed-score How It's Scoring an Entry
+@section Asking elfeed-score How It's Scoring an Entry
+
+If you've got an entry that's not being scored in the manner you
+expect, you can ask elfeed-score to explain itself by selecting the
+offending entry & invoking @code{elfeed-score-scoring-explain-entry}
+(@kbd{= x}):
+
+@deffn Command elfeed-score-scoring-explain-entry
+Explain an Elfeed ENTRY.
+
+This function will apply all scoring rules to an entry, but will not
+change anything (e.g.  update the entry's meta-data, or the
+last-matched timestamp in the matching rules); instead, it will
+provide a human-readable description of what would happen if the entry
+were to be scored, presumably for purposes of debugging or
+understanding of scoring rules.
+@end deffn
+
+@node Rule Maintenance
+@section Rule Maintenance
+
+As time goes by, you may find your score file growing considerably in
+size & complexity. elfeed-score offers a few reporting functions for
+looking at the totality of your rules in a few ways:
+
+@deffn elfeed-score-maint-display-rules-by-last-match(&optional category)
+Display all scoring rules in descending order of last match.
+
+CATEGORY may be used to narrow the scope of rules displayed.  If
+nil, display all rules.  If one of the following symbols, display
+only that category of rules:
+
+    :title
+    :feed
+    :content
+    :title-or-content
+    :authors
+    :tag
+    :adjust-tags
+
+Finally, CATEGORY may be a list of symbols in the preceding
+list, in which case the union of the corresponding rule
+categories will be displayed.
+@end deffn
+
+@deffn Command elfeed-score-maint-display-rules-by-match-hits (&optional category)
+Display all scoring rules in descending order of match hits.
+
+CATEGORY may be used to narrow the scope of rules displayed.  If
+nil, display all rules.  If one of the following symbols, display
+only that category of rules:
+
+    :title
+    :feed
+    :content
+    :title-or-content
+    :authors
+    :tag
+    :adjust-tags
+
+Finally, CATEGORY may be a list of symbols in the preceding
+list, in which case the union of the corresponding rule
+categories will be displayed.
+@end deffn
+
+@node Roadmap & Contributing
+@chapter Roadmap & Contributing
+
+I've sketched some thoughts on elfeed-score's future in the
+@url{https://github.com/sp1ff/elfeed-score, README}. The focus now is
+getting it to a place where I'd feel comfortable calling it
+``1.0''. This includes re-factoring the code and re-writing the
+serialization logic.
+
+Bugs & feature requests are welcome in the
+@url{https://github.com/sp1ff/elfeed-score/issues, Issues} section of
+the project.
+
+If you'd like to hack on elfeed-score, I've started a
+@url{https://github.com/sp1ff/elfeed-score/wiki, Wiki} for that and am
+always happy to discuss PRs.
+
+Finally, you can just reach out directly at @email{sp1ff@@pobox.com}, or
+in my public @url{https://lists.sr.ht/~sp1ff/public-inbox, inbox}.
+
+@node Index
+@unnumbered Index
+
+@printindex cp
+
+@node Function Index
+@unnumbered Function Index
+
+@printindex fn
+
+@node Variable Index
+@unnumbered Variable Index
+
+@printindex vr
+
+@bye
+
