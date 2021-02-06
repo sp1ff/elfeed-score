@@ -47,7 +47,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
+          tag_name: ${{ env.RELEASE_VERSION }}
           release_name: 0.7-alpha-${{ env.ALPHA_VERSION }}
+          prelease: true
 
       - name: Save release upload URL to artifact
         run: echo "${{ steps.release.outputs.upload_url }}" > artifacts/release-upload-url
