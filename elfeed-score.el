@@ -3,7 +3,7 @@
 ;; Copyright (C) 2019-2021 Michael Herstine <sp1ff@pobox.com>
 
 ;; Author: Michael Herstine <sp1ff@pobox.com>
-;; Version: 0.7.1
+;; Version: 0.7.2
 ;; Package-Requires: ((emacs "24.4") (elfeed "3.3.0"))
 ;; Keywords: news
 ;; URL: https://github.com/sp1ff/elfeed-score
@@ -43,7 +43,7 @@
 (require 'elfeed-score-scoring)
 (require 'elfeed-score-maint)
 
-(defconst elfeed-score-version "0.7.1")
+(defconst elfeed-score-version "0.7.2")
 
 (defgroup elfeed-score nil
   "Gnus-style scoring for Elfeed entries."
@@ -66,8 +66,8 @@ for (format width alignment).  Possible alignments are :left and
 
 `elfeed-score' will substitute this for the Elfeed scoring function."
 
-  (let ((a-score (elfeed-score-scoring--get-score-from-entry a))
-        (b-score (elfeed-score-scoring--get-score-from-entry b)))
+  (let ((a-score (elfeed-score-scoring-get-score-from-entry a))
+        (b-score (elfeed-score-scoring-get-score-from-entry b)))
     (if (> a-score b-score)
         t
       (let ((a-date (elfeed-entry-date a))
@@ -100,7 +100,7 @@ region's state."
     (dolist (entry entries)
       (elfeed-score-log 'info "entry %s ('%s') was directly set to %d"
                         (elfeed-entry-id entry ) (elfeed-entry-title entry) score)
-      (elfeed-score-scoring--set-score-on-entry entry score))))
+      (elfeed-score-scoring-set-score-on-entry entry score))))
 
 (define-obsolete-function-alias 'elfeed-score/get-score
   #'elfeed-score-get-score "0.2.0" "Move to standard-compliant naming.")
@@ -113,7 +113,7 @@ If called interactively, print a message."
   (interactive)
 
   (let* ((entry (elfeed-search-selected t))
-         (score (elfeed-score-scoring--get-score-from-entry entry)))
+         (score (elfeed-score-scoring-get-score-from-entry entry)))
     (if (called-interactively-p 'any)
         (message "%s has a score of %d." (elfeed-entry-title entry) score))
     score))
@@ -163,7 +163,7 @@ entry under point will be explained."
    (list
     (read-file-name "score file: " nil elfeed-score-serde-score-file t
                     elfeed-score-serde-score-file)))
-  (elfeed-score-serde--load-score-file score-file))
+  (elfeed-score-serde-load-score-file score-file))
 
 
 
@@ -181,7 +181,7 @@ region is not active, only the entry under point will be scored."
 
   (let ((entries (elfeed-search-selected ignore-region)))
     (dolist (entry entries)
-      (let ((score (elfeed-score-scoring--score-entry entry)))
+      (let ((score (elfeed-score-scoring-score-entry entry)))
         (elfeed-score-log 'info "entry %s('%s') has been given a score of %d"
                           (elfeed-entry-id entry) (elfeed-entry-title entry) score)))
     (if elfeed-score-serde-score-file
@@ -197,7 +197,7 @@ region is not active, only the entry under point will be scored."
   (interactive)
 
   (dolist (entry elfeed-search-entries)
-    (let ((score (elfeed-score-scoring--score-entry entry)))
+    (let ((score (elfeed-score-scoring-score-entry entry)))
       (elfeed-score-log 'info "entry %s('%s') has been given a score of %d"
                         (elfeed-entry-id entry) (elfeed-entry-title entry) score)))
   (if elfeed-score-serde-score-file
@@ -246,7 +246,7 @@ This implementation is derived from `elfeed-search-print-entry--default'."
                         :left))
 	       (score
           (elfeed-score-format-score
-           (elfeed-score-scoring--get-score-from-entry entry))))
+           (elfeed-score-scoring-get-score-from-entry entry))))
     (insert score)
     (insert (propertize date 'face 'elfeed-search-date-face) " ")
     (insert (propertize title-column 'face title-faces 'kbd-help title) " ")
@@ -262,7 +262,7 @@ This implementation is derived from `elfeed-search-print-entry--default'."
   (interactive "P")
 
   ;; Begin scoring on every new entry...
-  (add-hook 'elfeed-new-entry-hook #'elfeed-score-scoring--score-entry)
+  (add-hook 'elfeed-new-entry-hook #'elfeed-score-scoring-score-entry)
   ;; sort based on score...
   (unless arg
     (setq elfeed-score--old-sort-function        elfeed-search-sort-function
@@ -284,7 +284,7 @@ This implementation is derived from `elfeed-search-print-entry--default'."
       (setq elfeed-search-sort-function elfeed-score--old-sort-function))
   (if elfeed-score--old-print-entry-function
       (setq elfeed-search-print-entry-function elfeed-score--old-print-entry-function))
-  (remove-hook 'elfeed-new-entry-hook #'elfeed-score-scoring--score-entry))
+  (remove-hook 'elfeed-new-entry-hook #'elfeed-score-scoring-score-entry))
 
 (provide 'elfeed-score)
 

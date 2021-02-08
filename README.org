@@ -2,7 +2,7 @@
 #+DESCRIPTION: Gnus-style scoring for Elfeed
 #+AUTHOR: Michael Herstine
 #+EMAIL: sp1ff@pobox.com
-#+DATE: <2021-02-05 Fri 18:46>
+#+DATE: <2021-02-08 Mon 14:49>
 #+AUTODATE: t
 #+OPTIONS: toc:nil org-md-headline-style:setext *:t ^:nil
 
@@ -47,7 +47,7 @@ For instance, here's a subset of my scoring file at the moment:
 
 Like Gnus scoring, this may look like Lisp code, but it is not directly eval'd. It will be read by the Lisp reader, so it must at least be a valid Lisp s-expression. 
 
-This README introduces the package and describes the various ways to install it. Detailed user documentation (including full details on the score file format) is distributed in Texinfo format with the package and is also available in  HTML format [[https://www.unwoundstack.com/doc/elfeed-score/current][here]].
+This README introduces the package and describes the various ways to install it. Detailed user documentation (including full details on the score file format) is distributed in Texinfo format with the package and is also available in  HTML format [[https://www.unwoundstack.com/doc/elfeed-score/curr][here]].
 * Prerequisites
 
 This package requires Emacs 24.4, and was developed against [[https://github.com/skeeto/elfeed][Elfeed]] 3.3.0, which itself requires cURL.
@@ -71,7 +71,7 @@ The easiest way to install elfeed-score is [[https://github.com/melpa/melpa][MEL
 You can also download the Emacs package file on the GitHub releases [[https://github.com/sp1ff/elfeed-score/releases][page]] or from my personal [[https://www.unwoundstack/distros.html][page]]. Then say:
 
 #+BEGIN_SRC elisp
-(package-install-file "elfeed-score-0.7.1.tar")
+(package-install-file "elfeed-score-0.7.2.tar")
 #+END_SRC
 
 ** Autotools Source Distributions
@@ -80,8 +80,8 @@ You can also download Autotools source tarballs (again available either on the G
 
 #+BEGIN_SRC bash
 cd /tmp
-curl -L --output elfeed-score-0.7.1.tar.gz https://github.com/sp1ff/elfeed-score/releases/download/0.7.1/elfeed-score-0.7.1.tar.gz
-tar xvf elfeed-score-0.7.1.tar.gz && cd elfeed-score-0.7.1
+curl -L --output elfeed-score-0.7.2.tar.gz https://github.com/sp1ff/elfeed-score/releases/download/0.7.2/elfeed-score-0.7.2.tar.gz
+tar xvf elfeed-score-0.7.2.tar.gz && cd elfeed-score-0.7.2
 export EMACSLOADPATH=$HOME/.emacs.d/elpa/elfeed-20200209.1942:$EMACSLOADPATH
 ./configure
 make
@@ -96,16 +96,16 @@ The unit tests require some macros defined by the [[https://github.com/skeeto/el
 #+BEGIN_SRC bash
 cd /tmp
 git clone https://github.com/skeeto/elfeed.git
-curl -L --output=elfeed-score-0.7.1.tar.gz https://github.com/sp1ff/elfeed-score/releases/download/0.7.1/elfeed-score-0.7.1.tar.gz
-tar xvf elfeed-score-0.7.1.tar.gz && cd elfeed-score-0.7.1
-export EMACSLOADPATH=/tmp/elfeed-score-0.7.1:/tmp/elfeed:/tmp/elfeed/tests:$EMACSLOADPATH
+curl -L --output=elfeed-score-0.7.2.tar.gz https://github.com/sp1ff/elfeed-score/releases/download/0.7.2/elfeed-score-0.7.2.tar.gz
+tar xvf elfeed-score-0.7.2.tar.gz && cd elfeed-score-0.7.2
+export EMACSLOADPATH=/tmp/elfeed-score-0.7.2:/tmp/elfeed:/tmp/elfeed/tests:$EMACSLOADPATH
 ./configure
 make
 make check
 sudo make install
 #+END_SRC
 
-Again, unless you already use =EMACSLOADPATH=, you'll need to set =EMACSLOADPATH= appropriately to your system, something like =EMACSLOADPATH=/tmp/elfeed-score-0.7.1:/tmp/elfeed:/tmp/elfeed/tests:/usr/share/emacs/25.2/lisp=.
+Again, unless you already use =EMACSLOADPATH=, you'll need to set =EMACSLOADPATH= appropriately to your system, something like =EMACSLOADPATH=/tmp/elfeed-score-0.7.2:/tmp/elfeed:/tmp/elfeed/tests:/usr/share/emacs/25.2/lisp=.
 
 ** Building From Source
 

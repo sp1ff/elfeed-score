@@ -3,7 +3,7 @@
 ;; Copyright (C) 2021 Michael Herstine <sp1ff@pobox.com>
 
 ;; Package-Requires: ((emacs "24.4") (elfeed "3.3.0"))
-;; Version: 0.7.1
+;; Version: 0.7.2
 ;; URL: https://github.com/sp1ff/elfeed-score
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -707,7 +707,7 @@ a cons cell"))))))
               version 5 that this rule has been matched"
   threshold tags date (hits 0))
 
-(defun elfeed-score-rules--pp-rule-to-string (rule)
+(defun elfeed-score-rules-pp-rule-to-string (rule)
   "Pretty-print RULE; return as a string."
   (cl-typecase rule
     (elfeed-score-title-rule
