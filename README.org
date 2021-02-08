@@ -2,7 +2,7 @@
 #+DESCRIPTION: Gnus-style scoring for Elfeed
 #+AUTHOR: Sp1ff
 #+EMAIL: sp1ff@pobox.com
-#+DATE: <2021-01-29 Fri 07:38>
+#+DATE: <2021-02-08 Mon 07:45>
 #+AUTODATE: t
 #+OPTIONS: toc:nil org-md-headline-style:setext *:t ^:nil
 
@@ -10,6 +10,10 @@
 [[https://stable.melpa.org/#/elfeed-score][file:https://stable.melpa.org/packages/elfeed-score-badge.svg]]
 [[https://github.com/sp1ff/elfeed-score/workflows/melpazoid/badge.svg][file:https://github.com/sp1ff/elfeed-score/workflows/melpazoid/badge.svg]]
 
+
+* Ann: elfeed-score 0.7 pre-releases
+
+Hello all-- in order to support some new features I'd like to add, I've started re-factoring elfeed-score from one Emacs Lisp file (over 2K LoC in size) into several. Upgrading should be transparent, but out of an abundance of caution I'm doing the work on branch (=0.7=) and I've started putting up pre-releases made from that branch (the first one may be found [[https://github.com/sp1ff/elfeed-score/releases/tag/0.7.1][here]]). If anyone would like to try 'em out & let me know how it worked, I'd appreciate it. Also, apologies to anyone getting elfeed-score from MELPA Stable: I didn't realize that it picked up tags on *any* branch (as opposed to just =master=): as a result, I find myself in the odd position of hosting the latest builds on MELPA Stable, and the known-good, stable code on MELPA.
 
 * Introduction
 
