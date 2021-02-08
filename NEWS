@@ -1,5 +1,9 @@
 elfeed-score News -- history of user-visible changes -*- outline -*-
 
+* Changes in elfeed-score 0.7.2
+
+No user-visible changes; strictly internal changes cleaning-up
+after the re-factor.
 * Changes in elfeed-score 0.7.1
 
 ** User-visible Changes

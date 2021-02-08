@@ -48,12 +48,12 @@
             (entry (elfeed-score-test-generate-entry feed title "some content")))
        (elfeed-db-add entry)
        (with-elfeed-score-test
-        (let* ((elfeed-score-serde--title-rules
+        (let* ((elfeed-score-serde-title-rules
                 (list
                  (elfeed-score-title-rule--create
                   :text "foo" :value 1 :type 's
                   :feeds '(t . ((u s "quux.com") (t s "feed"))))))
-               (score (elfeed-score-scoring--score-entry entry)))
+               (score (elfeed-score-scoring-score-entry entry)))
           (should (eq 1 score))))))))
 
 (provide 'elfeed-score-test-feed-rules)

@@ -3,7 +3,7 @@
 ;; Copyright (C) 2021 Michael Herstine <sp1ff@pobox.com>
 
 ;; Package-Requires: ((emacs "24.4") (elfeed "3.3.0"))
-;; Version: 0.7.1
+;; Version: 0.7.2
 ;; URL: https://github.com/sp1ff/elfeed-score
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -45,28 +45,28 @@ deserialization of scoring rules."
   :group 'elfeed-score
   :type 'file)
 
-(defvar elfeed-score-serde--title-rules nil
+(defvar elfeed-score-serde-title-rules nil
   "List of structs each defining a scoring rule for entry titles.")
 
-(defvar elfeed-score-serde--feed-rules nil
+(defvar elfeed-score-serde-feed-rules nil
   "List of structs each defining a scoring rule for entry feeds.")
 
-(defvar elfeed-score-serde--authors-rules nil
+(defvar elfeed-score-serde-authors-rules nil
   "List of structs each defining a scoring rule for entry authors.")
 
-(defvar elfeed-score-serde--content-rules nil
+(defvar elfeed-score-serde-content-rules nil
   "List of structs each defining a scoring rule for entry content.")
 
-(defvar elfeed-score-serde--title-or-content-rules nil
+(defvar elfeed-score-serde-title-or-content-rules nil
   "List of structs each defining a scoring rule for entry title or content.")
 
-(defvar elfeed-score-serde--tag-rules nil
+(defvar elfeed-score-serde-tag-rules nil
   "List of structs each defining a scoring rule for entry tags.")
 
-(defvar elfeed-score-serde--score-mark nil
+(defvar elfeed-score-serde-score-mark nil
   "Score at or below which entries shall be marked as read.")
 
-(defvar elfeed-score-serde--adjust-tags-rules nil
+(defvar elfeed-score-serde-adjust-tags-rules nil
   "List of structs defining rules to be run after scoring to adjust entry tags based on score.")
 
 (defun elfeed-score-serde--parse-title-rule-sexps (sexps)
@@ -502,7 +502,7 @@ into a property list with the following properties:
              (elfeed-score-title-rule-tags  x)
              (elfeed-score-title-rule-hits  x)
              (elfeed-score-title-rule-feeds x)))
-	        elfeed-score-serde--title-rules))
+	        elfeed-score-serde-title-rules))
         (append
          '("content")
 	       (mapcar
@@ -515,7 +515,7 @@ into a property list with the following properties:
              (elfeed-score-content-rule-tags  x)
              (elfeed-score-content-rule-hits  x)
              (elfeed-score-content-rule-feeds x)))
-	        elfeed-score-serde--content-rules))
+	        elfeed-score-serde-content-rules))
         (append
          '("title-or-content")
          (mapcar
@@ -529,7 +529,7 @@ into a property list with the following properties:
              (elfeed-score-title-or-content-rule-tags x)
              (elfeed-score-title-or-content-rule-hits x)
              (elfeed-score-title-or-content-rule-feeds x)))
-          elfeed-score-serde--title-or-content-rules))
+          elfeed-score-serde-title-or-content-rules))
         (append
          '("tag")
          (mapcar
@@ -539,7 +539,7 @@ into a property list with the following properties:
              (elfeed-score-tag-rule-value x)
              (elfeed-score-tag-rule-date  x)
              (elfeed-score-tag-rule-hits  x)))
-          elfeed-score-serde--tag-rules))
+          elfeed-score-serde-tag-rules))
         (append
          '("authors")
 	       (mapcar
@@ -552,7 +552,7 @@ into a property list with the following properties:
              (elfeed-score-authors-rule-tags  x)
              (elfeed-score-authors-rule-hits  x)
              (elfeed-score-authors-rule-feeds x)))
-	        elfeed-score-serde--authors-rules))
+	        elfeed-score-serde-authors-rules))
         (append
          '("feed")
 	       (mapcar
@@ -565,8 +565,8 @@ into a property list with the following properties:
 		         (elfeed-score-feed-rule-date  x)
              (elfeed-score-feed-rule-tags  x)
              (elfeed-score-feed-rule-hits  x)))
-	        elfeed-score-serde--feed-rules))
-        (list 'mark elfeed-score-serde--score-mark)
+	        elfeed-score-serde-feed-rules))
+        (list 'mark elfeed-score-serde-score-mark)
         (append
          '("adjust-tags")
          (mapcar
@@ -576,23 +576,23 @@ into a property list with the following properties:
              (elfeed-score-adjust-tags-rule-tags      x)
              (elfeed-score-adjust-tags-rule-date      x)
              (elfeed-score-adjust-tags-rule-hits      x)))
-          elfeed-score-serde--adjust-tags-rules))))))
+          elfeed-score-serde-adjust-tags-rules))))))
    nil score-file))
 
-(defun elfeed-score-serde--load-score-file (score-file)
+(defun elfeed-score-serde-load-score-file (score-file)
   "Load SCORE-FILE into our internal scoring rules.
 
 Internal.  Read SCORE-FILE, store scoring rules in our internal datastructures,"
 
   (let ((score-entries (elfeed-score-serde--parse-score-file score-file)))
-    (setq elfeed-score-serde--title-rules             (plist-get score-entries :titles)
-          elfeed-score-serde--feed-rules              (plist-get score-entries :feeds)
-          elfeed-score-serde--content-rules           (plist-get score-entries :content)
-          elfeed-score-serde--title-or-content-rules  (plist-get score-entries :title-or-content)
-          elfeed-score-serde--tag-rules               (plist-get score-entries :tag)
-          elfeed-score-serde--authors-rules           (plist-get score-entries :authors)
-          elfeed-score-serde--score-mark              (plist-get score-entries :mark)
-          elfeed-score-serde--adjust-tags-rules       (plist-get score-entries :adjust-tags))))
+    (setq elfeed-score-serde-title-rules             (plist-get score-entries :titles)
+          elfeed-score-serde-feed-rules              (plist-get score-entries :feeds)
+          elfeed-score-serde-content-rules           (plist-get score-entries :content)
+          elfeed-score-serde-title-or-content-rules  (plist-get score-entries :title-or-content)
+          elfeed-score-serde-tag-rules               (plist-get score-entries :tag)
+          elfeed-score-serde-authors-rules           (plist-get score-entries :authors)
+          elfeed-score-serde-score-mark              (plist-get score-entries :mark)
+          elfeed-score-serde-adjust-tags-rules       (plist-get score-entries :adjust-tags))))
 
 (provide 'elfeed-score-serde)
 ;;; elfeed-score-serde.el ends here

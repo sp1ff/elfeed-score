@@ -1,4 +1,22 @@
-2021-02-05  Michael Herstine  <sp1ff@pobox.com>
+2021-02-08  Michael Herstine  <sp1ff@pobox.com>
+
+	Stop packages from referring to private symbols in other packages.
+	Post-re-factor, there were a few cases of one package referring
+	to a prinvate symbol defined in another package. This commit
+	eliminates that, albeit by simply renaming the referenced
+	private symbosl to be public.
+
+2021-02-06  Michael Herstine  <sp1ff@pobox.com>
+
+	Update my Github workflows.
+	This commit:
+
+	  - updates the release workflow to add the stock Emacs package
+	    file (elfeed-score-x.y.z.tar) to the release
+	  - adds a workflow just for the 0.7 branch that will create
+	    alpha releases
+
+2021-02-06  Michael Herstine  <sp1ff@pobox.com>
 
 	Major re-work of the elfeed-score documentation.
 	This commit breaks-up the bloated README:

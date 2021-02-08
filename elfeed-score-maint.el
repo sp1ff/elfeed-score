@@ -3,7 +3,7 @@
 ;; Copyright (C) 2021 Michael Herstine <sp1ff@pobox.com>
 
 ;; Package-Requires: ((emacs "24.4") (elfeed "3.3.0"))
-;; Version: 0.7.1
+;; Version: 0.7.2
 ;; URL: https://github.com/sp1ff/elfeed-score
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -109,7 +109,7 @@ structs of any kind understood by
 	      (results '())
 	      (max-text 0))
     (cl-dolist (rule rules)
-      (let* ((pp (elfeed-score-rules--pp-rule-to-string rule))
+      (let* ((pp (elfeed-score-rules-pp-rule-to-string rule))
 	           (lp (length pp)))
 	      (if (> lp max-text) (setq max-text lp))
 	      (setq
@@ -130,7 +130,7 @@ structs of any kind understood by
 	      (max-text 0)
         (max-hits 0))
     (cl-dolist (rule rules)
-      (let* ((pp (elfeed-score-rules--pp-rule-to-string rule))
+      (let* ((pp (elfeed-score-rules-pp-rule-to-string rule))
 	           (lp (length pp))
              (hits (elfeed-score-maint--get-hits rule)))
 	      (if (> lp max-text) (setq max-text lp))
@@ -145,13 +145,13 @@ structs of any kind understood by
 (defun elfeed-score-maint--rules-for-keyword (key)
   "Retrieve the list of rules corresponding to keyword KEY."
   (cond
-   ((eq key :title) elfeed-score-serde--title-rules)
-   ((eq key :feed) elfeed-score-serde--feed-rules)
-   ((eq key :content) elfeed-score-serde--content-rules)
-   ((eq key :title-or-content) elfeed-score-serde--title-or-content-rules)
-   ((eq key :authors) elfeed-score-serde--authors-rules)
-   ((eq key :tag) elfeed-score-serde--tag-rules)
-   ((eq key :adjust-tags) elfeed-score-serde--adjust-tags-rules)
+   ((eq key :title) elfeed-score-serde-title-rules)
+   ((eq key :feed) elfeed-score-serde-feed-rules)
+   ((eq key :content) elfeed-score-serde-content-rules)
+   ((eq key :title-or-content) elfeed-score-serde-title-or-content-rules)
+   ((eq key :authors) elfeed-score-serde-authors-rules)
+   ((eq key :tag) elfeed-score-serde-tag-rules)
+   ((eq key :adjust-tags) elfeed-score-serde-adjust-tags-rules)
    (t
     (error "Unknown keyword %S" key))))
 
@@ -184,11 +184,11 @@ categories will be displayed."
   (let ((rules
 	       (cond
 	        ((not category)
-	         (append elfeed-score-serde--title-rules elfeed-score-serde--feed-rules
-		               elfeed-score-serde--content-rules
-		               elfeed-score-serde--title-or-content-rules
-		               elfeed-score-serde--authors-rules elfeed-score-serde--tag-rules
-		               elfeed-score-serde--adjust-tags-rules))
+	         (append elfeed-score-serde-title-rules elfeed-score-serde-feed-rules
+		               elfeed-score-serde-content-rules
+		               elfeed-score-serde-title-or-content-rules
+		               elfeed-score-serde-authors-rules elfeed-score-serde-tag-rules
+		               elfeed-score-serde-adjust-tags-rules))
 	        ((symbolp category)
 	         (elfeed-score-maint--rules-for-keyword category))
 	        ((listp category)
@@ -227,11 +227,11 @@ categories will be displayed."
   (let ((rules
 	       (cond
 	        ((not category)
-	         (append elfeed-score-serde--title-rules elfeed-score-serde--feed-rules
-		               elfeed-score-serde--content-rules
-		               elfeed-score-serde--title-or-content-rules
-		               elfeed-score-serde--authors-rules elfeed-score-serde--tag-rules
-		               elfeed-score-serde--adjust-tags-rules))
+	         (append elfeed-score-serde-title-rules elfeed-score-serde-feed-rules
+		               elfeed-score-serde-content-rules
+		               elfeed-score-serde-title-or-content-rules
+		               elfeed-score-serde-authors-rules elfeed-score-serde-tag-rules
+		               elfeed-score-serde-adjust-tags-rules))
 	        ((symbolp category)
 	         (elfeed-score-maint--rules-for-keyword category))
 	        ((listp category)

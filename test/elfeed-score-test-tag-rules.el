@@ -41,7 +41,7 @@
        (elfeed-db-add entry)
        (elfeed-tag entry 'a 'b 'c)
        (with-elfeed-score-test
-        (let* ((elfeed-score-serde--tag-rules
+        (let* ((elfeed-score-serde-tag-rules
                 (list
                  (elfeed-score-tag-rule--create
                   :tags '(t . a)
@@ -49,7 +49,7 @@
                  (elfeed-score-tag-rule--create
                   :tags '(t . (z a))
                   :value 1)))
-               (score (elfeed-score-scoring--score-entry entry)))
+               (score (elfeed-score-scoring-score-entry entry)))
           (should (eq score 2))))))))
 
 (ert-deftest elfeed-score-test-tag-rules-smoke-1 ()
@@ -62,7 +62,7 @@
        (elfeed-db-add entry)
        (elfeed-tag entry 'a 'b 'c)
        (with-elfeed-score-test
-        (let* ((elfeed-score-serde--tag-rules
+        (let* ((elfeed-score-serde-tag-rules
                 (list
                  (elfeed-score-tag-rule--create
                   :tags '(nil . a)
@@ -70,7 +70,7 @@
                  (elfeed-score-tag-rule--create
                   :tags '(nil . (z a))
                   :value 1)))
-               (score (elfeed-score-scoring--score-entry entry)))
+               (score (elfeed-score-scoring-score-entry entry)))
           (should (eq score 0))))))))
 
 (ert-deftest elfeed-score-test-tag-rules-smoke-2 ()
@@ -83,7 +83,7 @@
        (elfeed-db-add entry)
        (elfeed-tag entry 'a 'b 'c)
        (with-elfeed-score-test
-        (let* ((elfeed-score-serde--tag-rules
+        (let* ((elfeed-score-serde-tag-rules
                 (list
                  (elfeed-score-tag-rule--create
                   :tags '(t . a)
@@ -91,7 +91,7 @@
                  (elfeed-score-tag-rule--create
                   :tags '(nil . (z a))
                   :value 1)))
-               (score (elfeed-score-scoring--score-entry entry)))
+               (score (elfeed-score-scoring-score-entry entry)))
           (should (eq score 1))))))))
 
 (ert-deftest elfeed-score-test-tag-rules-adjust ()
@@ -103,7 +103,7 @@
        (elfeed-db-add entry)
        (elfeed-tag entry 'a 'b 'c)
        (with-elfeed-score-test
-        (let* ((elfeed-score-serde--adjust-tags-rules
+        (let* ((elfeed-score-serde-adjust-tags-rules
                 (list
                  (elfeed-score-adjust-tags-rule--create
                   :threshold '(t . 100)
