@@ -28,24 +28,24 @@ For instance, here's a subset of my scoring file at the moment:
 #+BEGIN_SRC elisp
   ;;; Elfeed score file                                     -*- lisp -*-
   (("title"
-    ("OPEN THREAD" -1000 S 1576681345.4086394)
-    ("raymond c\\(hen\\)?" 250 r 1576808786.1558545) (t .(@dev)))
+    (:text "OPEN THREAD" :value -1000 :type S :date 1576681345.4086394)
+    (:text "raymond c\\(hen\\)?" :value 250 :type r :date 1576808786.1558545) :tags (t .(@dev)))
    ("content"
-    ("type erasure" 500 s 1576808786.043517))
+    (:text "type erasure" :value 500 :type s :date 1576808786.043517))
    ("title-or-content"
-    ("california" 150 100 s 1576808786.4068587)
-    ("china" 150 100 w 1576808786.1848788))
+    (:text "california" 150 100 :type s :date 1576808786.4068587)
+    (:text "china" 150 100 :type w :date 1576808786.1848788))
    ("feed"
-    ("Essays in Idleness" 250 S t 1576808786.1956885)
-    ("Irreal" 250 S t 1576808786.1765869)
-    ("Julia Evans" 100 s t 1576808786.4092398)
-    ("National Weather Service" 400 S t 1576808786.1117532)
-    ("emacs-news – sacha chua" 350 S t 1576808785.3807983))
+    (:text "Essays in Idleness" :value 250 :type S :attr t :date 1576808786.1956885)
+    (:text "Irreal" :value 250 :type S :attr t :date 1576808786.1765869)
+    (:text "Julia Evans" :value 100 :type :type s :attr t :date 1576808786.4092398)
+    (:text "National Weather Service" :value 400 :type S :attr t :date 1576808786.1117532)
+    (:text "emacs-news – sacha chua" :value 350 :type S :attr t :date 1576808785.3807983))
    ("authors"
-     ("Jim Geraghty" 500 s 1611757856.1711636 nil 150 nil))
+     (:text "Jim Geraghty" :value 500 :type s :date 1611757856.1711636 :hits 150))
    ("tag"
-    ((t . reddit-question)
-     750 nil))
+    (:tags (t . reddit-question)
+     :value 750))
    (mark -2500))
 #+END_SRC
 
@@ -54,7 +54,7 @@ Like Gnus scoring, this may look like Lisp code, but it is not directly eval'd. 
 This README introduces the package and describes the various ways to install it. Detailed user documentation (including full details on the score file format) is distributed in Texinfo format with the package and is also available in  HTML format [[https://www.unwoundstack.com/doc/elfeed-score/curr][here]].
 * Prerequisites
 
-This package requires Emacs 24.4, and was developed against [[https://github.com/skeeto/elfeed][Elfeed]] 3.3.0, which itself requires cURL.
+This package requires Emacs 26.1, and was developed against [[https://github.com/skeeto/elfeed][Elfeed]] 3.3.0, which itself requires cURL.
 * Installing
 
 ** MELPA

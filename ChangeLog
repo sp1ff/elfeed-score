@@ -1,3 +1,14 @@
+2021-02-19  Michael Herstine  <sp1ff@pobox.com>
+
+	Introduce score file format version 6.
+	With this commit, elfeed-score will serialize scoring rules as
+	property lists, rather than flat lists. It will, of course,
+	continue to read all prior versions of the score file format.
+
+	Moving to property lists for the rule format, while more prolix,
+	will reduce errors on the part of rule authors & enable better
+	validation & error messages on the part of the package.
+
 2021-02-08  Michael Herstine  <sp1ff@pobox.com>
 
 	Stop packages from referring to private symbols in other packages.
