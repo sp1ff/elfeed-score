@@ -142,26 +142,33 @@ For instance, here's a subset of my scoring file at the moment:
 
 @lisp
 ;;; Elfeed score file                                     -*- lisp -*-
-(("title"
-  ("OPEN THREAD" -1000 S 1576681345.4086394)
-  ("raymond c\\(hen\\)?" 250 r 1576808786.1558545) (t .(@@dev)))
- ("content"
-  ("type erasure" 500 s 1576808786.043517))
- ("title-or-content"
-  ("california" 150 100 s 1576808786.4068587)
-  ("china" 150 100 w 1576808786.1848788))
- ("feed"
-  ("Essays in Idleness" 250 S t 1576808786.1956885)
-  ("Irreal" 250 S t 1576808786.1765869)
-  ("Julia Evans" 100 s t 1576808786.4092398)
-  ("National Weather Service" 400 S t 1576808786.1117532)
-  ("emacs-news – sacha chua" 350 S t 1576808785.3807983))
- ("authors"
-   ("Jim Geraghty" 500 s 1611757856.1711636 nil 150 nil))
- ("tag"
-  ((t . reddit-question)
-   750 nil))
- (mark -2500))
+  (("title"
+    (:text "OPEN THREAD" :value -1000 :type S :date 1576681345.4086394)
+    (:text "raymond c\\(hen\\)?" :value 250 :type r
+    :date 1576808786.1558545) :tags (t .(@@dev)))
+   ("content"
+    (:text "type erasure" :value 500 :type s :date 1576808786.043517))
+   ("title-or-content"
+    (:text "california" 150 100 :type s :date 1576808786.4068587)
+    (:text "china" 150 100 :type w :date 1576808786.1848788))
+   ("feed"
+    (:text "Essays in Idleness" :value 250 :type S :attr t
+    :date 1576808786.1956885)
+    (:text "Irreal" :value 250 :type S :attr t
+    :date 1576808786.1765869)
+    (:text "Julia Evans" :value 100 :type :type s :attr t
+    :date 1576808786.4092398)
+    (:text "National Weather Service" :value 400 :type S :attr t
+    :date 1576808786.1117532)
+    (:text "emacs-news – sacha chua" :value 350 :type S :attr t
+    :date 1576808785.3807983))
+   ("authors"
+     (:text "Jim Geraghty" :value 500 :type s :date 1611757856.1711636
+      :hits 150))
+   ("tag"
+    (:tags (t . reddit-question)
+     :value 750))
+   (mark -2500))
 @end lisp
 
 Like Gnus scoring, this may look like Lisp code, but it is not
@@ -299,18 +306,17 @@ temporary buffer, and calls @code{read-from-string} (@pxref{Input
 Functions, read-from-string, read-from-string, elisp, Emacs Lisp}) on
 the contents.
 
-The form is a list of lists and each sub-list begins with a symbol or
-a string identifying that sub-list's nature & purpose. The sub-list
+The form is a list of lists; each sub-list begins with a symbol or a
+string identifying that sub-list's nature & purpose. The sub-list
 identifiers elfeed-score recognizes are:
 
 @cindex score file entries
 
 @itemize
 @item
-@code{version}
-The sublist named by the symbol @code{version} contains the version of
-the score file format. You do not need to include this in your initial
-score file; it is written out automatically by
+@code{version} The sublist named by the symbol @code{version} contains
+the version of the score file format. You do not need to include this
+in your initial score file; it is written out automatically by
 elfeed-score. elfeed-score maintains backward compatibiliy in that
 score files in older format versions are still recognized. The most
 recent format version will always be used when the score file is
@@ -367,6 +373,55 @@ this value, the entry will be marked as ``read''. Details below in
 
 @end itemize
 
+Until elfeed-score 0.7, all rules were serialized to flat lists, with
+each attribute in a known position in the list (for instance, title
+rules wrote down their match text in position 0, the match value in
+position 1, and so forth, while the other rule types each had their
+own format).
+
+As time went on, the number of attributes for any given rule type
+grew. Using flat lists as a serialization format became untenable for
+two reasons:
+
+@enumerate
+
+@item
+Having to "just know" that slot @code{i} was for this & slot @code{j}
+was for that became increasingly burdensome for the package author,
+let alone contributors & users.
+
+@item
+It makes validation hard: if the score file author forgets that slot
+@code{i} is for this thing, but provides the thing that goes in slot
+@code{i + 1}, then when elfeed-score calls @code{(nth in i)} it will
+get @emph{something} back, but will not discover that it's the wrong
+sort of thing for some time, which makes it hard to craft a usable
+error message; worse, elfeed-score may never discover it & instead
+fail silently.
+
+@end enumerate
+
+Beginning with build 0.7.3 (format version 6), elfeed-score now uses
+property lists as its serialization format. This will address these
+two issues, at the cost of making authoring rules more prolix: instead
+of saying:
+
+@lisp
+("match text" 100...)
+@end lisp
+
+you'll now have to say:
+
+@lisp
+(:text "match text" :value 100...)
+@end lisp
+
+Given that fields set to their default values do @emph{not} have to be
+specified, this will hopefully not be too inconvenient, and will enable
+better error messages on reading score files.
+
+@cindex new score file format
+
 @node Types of Rules
 @section Types of Rules
 
@@ -394,20 +449,19 @@ specify the amount to be added to an entry's score on successful
 match.
 
 In the score file (@pxref{The Score File}), title rules are
-represented by a list of length seven:
+represented by a property list of up to seven attributes:
 
 @enumerate
 @item
-The match text
-This is a string.
+@code{:text}: The match text.
 
 @item
-The match value
+@code{:value}: The match value.
 This is an integer specifying the amount by which the entry's score
 should be adjusted, should the text match
 
 @item
-The match type
+@code{:type}: The match type.
 
 @cindex match type
 
@@ -428,7 +482,7 @@ Whole word matching just feeds the match text to
 Search, elisp, Emacs Lisp}) before doing a regexp search.
 
 @item
-Last match time
+@code{:date}: Last match time.
 
 The last time this rule matched an entry, in seconds since Unix
 epoch. When defining rules, this element & all those following are
@@ -436,24 +490,28 @@ optional & need not be supplied by the score file author. This field
 will be automatically kept up-to-date by elfeed-score.
 
 @item
-Tag scoping rules
+@code{:tags}: Tag scoping rules.
 
 You may wish to apply this rule only to entries that have certain tags
 (or that do @emph{not} have certain tags). @xref{Scoping Rules by
 Tags} for how to do that.
 
+This property is optional.
+
 @item
-Hit count
+@code{:hits}: Hit count.
 
 The number of times this rule has matched an entry. This field will be
 automatically kept up-to-date by elfeed-score.
 
 @item
-Feed scoping rules
+@code{:feeds}: Feed scoping rules.
 
 You may wish to apply this rule only to entries that came from certain
 feeds (or did @emph{not} come from certain feeds).  @xref{Scoping
 Rules by Feed} for how to do that.
+
+This property is optional.
 
 @end enumerate
 
@@ -461,15 +519,15 @@ So, for instance, the following rule:
 
 @lisp
 ("title"
-  ("rust.*who.s hiring" 1500 r))
+  (:text "rust.*who.s hiring" :value 1500 :type r))
 @end lisp
 
 would match each entry's title against the regular expression
 ``rust.*who.s hiring'' (without regard to case) and adds 1500 to the
 score of any entry that matches.
 
-Note that it takes advantage of the fact that only the first three
-elements are required.
+Note that it takes advantage of the fact that only the @code{:text},
+@code{:value} & @code{:type} properties are required.
 
 After this rule has been running for some time, and the rule has been
 updated by elfeed-score, it will be written down in the score file as
@@ -477,13 +535,15 @@ something like this:
 
 @lisp
 ("title"
-  ("rust.*who.s hiring" 1500 r 1612278560.2936354 nil 46 nil))
+  (:text "rust.*who.s hiring" :value 1500 :type r
+  :date 1612278560.2936354 :hits 46))
 @end lisp
 
 The additional elements indicate that this was last matched at
-Tuesday, February 2, 2021 3:09:20.293 PM UTC, it is not scoped to any
-particular tags, it has matched forty-six entries since it was
-created, and that it is not scoped to any particular feed(s).
+Tuesday, February 2, 2021 3:09:20.293 PM UTC & that it has matched
+forty-six entries since it was created. Note that since it is not
+scoped to any particular tags or to any particular feed(s), those
+properties are not recorded.
 
 @node content Rules
 @subsection content Rules
@@ -496,29 +556,29 @@ reason, this section will be very brief-- refer to @ref{title Rules}
 for the details of each element.
 
 In the score file (@pxref{The Score File}), content rules are
-represented by a list of length seven:
+represented by seven properties:
 
 @enumerate
 @item
-The match text
+@code{:text} The match text
 
 @item
-The match value
+@code{:value} The match value
 
 @item
-The match type as per @ref{match-type, above, above}.
+@code{:type} The match type as per @ref{match-type, above, above}.
 
 @item
-Last match time
+@code{:date} Last match time
 
 @item
-Tag scoping rules
+@code{:tags} Tag scoping rules
 
 @item
-Hit count
+@code{:hits} Hit count
 
 @item
-Feed scoping rules
+@code{:feeds} Feed scoping rules
 
 @end enumerate
 
@@ -539,37 +599,37 @@ consist of eight elements, not seven:
 
 @enumerate
 @item
-The match text, as with title & content rules
+@code{:text} The match text, as with title & content rules
 
 @item
-The title match value
+@code{:title-value} The title match value
 
 The value by which an entry's score will be adjusted when the @emph{title}
 matches. This allows different scoring values for title & content matches,
 on the assumption that a title match would be considered more significant.
 
 @item
-The content match value
+@code{:content-value} The content match value
 
 The value by which an entry's score will be adjusted when the
 @emph{content} matches.
 
 @item
-The match type as per @ref{match-type, above, above}.
+@code{:type} The match type as per @ref{match-type, above, above}.
 
 @item
-Last match time
+@code{:date} Last match time
 Again, this & all following elements are optional, and elfeed-score
 will keep this element up-to-date.
 
 @item
-Tag scoping rules
+@code{:tags} Tag scoping rules
 
 @item
-Hit count
+@code{:hits} Hit count
 
 @item
-Feed scoping rules
+@code{:feeds} Feed scoping rules
 
 @end enumerate
 
@@ -580,7 +640,7 @@ For instance, the following rule:
 
 @lisp
 ("title-or-content"
-  ("california" 150 100 s))
+  (:text "california" :title-value 150 :content-value 100 :type s))
 @end lisp
 
 would add 150 to any element who's title contains the string
@@ -598,38 +658,38 @@ sources.  A feed rule is defined by the following seven elements:
 @enumerate
 
 @item
-Match text
+@code{:text}: Match text
 The text to be matched against the feed title, URL or author
 
 @item
-Match value
+@code{:value}: Match value
 The value by which an entry's score will be adjusted should there be a
 match
 
 @item
-Match type
+@code{:type}: Match type
 The match type as per @ref{match-type, above, above}.
 
 @item
-Feed attribute
+@code{:attr}: Feed attribute
 One of the symbols @code{t}, @code{u} or @code{a} for title, URL, or
 author respectively; this determines the attribute of the feed against
 which this rule's text will be matched.
 
 @item
-Last match date
+@code{:date}: Last match date
 The last time this rule matched, in seconds since Unix epoch. This
 element and all that follow it are optional. This element will be
 maintained by elfeed-score.
 
 @item
-Tag scoping rules
+@code{:tags}: Tag scoping rules
 You may wish to apply this rule only to entries that have certain tags
 (or that do @emph{not} have certain tags). See @ref{Scoping Rules by
 Tags, below, below} for how to do that.
 
 @item
-Hit count
+@code{:hits}: Hit count
 The number of times this rule has matched an entry. This field will be
 automatically kept up-to-date by elfeed-score.
 
@@ -639,7 +699,7 @@ For example, this rule:
 
 @lisp
 ("feed"
-  ("National Weather Service" 400 S t))
+  (:text "National Weather Service" :value 400 :type S :attr t))
 @end lisp
 
 will check the feed title for each entry against the string ``National
@@ -658,21 +718,21 @@ the paper to which that entry corresponds. You can score against an
 
 @enumerate
 @item
-The match text
+@code{:text}: The match text
 For each entry, if the ``authors'' meta-data is present, the authors'
 names will be concatenated (separated by ``, ``) and matched against
 this text for scoring purposes.
 
 @item
-The match value
+@code{:value}: The match value
 This is an integer specifying the amount by which the entry's score
 should be adjusted, should the text match 
 
 @item
-The match type
+@code{:type}: The match type
 
 @item
-Last match time
+@code{:date}: Last match time
 
 The last time this rule matched an entry, in seconds since Unix
 epoch. When defining rules, this element & all those following are
@@ -680,20 +740,20 @@ optional & need not be supplied by the score file author. This field
 will be automatically kept up-to-date by elfeed-score.
 
 @item
-Tag scoping rules
+@code{:tags}: Tag scoping rules
 
 You may wish to apply this rule only to entries that have certain tags
 (or that do @emph{not} have certain tags). See @ref{Scoping Rules by
 Tags, below, below} for how to do that.
 
 @item
-Hit count
+@code{:hits}: Hit count
 
 The number of times this rule has matched an entry. This field will be
 automatically kept up-to-date by elfeed-score.
 
 @item
-Feed scoping rules
+@code{:feeds}: Feed scoping rules
 
 You may wish to apply this rule only to entries that came from certain
 feeds (or did @emph{not} come from certain feeds). See @ref{Scoping
@@ -711,12 +771,12 @@ discovered.  It can therefore be convenient to group entries that come
 from many different feeds but share a tag or tags. That is the purpose
 of ``tag'' rules.
 
-``tag'' rules are defined by a four-tuple:
+``tag'' rules are defined by four properties:
 
 @enumerate
 
 @item
-Tags
+@code{:tags}: Tags
 
 The tags whose presence or absence will trigger this rule. They are
 specified as a cons cell (@pxref{Cons Cell and List Types, cons cell,
@@ -734,18 +794,18 @@ will apply to entries who posses @emph{none} of the tags in
 @code{tags}.
 
 @item
-Match value
+@code{:value}: Match value
 The amount by which an entry's score shall be adjusted should this
 rule match.
 
 @item
-Last matched time
+@code{:date}: Last matched time
 The time, in seconds since Unix epoch, at which this rule last matched
 an entry. This and the next element are optional, and elfeed-score
 will keep this entry up-to-date.
 
 @item
-Hit count
+@code{:hits}: Hit count
 The number of times this rule has matched any entry. elfeed-score will
 keep this entry up-to-date.
 
@@ -769,12 +829,12 @@ that elfeed-score couldn't do that, so in build 0.4.3, I added this
 rule type. These will add or remove tags based on whether the entry's
 score is above or below a given threshold.
 
-adjust-tags rules are given by a four-tuple:
+adjust-tags rules are given by four properties:
 
 @enumerate
 
 @item
-The threshold at which the rule shall apply
+@code{:threshold}: The threshold at which the rule shall apply
 
 This is defined by a cons cell (@pxref{Cons Cell and List Types, cons
 cell, cons cell, elisp, Emacs Lisp}) of the form:
@@ -790,7 +850,7 @@ than or equal to @code{threshold}; if @code{switch} is @code{nil} the rule
 applies if score is less than or equal to @code{threshold}.
 
 @item
-The tags to be added or removed
+@code{:tags}: The tags to be added or removed
 
 This is also given by a cons cell
 
@@ -803,14 +863,14 @@ single tag or a list of tags) will be added to the entry; if
 @code{switch} is @code{nil}, they will be removed
 
 @item
-Last match time
+@code{:date}: Last match time
 
 The last time this rule matched an entry, in seconds since Unix
 epoch. This element is optional, need not be supplied by the score
 file author, and will be automatically kept up-to-date by the package.
 
 @item
-Hit count
+@code{:hits}: Hit count
 
 The number of times this rule has matched an entry. This element is
 optional, need not be supplied by the score file author, and will be
@@ -822,8 +882,8 @@ For example, the following rules:
 
 @lisp
 (("adjust-tags"
-  ((t . 1000) (t . a))
-  ((nil . -1000) (nil . b)))
+  (:threshold (t . 1000) :tags (t . a))
+  (:threshold (nil . -1000) :tags (nil . b)))
 @end lisp
 
 will add the tag @code{'a} to all entries whose score is 1000 or more,
@@ -894,9 +954,10 @@ writing:
 
 @lisp
 ("title-or-content
-  ("workspace" 150 75 s 1611937077.6047099
-   (t linux)
-   48 nil)
+  (:text "workspace" :title-value 150 :content-value 75 :type s
+   :date 1611937077.6047099
+   :tags (t linux)
+   :hits 48)
 @end lisp
 
 It performs a case-insensitive substring match against entry title and
@@ -955,8 +1016,8 @@ Example:
 
 @lisp
 ("title"
-  ("foo" 100 s nil nil 0
-   (t . ((t S "Bar")))))
+  (:text "foo" :value 100 :type s
+   :feeds (t . ((t S "Bar")))))
 @end lisp
 
 This defines a title rule @xref{title Rules} that checks for a
@@ -978,27 +1039,32 @@ writing. Working score files tend to grow much larger than this
 ;;; Elfeed score file                                     -*- lisp -*-
 ((version 5)
  ("title"
-  ("rust.*who.s hiring" 1500 r 1612278560.2936354 nil 46 nil)
-  ("Microsoft Security Response Center" 1500 s nil nil 0 nil))
+  (:text "rust.*who.s hiring" :value 1500 :type r
+   :date 1612278560.2936354 :hits 46)
+  (:text "Microsoft Security Response Center" :value 1500 :type s))
  ("content"
-  ("/u/I_am_dom_" 250 s 1592054264.5130005
-   (t @@china)
-   0 nil))
+  (:text "/u/I_am_dom_" :value 250 :type s :date 1592054264.5130005
+   :tags (t @@china)))
  ("title-or-content"
-  ("california" 150 100 s 1612451934.031678 nil 3077 nil)
-  ("melpa" 250 150 s 1612363625.193721
-   (t @@dev @@emacs)
-   108 nil)
-  ("workspace" 150 75 s 1612451475.3151736
-   (t linux)
-   50 nil))
+  (:text "california" :title-value 150 :content-value 100 :type s
+   :date 1612451934.031678 :hits 3077)
+  (:text "melpa" :title-value 250 :content-value 150 :type s
+   :date 1612363625.193721
+   :tags (t @@dev @@emacs)
+   :hits 108)
+  (:text "workspace" :title-value 150 :content-value 75 :type s
+   :date 1612451475.3151736
+   :tags (t linux)
+   :hits 50))
  ("tag"
-  ((t . reddit-question)
-   750 1602258238.98633 0))
+  (:tags (t . reddit-question)
+   :value 750 :date 1602258238.98633))
  ("authors"
-  ("Jim Geraghty" 500 s 1612451618.429526 nil 172 nil))
+  (:text "Jim Geraghty" :value 500 :type s
+   :date 1612451618.429526 :hits 172))
  ("feed"
-  ("Hacker News" 150 S t 1612451901.966745 nil 985))
+  (:text "Hacker News" :value 150 :type S :attr t
+   :date 1612451901.966745 :hits 985))
  (mark -2500)
  ("adjust-tags"))
 @end lisp

@@ -2,10 +2,6 @@
 
 ;; Copyright (C) 2021 Michael Herstine <sp1ff@pobox.com>
 
-;; Package-Requires: ((emacs "24.4") (elfeed "3.3.0"))
-;; Version: 0.7.2
-;; URL: https://github.com/sp1ff/elfeed-score
-
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
 ;; the Free Software Foundation, either version 3 of the License, or

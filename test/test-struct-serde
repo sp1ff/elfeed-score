@@ -1,0 +1,3 @@
+#!/bin/bash
+EMACS=${EMACS:-emacs}
+${EMACS} -batch -L ${srcdir}/.. -l ${srcdir}/test-struct-serde.el --eval '(let ((ert-batch-backtrace-right-margin 120)) (ert-run-tests-batch-and-exit t))'

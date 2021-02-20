@@ -1,4 +1,4 @@
-;;; elfeed-score-test-serde.el --- ERT tests for elfeed-score SERDE  -*- lexical-binding: t; -*-
+;;; test-serde.el --- ERT tests for elfeed-score SERDE  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2020-2021 Michael Herstine <sp1ff@pobox.com>
 
@@ -28,8 +28,10 @@
 (require 'elfeed-score)
 (require 'elfeed-db-tests)
 
-(ert-deftest elfeed-score-test-score-files-0 ()
-  "Smoke test reading/writing score files"
+(ert-deftest score-files-smoke-test ()
+  "Smoke test reading/writing score files.
+
+Test reading a trival score file (format version 1)."
 
   (let* ((score-entries
           '((version 1)
@@ -42,8 +44,8 @@
             (mark -2500)))
          (score-text (pp-to-string score-entries))
          (score-file (make-temp-file "elfeed-score-test-" nil nil score-text))
-         (score-entries-2 (elfeed-score-serde--parse-score-file score-file)))
-    (should (equal score-entries-2
+         (score-entries-read (elfeed-score-serde--parse-score-file score-file)))
+    (should (equal score-entries-read
                    (list :mark -2500
                          :feeds (list (elfeed-score-feed-rule--create
                                        :text "foo.com" :value 100 :type 's
@@ -58,8 +60,10 @@
                                         :type 'r))
                          :content nil)))))
 
-(ert-deftest elfeed-score-test-score-files-1 ()
-  "Smoke test reading/writing score files"
+(ert-deftest test-score-files-1 ()
+  "Smoke test reading/writing score files.
+
+Test reading a trival score file (format version 2)."
 
   (let* ((score-entries
           '((version 2)
@@ -72,8 +76,8 @@
             (mark -2500)))
          (score-text (pp-to-string score-entries))
          (score-file (make-temp-file "elfeed-score-test-" nil nil score-text))
-         (score-entries-2 (elfeed-score-serde--parse-score-file score-file)))
-    (should (equal score-entries-2
+         (score-entries-read (elfeed-score-serde--parse-score-file score-file)))
+    (should (equal score-entries-read
                    (list :mark -2500
                          :feeds (list (elfeed-score-feed-rule--create
                                        :text "foo.com" :value 100 :type 's
@@ -89,8 +93,11 @@
                          :content nil
                          :title-or-content nil)))))
 
-(ert-deftest elfeed-score-test-score-files-2 ()
-  "Smoke test reading/writing score files"
+(ert-deftest test-score-files-2 ()
+  "Smoke test reading/writing score files.
+
+Test reading a trival score file (format version 2 with
+tag-scoping rules)."
 
   (let* ((score-entries
           '((version 2)
@@ -107,8 +114,8 @@
             (mark -2500)))
          (score-text (pp-to-string score-entries))
          (score-file (make-temp-file "elfeed-score-test-" nil nil score-text))
-         (score-entries-2 (elfeed-score-serde--parse-score-file score-file)))
-       (should (equal score-entries-2
+         (score-entries-read (elfeed-score-serde--parse-score-file score-file)))
+       (should (equal score-entries-read
                       (list :mark -2500
                             :feeds (list (elfeed-score-feed-rule--create
                                           :text "foo.com" :value 100 :type 's
@@ -130,21 +137,23 @@
                                    :text "now is the time..." :title-value 150
                                    :content-value 100 :type 's :tags '(t . (foo bar)))))))))
 
-(ert-deftest elfeed-score-test-score-files-3 ()
-  "Smoke test reading/writing score files"
+(ert-deftest test-score-files-3 ()
+  "Smoke test reading/writing score files.
+
+Format version defaulted; tag-scoping rules."
 
   (let* ((score-entries
           '(("title"
-             ("hoping" -1000 s nil (t . (foo bar)))
-             ("long way( home)?" +100 r))
+             (:text "hoping" :value -1000 :type s :tags (t . (foo bar)))
+             (:text "long way( home)?" :value +100 :type r))
             ("feed"
-             ("foo.com" +100 s u)
-             ("title" -100 s t))
+             (:text "foo.com" :value +100 :type s :attr u)
+             (:text "title" :value -100 :type s :attr t))
             (mark -2500)))
          (score-text (pp-to-string score-entries))
          (score-file (make-temp-file "elfeed-score-test-" nil nil score-text))
-         (score-entries-2 (elfeed-score-serde--parse-score-file score-file)))
-       (should (equal score-entries-2
+         (score-entries-read (elfeed-score-serde--parse-score-file score-file)))
+       (should (equal score-entries-read
                       (list :mark -2500
                             :adjust-tags nil
                             :feeds (list (elfeed-score-feed-rule--create
@@ -164,27 +173,29 @@
                             :authors nil
                             :tag nil)))))
 
-(ert-deftest elfeed-score-test-score-files-4 ()
-  "Smoke test reading/writing score files"
+(ert-deftest test-score-files-4 ()
+  "Smoke test reading/writing score files.
+
+Format version defaulted, includes adjust-tags rules."
 
   (let* ((score-entries
           '(("title"
-             ("hoping" -1000 s nil (t . (foo bar)))
-             ("long way( home)?" +100 r))
+             (:text "hoping" :value -1000 :type s :tags (t . (foo bar)))
+             (:text "long way( home)?" :value +100 :type r))
             ("feed"
-             ("foo.com" +100 s u)
-             ("title" -100 s t))
+             (:text "foo.com" :value +100 :type s :attr u)
+             (:text "title" :value -100 :type s :attr t))
             ("tag"
-             ((t . (a b c)) +10)
-             ((nil . z) -1))
+             (:tags (t . (a b c)) :value +10)
+             (:tags (nil . z) :value -1))
             ("adjust-tags"
-             ((t . 100) (t . important))
-             ((nil . -100) (nil . important)))
+             (:threshold (t . 100) :tags (t . important))
+             (:threshold (nil . -100) :tags (nil . important)))
             (mark -2500)))
          (score-text (pp-to-string score-entries))
          (score-file (make-temp-file "elfeed-score-test-" nil nil score-text))
-         (score-entries-2 (elfeed-score-serde--parse-score-file score-file)))
-    (should (equal score-entries-2
+         (score-entries-read (elfeed-score-serde--parse-score-file score-file)))
+    (should (equal score-entries-read
                    (list :mark -2500
                          :adjust-tags
                          (list (elfeed-score-adjust-tags-rule--create
@@ -215,8 +226,10 @@
                                      :tags '(nil . z)
                                      :value -1)))))))
 
-(ert-deftest elfeed-score-test-score-files-5 ()
-  "Smoke test reading/writing score files"
+(ert-deftest test-score-files-5 ()
+  "Smoke test reading/writing score files.
+
+Format version 4."
 
   (let* ((score-entries
           '((version 4)
@@ -237,8 +250,8 @@
             (mark -2500)))
          (score-text (pp-to-string score-entries))
          (score-file (make-temp-file "elfeed-score-test-" nil nil score-text))
-         (score-entries-2 (elfeed-score-serde--parse-score-file score-file)))
-    (should (equal score-entries-2
+         (score-entries-read (elfeed-score-serde--parse-score-file score-file)))
+    (should (equal score-entries-read
                    (list :mark -2500
                          :adjust-tags
                          (list (elfeed-score-adjust-tags-rule--create
@@ -270,8 +283,10 @@
                                      :tags '(nil . z)
                                      :value -1)))))))
 
-(ert-deftest elfeed-score-test-score-files-6 ()
-  "Smoke test reading/writing score files"
+(ert-deftest test-score-files-6 ()
+  "Smoke test reading/writing score files.
+
+Format version 6; tag- and feed-scorping rules; authors rule."
 
   (let* ((score-entries
           '((version 5)
@@ -292,8 +307,8 @@
             (mark -2500)))
          (score-text (pp-to-string score-entries))
          (score-file (make-temp-file "elfeed-score-test-" nil nil score-text))
-         (score-entries-2 (elfeed-score-serde--parse-score-file score-file)))
-    (should (equal score-entries-2
+         (score-entries-read (elfeed-score-serde--parse-score-file score-file)))
+    (should (equal score-entries-read
                    (list
                     :mark -2500
                     :adjust-tags
@@ -330,7 +345,7 @@
                                 :tags '(nil . z)
                                 :value -1)))))))
 
-(ert-deftest elfeed-score-test-issue-7 ()
+(ert-deftest test-issue-7 ()
   "Check that the error in issue #7 is caught."
 
   (let* ((score-entries
@@ -340,6 +355,37 @@
          (score-file (make-temp-file "elfeed-score-test-" nil nil score-text)))
     (should-error (elfeed-score-serde--parse-score-file score-file))))
 
-(provide 'elfeed-score-test-serde)
+(ert-deftest test-format-version-6 ()
+  "Smoke tests for format version 6."
+  (let* ((score-entries
+          '((version 6)
+            ("title"
+             (:text "hoping" :value -1000 :type s))))
+         (score-text (pp-to-string score-entries))
+         (score-file (make-temp-file "elfeed-score-test-" nil nil score-text))
+         (score-entries-read (elfeed-score-serde--parse-score-file score-file)))
+    (should (equal score-entries-read
+                   (list :mark nil :adjust-tags nil :feeds nil
+                    :titles
+                    (list
+                     (elfeed-score-title-rule--create
+                      :text "hoping" :value -1000 :type 's))
+                    :content nil :title-or-content nil
+                    :authors nil :tag nil)))))
 
-;;; elfeed-score-test-serde.el ends here
+(ert-deftest test-writes-latest-version ()
+  "Be sure that the score file is written in the lastest format version."
+
+  (let* ((score-file (make-temp-file "elfeed-score-test-")))
+    (elfeed-score-serde-write-score-file score-file)
+    (let ((sexp
+           (car
+            (read-from-string
+             (with-temp-buffer
+               (insert-file-contents score-file)
+               (buffer-string))))))
+      (should (eq elfeed-score-serde-current-format
+                  (car (alist-get 'version sexp)))))))
+
+(provide 'test-serde)
+;;; test-serde.el ends here

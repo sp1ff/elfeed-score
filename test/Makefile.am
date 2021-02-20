@@ -1,7 +1,8 @@
 AM_ELCFLAGS = -L ${srcdir}/..
 
 TESTS = elfeed-score-tests		\
-	elfeed-score-test-serde		\
+	test-struct-serde               \
+	test-serde			\
 	elfeed-score-test-scoring	\
 	elfeed-score-test-tag-rules	\
 	elfeed-score-log-tests		\
@@ -10,7 +11,8 @@ TESTS = elfeed-score-tests		\
         test-explanations
 
 dist_noinst_LISP = elfeed-score-tests.el		\
-		   elfeed-score-test-serde.el		\
+		   test-struct-serde.el                 \
+		   test-serde.el			\
 		   elfeed-score-test-scoring.el         \
 		   elfeed-score-test-tag-rules.el	\
 		   elfeed-score-log-tests.el		\

@@ -2,8 +2,20 @@ elfeed-score News -- history of user-visible changes -*- outline -*-
 
 * Changes in elfeed-score 0.7.2
 
-No user-visible changes; strictly internal changes cleaning-up
-after the re-factor.
+** User-visible Changes
+
+*** Scoring Rules Now Serialized to Property Lists
+
+This build introduces score file format version 6.
+
+elfeed-score will now serialize scoring rules as property lists, rather than flat lists. It will, of course, continue to read all prior versions of the score file format.
+
+Moving to property lists for the rule format, while more prolix, will reduce errors on the part of rule authors & enable better validation & error messages on the part of the package.
+
+*** elfeed-score now requires Emacs 26.1
+** Other Changes
+
+Internal changes cleaning-up after the re-factor.
 * Changes in elfeed-score 0.7.1
 
 ** User-visible Changes
