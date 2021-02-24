@@ -1,5 +1,15 @@
 elfeed-score News -- history of user-visible changes -*- outline -*-
 
+* Changes in elfeed-score 0.7.3
+
+** User-visible Changes
+
+*** Write backup file on score file format version change
+
+If elfeed-score detects that the score file it has read is in a format
+prior to the current, it will write a backup file named SCORE-FILE.~N~
+where SCORE-FILE is the original score file name and N is the prior
+version.
 * Changes in elfeed-score 0.7.2
 
 ** User-visible Changes
