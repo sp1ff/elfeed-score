@@ -587,19 +587,22 @@ with the following keys:
      :authors authors
      :tag tags)))
 
+(defun elfeed-score-serde--parse-version (sexps)
+  "Retrieve the version attribute from SEXPS."
+  (cond
+   ((assoc 'version sexps)
+    (cadr (assoc 'version sexps)))
+   ((assoc "version" sexps)
+    (cadr (assoc "version" sexps)))
+   (t
+    ;; I'm going to assume this is a new, hand-authored scoring
+    ;; file, and attempt to parse it according to the latest
+    ;; version spec.
+    elfeed-score-serde-current-format)))
+
 (defun elfeed-score-serde--parse-scoring-sexp (sexps)
   "Parse raw S-expressions (SEXPS) into scoring rules."
-  (let ((version
-         (cond
-          ((assoc 'version sexps)
-           (cadr (assoc 'version sexps)))
-          ((assoc "version" sexps)
-           (cadr (assoc "version" sexps)))
-          (t
-           ;; I'm going to assume this is a new, hand-authored scoring
-           ;; file, and attempt to parse it according to the latest
-           ;; version spec.
-           6))))
+  (let ((version (elfeed-score-serde--parse-version sexps)))
     ;; I use `cl-delete' instead of `assoc-delete-all' because the
     ;; latter would entail a dependency on Emacs 26.2, which I would
     ;; prefer not to do.
@@ -650,12 +653,15 @@ into a property list with the following properties:
     - :title-or-content
     - :tags"
 
-  (let ((sexp
-         (car
-		      (read-from-string
-		       (with-temp-buffer
-			       (insert-file-contents score-file)
-			       (buffer-string))))))
+  (let* ((sexp
+          (car
+		       (read-from-string
+		        (with-temp-buffer
+			        (insert-file-contents score-file)
+			        (buffer-string)))))
+         (version (elfeed-score-serde--parse-version sexp)))
+    (unless (eq version elfeed-score-serde-current-format)
+      (copy-file score-file (format "%s.~%d~" score-file version)))
     (elfeed-score-serde--parse-scoring-sexp sexp)))
 
 (define-obsolete-function-alias 'elfeed-score/write-score-file

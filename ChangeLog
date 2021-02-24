@@ -1,4 +1,11 @@
-2021-02-19  Michael Herstine  <sp1ff@pobox.com>
+2021-02-24  Michael Herstine  <sp1ff@pobox.com>
+
+	Write a backup copy of the score file on version upgrade.
+	This commit adds a minor new feature: if elfeed-score detects,
+	on loading the score file, that the format version has changed,
+	it will write a backup copy of the score file.
+
+2021-02-20  Michael Herstine  <sp1ff@pobox.com>
 
 	Introduce score file format version 6.
 	With this commit, elfeed-score will serialize scoring rules as

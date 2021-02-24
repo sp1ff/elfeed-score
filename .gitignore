@@ -17,3 +17,4 @@ smoke-test.el
 *.tar.gz
 *.tar.xz
 package-test.el
+upgrade-test.el
