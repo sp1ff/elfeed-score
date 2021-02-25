@@ -2,7 +2,7 @@
 #+DESCRIPTION: Gnus-style scoring for Elfeed
 #+AUTHOR: Michael Herstine
 #+EMAIL: sp1ff@pobox.com
-#+DATE: <2021-02-25 Thu 08:03>
+#+DATE: <2021-02-25 Thu 08:11>
 #+AUTODATE: t
 #+OPTIONS: toc:nil org-md-headline-style:setext *:t ^:nil
 
@@ -11,11 +11,6 @@
 [[https://github.com/sp1ff/elfeed-score/workflows/melpazoid/badge.svg][file:https://github.com/sp1ff/elfeed-score/workflows/melpazoid/badge.svg]]
 
 
-* Ann: elfeed-score 0.7 pre-releases
-
-Hello all-- in order to support some new features I'd like to add, I've started re-factoring elfeed-score from one Emacs Lisp file (over 2K LoC in size) into several. I've also made a significant change to the serialization format. Upgrading should be transparent, but out of an abundance of caution I'm doing the work on branch (=0.7=) and I've started putting up pre-releases made from that branch (the latest may be found [[https://github.com/sp1ff/elfeed-score/releases/tag/0.7.3][here]]). If anyone would like to try 'em out & let me know how it worked, I'd appreciate it. Also, apologies to anyone getting elfeed-score from MELPA Stable: I didn't realize that it picked up tags on *any* branch (as opposed to just =master=): as a result, I find myself in the odd position of hosting the latest builds on MELPA Stable, and the known-good, stable code on MELPA.
-
-At this point, I've been letting the latest =0.7= code "bake" in my production Emacs instance; with no major issues having cropped up in the past few days I'll be mergint into =master= & releasing soon.
 * Introduction
 
 [[https://github.com/sp1ff/elfeed-score][elfeed-score]] brings Gnus-style [[https://www.gnu.org/software/emacs/manual/html_node/gnus/Scoring.html#Scoring][scoring]] to [[https://github.com/skeeto/elfeed][Elfeed]].
@@ -76,7 +71,7 @@ The easiest way to install elfeed-score is [[https://github.com/melpa/melpa][MEL
 You can also download the Emacs package file on the GitHub releases [[https://github.com/sp1ff/elfeed-score/releases][page]] or from my personal [[https://www.unwoundstack/distros.html][page]]. Then say:
 
 #+BEGIN_SRC elisp
-(package-install-file "elfeed-score-0.7.3.tar")
+(package-install-file "elfeed-score-0.7.4.tar")
 #+END_SRC
 
 ** Autotools Source Distributions
@@ -85,8 +80,8 @@ You can also download Autotools source tarballs (again available either on the G
 
 #+BEGIN_SRC bash
 cd /tmp
-curl -L --output elfeed-score-0.7.3.tar.gz https://github.com/sp1ff/elfeed-score/releases/download/0.7.3/elfeed-score-0.7.3.tar.gz
-tar xvf elfeed-score-0.7.3.tar.gz && cd elfeed-score-0.7.3
+curl -L --output elfeed-score-0.7.4.tar.gz https://github.com/sp1ff/elfeed-score/releases/download/0.7.4/elfeed-score-0.7.4.tar.gz
+tar xvf elfeed-score-0.7.4.tar.gz && cd elfeed-score-0.7.4
 export EMACSLOADPATH=$HOME/.emacs.d/elpa/elfeed-20200209.1942:$EMACSLOADPATH
 ./configure
 make
@@ -101,16 +96,16 @@ The unit tests require some macros defined by the [[https://github.com/skeeto/el
 #+BEGIN_SRC bash
 cd /tmp
 git clone https://github.com/skeeto/elfeed.git
-curl -L --output=elfeed-score-0.7.3.tar.gz https://github.com/sp1ff/elfeed-score/releases/download/0.7.3/elfeed-score-0.7.3.tar.gz
-tar xvf elfeed-score-0.7.3.tar.gz && cd elfeed-score-0.7.3
-export EMACSLOADPATH=/tmp/elfeed-score-0.7.3:/tmp/elfeed:/tmp/elfeed/tests:$EMACSLOADPATH
+curl -L --output=elfeed-score-0.7.4.tar.gz https://github.com/sp1ff/elfeed-score/releases/download/0.7.4/elfeed-score-0.7.4.tar.gz
+tar xvf elfeed-score-0.7.4.tar.gz && cd elfeed-score-0.7.4
+export EMACSLOADPATH=/tmp/elfeed-score-0.7.4:/tmp/elfeed:/tmp/elfeed/tests:$EMACSLOADPATH
 ./configure
 make
 make check
 sudo make install
 #+END_SRC
 
-Again, unless you already use =EMACSLOADPATH=, you'll need to set =EMACSLOADPATH= appropriately to your system, something like =EMACSLOADPATH=/tmp/elfeed-score-0.7.3:/tmp/elfeed:/tmp/elfeed/tests:/usr/share/emacs/25.2/lisp=.
+Again, unless you already use =EMACSLOADPATH=, you'll need to set =EMACSLOADPATH= appropriately to your system, something like =EMACSLOADPATH=/tmp/elfeed-score-0.7.4:/tmp/elfeed:/tmp/elfeed/tests:/usr/share/emacs/25.2/lisp=.
 
 ** Building From Source
 

@@ -1,11 +1,24 @@
-2021-02-24  Michael Herstine  <sp1ff@pobox.com>
+2021-02-25  Michael Herstine  <sp1ff@pobox.com>
+
+	Initial 0.7 release.
+	This commit brings in a few major changes to elfeed-score:
+
+	    1. Re-factors 'elfeed-score.el' into multiple, smaller files
+	    2. Updates the score file format to serialize rules as property
+	       lists
+	    3. When elfeed-score reads a score file in an archaic format,
+	       it will write a backup before updating it.
+
+2021-02-25  Michael Herstine  <sp1ff@pobox.com>
+
+	texinfo version updated by sanity check
 
 	Write a backup copy of the score file on version upgrade.
 	This commit adds a minor new feature: if elfeed-score detects,
 	on loading the score file, that the format version has changed,
 	it will write a backup copy of the score file.
 
-2021-02-20  Michael Herstine  <sp1ff@pobox.com>
+2021-02-25  Michael Herstine  <sp1ff@pobox.com>
 
 	Introduce score file format version 6.
 	With this commit, elfeed-score will serialize scoring rules as
@@ -16,7 +29,7 @@
 	will reduce errors on the part of rule authors & enable better
 	validation & error messages on the part of the package.
 
-2021-02-08  Michael Herstine  <sp1ff@pobox.com>
+2021-02-25  Michael Herstine  <sp1ff@pobox.com>
 
 	Stop packages from referring to private symbols in other packages.
 	Post-re-factor, there were a few cases of one package referring
@@ -24,7 +37,7 @@
 	eliminates that, albeit by simply renaming the referenced
 	private symbosl to be public.
 
-2021-02-06  Michael Herstine  <sp1ff@pobox.com>
+2021-02-25  Michael Herstine  <sp1ff@pobox.com>
 
 	Update my Github workflows.
 	This commit:
@@ -34,7 +47,7 @@
 	  - adds a workflow just for the 0.7 branch that will create
 	    alpha releases
 
-2021-02-06  Michael Herstine  <sp1ff@pobox.com>
+2021-02-25  Michael Herstine  <sp1ff@pobox.com>
 
 	Major re-work of the elfeed-score documentation.
 	This commit breaks-up the bloated README:
@@ -44,7 +57,7 @@
 	  - user documentation has been moved to a Texinfo manual
 	  - developer documentation has been moved to the project Wiki
 
-2021-01-31  Michael Herstine  <sp1ff@pobox.com>
+2021-02-25  Michael Herstine  <sp1ff@pobox.com>
 
 	Re-factor 'elfeed-score.el'.
 	'elfeed-score.el' has grown to over 2K lines. Consequently, it
@@ -59,6 +72,18 @@
 
 	All lints now pass, as well as all unit tests. Still, this is a
 	major, breaking change & is not ready for release, yet.
+
+2021-02-25  Michael Herstine  <sp1ff@pobox.com>
+
+	Updated README.org with latest 0.7 alpha release
+
+2021-02-20  Michael Herstine  <sp1ff@pobox.com>
+
+	Updated the 0.7 pre-releases ann
+
+2021-02-08  Michael Herstine  <sp1ff@pobox.com>
+
+	Added an announcment about 0.7 pre-releases to the README.
 
 2021-01-29  Michael Herstine  <sp1ff@pobox.com>
 
