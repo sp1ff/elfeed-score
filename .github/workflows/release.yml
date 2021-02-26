@@ -22,8 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     # Un-comment this for testing
     # env:
-    #   RELEASE_VERSION: 0.6.3
-    #   RELEASE_VERSION: 0.0.1
+    #   RELEASE_VERSION: 0.7.4
     steps:
       - name: Create artifacts directory
         run: mkdir artifacts
@@ -103,7 +102,7 @@ jobs:
         echo "DISTRO_BZ2=elfeed-score-${{ env.RELEASE_VERSION }}.tar.bz2" >> $GITHUB_ENV
         echo "DISTRO_GZ=elfeed-score-${{ env.RELEASE_VERSION }}.tar.gz" >> $GITHUB_ENV
         echo "DISTRO_XZ=elfeed-score-${{ env.RELEASE_VERSION }}.tar.xz" >> $GITHUB_ENV
-        echo "DISTRO_PKG=elfeed-score${{ env.RELEASE_VERSION }}.tar >> $GITHUB_ENV
+        echo "DISTRO_PKG=elfeed-score-${{ env.RELEASE_VERSION }}.tar" >> $GITHUB_ENV
 
     - name: Upload bzip2 tarball
       uses: actions/upload-release-asset@v1.0.1
