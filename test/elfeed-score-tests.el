@@ -46,7 +46,8 @@ URL (which is convenient for testing scoring)."
 
 (cl-defun elfeed-score-test-generate-entry (feed title content
                                                  &key (within "1 year")
-                                                 tags (authors '((:name "spaceman sp1ff"))))
+                                                 tags (authors '((:name "spaceman sp1ff")))
+                                                 link)
   "Generate a random entry with feed FEED, title TITLE & content CONTENT.
 Use WITHIN to scope the date.  TAGS specifies tags to be applied in addition
 to 'unread.
@@ -59,7 +60,7 @@ is convenient for testing scoring)."
 
   (let* ((feed-id (elfeed-feed-id feed))
          (namespace (elfeed-url-to-namespace feed-id))
-         (link (elfeed-test-generate-url))
+         (link (or link (elfeed-test-generate-url)))
          (entry (elfeed-entry--create
                  :id (cons namespace link)
                  :title title

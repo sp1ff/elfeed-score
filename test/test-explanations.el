@@ -35,22 +35,29 @@
           (entry (elfeed-score-test-generate-entry
                   feed "bar" "Lorem ipsum"
                   :authors '((:name "John Hancock"))
-                  :tags '(a b c))))
+                  :tags '(a b c)
+                  :link "https://foo.com")))
      (elfeed-db-add entry)
      (with-elfeed-score-test
       (let* ((elfeed-score-serde-title-rules
               (list (elfeed-score-title-rule--create :text "bar" :value 1 :type 's)))
              (elfeed-score-serde-content-rules
-              (list (elfeed-score-content-rule--create :text "lorem" :value 1 :type 's)))
+              (list
+               (elfeed-score-content-rule--create :text "lorem" :value 1 :type 's)))
              (elfeed-score-serde-title-or-content-rules
               (list (elfeed-score-title-or-content-rule--create :text "bar"
                                                                 :title-value 1
                                                                 :content-value 1
                                                                 :type 's)))
              (elfeed-score-serde-feed-rules
-              (list (elfeed-score-feed-rule--create :text "foo" :value 1 :type 's :attr 't)))
+              (list
+               (elfeed-score-feed-rule--create :text "foo" :value 1
+                                               :type 's :attr 't)))
              (elfeed-score-serde-authors-rules
-              (list (elfeed-score-authors-rule--create :text "hancock" :value 1 :type 's)))
+              (list
+               (elfeed-score-authors-rule--create :text "hancock" :value 1 :type 's)))
+             (elfeed-score-serde-link-rules
+              (list (elfeed-score-link-rule--create :text "foo" :value 1 :type 's)))
              (elfeed-score-serde-tag-rules
               (list (elfeed-score-tag-rule--create :tags '(b c d) :value 1))))
         (elfeed-score-scoring-explain-entry entry)
@@ -60,13 +67,14 @@
           (should
            (string=
             text
-            "\"bar\" matches 6 rules for a score of 6:
+            "\"bar\" matches 7 rules for a score of 7:
 title{bar}: \"bar\": 1
 feed{t/foo}: \"foo\": 1
 content{lorem}: \"Lorem\": 1
 title-or-content{t/bar}: \"bar\": 1
 authors{hancock} \"Hancock\": 1
 tags{(b c d)}: 1
+link{foo}: \"foo\": 1
 "))))))))
 
 (provide 'test-explanations)

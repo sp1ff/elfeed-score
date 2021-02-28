@@ -5,6 +5,15 @@
 	If there is an error on copy, say so & continue (i.e. don't
 	error out).
 
+2021-02-27  Michael Herstine  <sp1ff@pobox.com>
+
+	Address issue #11.
+	This commit introduces a new rule type: link. Link scoring rules
+	will operate against the entry link (thanks for the suggestion
+	TheLugal).
+
+	Additionally, this commit raises the format version to 7.
+
 2021-02-26  Michael Herstine  <sp1ff@pobox.com>
 
 	Fixed a few typos in the release workflow.

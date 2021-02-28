@@ -8,14 +8,17 @@ elfeed-score News -- history of user-visible changes -*- outline -*-
 
 Announce the fact when making a backup copy of the score file. If there is an error on copy, say so & continue (i.e. don't error out).
 
+** New Features
+
+*** New rule type: link
 * Changes in elfeed-score 0.7.4
 
-** User-visible Changes
+** Other Changes
 
 *** Below changes on the 0.7 branch now available on master
 * Changes in elfeed-score 0.7.3
 
-** User-visible Changes
+** New Features
 
 *** Write backup file on score file format version change
 
@@ -25,7 +28,7 @@ where SCORE-FILE is the original score file name and N is the prior
 version.
 * Changes in elfeed-score 0.7.2
 
-** User-visible Changes
+** New Features
 
 *** Scoring Rules Now Serialized to Property Lists
 
@@ -35,13 +38,13 @@ elfeed-score will now serialize scoring rules as property lists, rather than fla
 
 Moving to property lists for the rule format, while more prolix, will reduce errors on the part of rule authors & enable better validation & error messages on the part of the package.
 
-*** elfeed-score now requires Emacs 26.1
 ** Other Changes
 
-Internal changes cleaning-up after the re-factor.
+*** elfeed-score now requires Emacs 26.1
+*** Internal changes cleaning-up after the re-factor.
 * Changes in elfeed-score 0.7.1
 
-** User-visible Changes
+** Toher Changes
 
 *** elfeed-score documentation re-worked
 
@@ -54,7 +57,7 @@ up the README:
   - developer documentation has been moved to the project Wiki
 * Changes in elfeed-score 0.7.0
 
-** User-visible Changes
+** Other Changes
 
 *** elfeed-score.el re-factored
 

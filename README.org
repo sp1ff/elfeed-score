@@ -2,7 +2,7 @@
 #+DESCRIPTION: Gnus-style scoring for Elfeed
 #+AUTHOR: Michael Herstine
 #+EMAIL: sp1ff@pobox.com
-#+DATE: <2021-02-28 Sun 19:01>
+#+DATE: <2021-03-01 Mon 19:27>
 #+AUTODATE: t
 #+OPTIONS: toc:nil org-md-headline-style:setext *:t ^:nil
 
@@ -115,8 +115,6 @@ Finally, you can of course just clone this repo & build there. I've started a [[
 I've been using [[https://github.com/sp1ff/elfeed-score][elfeed-score]] day in & day out for my RSS reading for over a year now. I wrote a post on how [[https://github.com/sp1ff/elfeed-score][elfeed-score]] works, along with the process of submitting code to MELPA, [[https://www.unwoundstack.com/blog/scoring-elfeed-entries.html][here]]. [[https://github.com/C-J-Cundy][Chris]] wrote a post on how he uses it to [[https://cundy.me/post/elfeed/][manage ArXiv RSS Feeds]]. 
 
 The current version number (0.N) was chosen to suggest a preliminary release, but I'm thinking about calling this 1.0 soon. Preparatory to that, I've been re-factoring the code (it used to reside in a single file that had grown to over 2K LoC) and breaking up the documentation into a brief README (this file) a developer's wiki, and proper user documentation.
-
-Before calling this "1.0" I'd also like to re-write the serialization logic to use something easier to read, such as property lists. As scoring rules have acquired more attributes, a flat list has become too confusing to read, maintain & hand-edit.
 
 I plan next to introduce commands for adding rules interactively (e.g. while reading an entry, you could say "score this entry's author higher", or "add a rule matching titles against this text I've selected in the current entry").
 

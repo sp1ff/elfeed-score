@@ -42,7 +42,7 @@ deserialization of scoring rules."
   :group 'elfeed-score
   :type 'file)
 
-(defconst elfeed-score-serde-current-format 6
+(defconst elfeed-score-serde-current-format 7
   "The most recent score file format version.")
 
 (defvar elfeed-score-serde-title-rules nil
@@ -62,6 +62,9 @@ deserialization of scoring rules."
 
 (defvar elfeed-score-serde-tag-rules nil
   "List of structs each defining a scoring rule for entry tags.")
+
+(defvar elfeed-score-serde-link-rules nil
+  "List of structs each defining a scoring rule for entry links.")
 
 (defvar elfeed-score-serde-score-mark nil
   "Score at or below which entries shall be marked as read.")
@@ -587,6 +590,106 @@ with the following keys:
      :authors authors
      :tag tags)))
 
+(defun elfeed-score-serde--parse-scoring-sexp-7 (sexp)
+  "Interpret the S-expression SEXP as scoring rules version 7.
+
+Parse version 6 of the scoring S-expression.  Return a property list
+with the following keys:
+
+    - :title : list of elfeed-score-title-rule structs
+    - :content : list of elfeed-score-content-rule structs
+    - :title-or-content: list of elfeed-score-title-or-content-rule
+                         structs
+    - :feed : list of elfeed-score-feed-rule structs
+    - :authors : list of elfeed-score-authors-rule-structs
+    - :tag : list of elfeed-score-tag-rule structs
+    - :link : list of elfeed-score-link-rule structs
+    - :mark : score below which entries shall be marked read
+    - :adjust-tags : list of elfeed-score-adjust-tags-rule structs"
+
+  (let (mark titles feeds content tocs authors tags links adj-tags)
+    (dolist (raw-item sexp)
+      (let ((key  (car raw-item))
+	          (rest (cdr raw-item)))
+	      (cond
+         ((string= key "version")
+          (unless (eq 7 (car rest))
+            (error "Unsupported score file version %s" (car rest))))
+	       ((string= key "title")
+          (setq
+           titles
+           (mapcar
+            (lambda (plist)
+              (elfeed-score-serde-plist-to-struct plist :type 'elfeed-score-title-rule))
+            rest)))
+         ((string= key "content")
+          (setq
+           content
+           (mapcar
+            (lambda (plist)
+              (elfeed-score-serde-plist-to-struct plist :type 'elfeed-score-content-rule))
+            rest)))
+         ((string= key "feed")
+          (setq
+           feeds
+           (mapcar
+            (lambda (plist)
+              (elfeed-score-serde-plist-to-struct plist :type 'elfeed-score-feed-rule))
+            rest)))
+         ((string= key "title-or-content")
+          (setq
+           tocs
+           (mapcar
+            (lambda (plist)
+              (elfeed-score-serde-plist-to-struct plist :type 'elfeed-score-title-or-content-rule))
+            rest)))
+	       ((string= key "authors")
+          (setq
+           authors
+           (mapcar
+            (lambda (plist)
+              (elfeed-score-serde-plist-to-struct plist :type 'elfeed-score-authors-rule))
+            rest)))
+         ((string= key "tag")
+          (setq
+           tags
+           (mapcar
+            (lambda (plist)
+              (elfeed-score-serde-plist-to-struct plist :type 'elfeed-score-tag-rule))
+            rest)))
+         ((string= key "link")
+          (setq
+           links
+           (mapcar
+            (lambda (plist)
+              (elfeed-score-serde-plist-to-struct plist :type 'elfeed-score-link-rule))
+            rest)))
+         ((string= key "adjust-tags")
+          (setq
+           adj-tags
+           (mapcar
+            (lambda (plist)
+              (elfeed-score-serde-plist-to-struct plist :type 'elfeed-score-adjust-tags-rule))
+            rest)))
+	       ((eq key 'mark)
+          ;; set `mark' to (cdr rest) if (not mark) or (< mark (cdr rest))
+          (let ((rest (car rest)))
+            (if (or (not mark)
+                    (< mark rest))
+                (setq mark rest))))
+	       (t
+	        (error "Unknown score file key %s" key)))))
+    (list
+     :mark mark
+     :adjust-tags adj-tags
+	   :feeds feeds
+	   :titles titles
+     :content content
+     :title-or-content tocs
+     :authors authors
+     :tag tags
+     :link links)))
+
 (defun elfeed-score-serde--parse-version (sexps)
   "Retrieve the version attribute from SEXPS."
   (cond
@@ -632,8 +735,10 @@ with the following keys:
       ;; keep old versions from even trying to read it) but I can
       ;; still use the same first-level parsing logic.
       (elfeed-score-serde--parse-scoring-sexp-4 sexps))
-     ((eq version elfeed-score-serde-current-format)
+     ((eq version 6)
       (elfeed-score-serde--parse-scoring-sexp-6 sexps))
+     ((eq version elfeed-score-serde-current-format)
+      (elfeed-score-serde--parse-scoring-sexp-7 sexps))
      (t
       (error "Unknown version %s" version)))))
 
@@ -651,7 +756,8 @@ into a property list with the following properties:
     - :titles
     - :adjust-tags
     - :title-or-content
-    - :tags"
+    - :tags
+    - :links"
 
   (let* ((sexp
           (car
@@ -726,6 +832,11 @@ a backup file will be in %s."
 	       (mapcar
           #'elfeed-score-serde-struct-to-plist
 	        elfeed-score-serde-feed-rules))
+        (append
+         '("link")
+	       (mapcar
+          #'elfeed-score-serde-struct-to-plist
+	        elfeed-score-serde-link-rules))
         (list 'mark elfeed-score-serde-score-mark)
         (append
          '("adjust-tags")

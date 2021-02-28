@@ -1,4 +1,4 @@
-;;; elfeed-score-test-scoring.el --- ERT tests for elfeed-score scoring  -*- lexical-binding: t; -*-
+;;; test-scoring.el --- ERT tests for elfeed-score scoring  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2020-2021 Michael Herstine <sp1ff@pobox.com>
 
@@ -25,7 +25,7 @@
 
 (require 'elfeed-score-tests)
 
-(ert-deftest elfeed-score-test-test-scoring-on-title-0 ()
+(ert-deftest test-scoring-on-title-0 ()
   "Test scoring against entry title-- substring matching."
 
   (let* ((lorem-ipsum "Lorem ipsum dolor sit amet")
@@ -63,7 +63,7 @@
              (score (elfeed-score-scoring-score-entry entry)))
         (should (eq score 0))))))))
 
-(ert-deftest elfeed-score-test-test-scoring-on-title-1 ()
+(ert-deftest test-scoring-on-title-1 ()
   "Test scoring against entry title-- regexp matching."
 
   (let* ((lorem-ipsum "Lorem ipsum dolor sit amet")
@@ -86,7 +86,7 @@
                (score (elfeed-score-scoring-score-entry entry)))
           (should (eq score 0))))))))
 
-(ert-deftest elfeed-score-test-test-scoring-on-title-2 ()
+(ert-deftest test-scoring-on-title-2 ()
   "Test scoring against entry title-- whole-word matching."
 
   (let* ((lorem-ipsum "Lorem ipsum dolor sit amet")
@@ -129,7 +129,7 @@
           (should (eq score 0))))
        ))))
 
-(ert-deftest elfeed-score-test-test-scoring-on-feed-title-0 ()
+(ert-deftest test-scoring-on-feed-title-0 ()
   "Test scoring against entry feed title-- substring matching."
 
   (let* ((lorem-ipsum "Lorem ipsum dolor sit amet")
@@ -155,7 +155,7 @@
                (score (elfeed-score-scoring-score-entry entry)))
           (should (eq score 0))))))))
 
-(ert-deftest elfeed-score-test-test-scoring-on-feed-title-1 ()
+(ert-deftest test-scoring-on-feed-title-1 ()
   "Test scoring against entry feed title-- regexp matching."
 
   (let* ((lorem-ipsum "Lorem ipsum dolor sit amet")
@@ -180,7 +180,7 @@
           (should (eq score 0))))
        ))))
 
-(ert-deftest elfeed-score-test-test-scoring-on-feed-url-0 ()
+(ert-deftest test-scoring-on-feed-url-0 ()
   "Test scoring against entry feed URL-- substring matching."
 
   (let* ((lorem-ipsum "Lorem ipsum dolor sit amet")
@@ -204,7 +204,7 @@
                (score (elfeed-score-scoring-score-entry entry)))
           (should (eq score 0))))))))
 
-(ert-deftest elfeed-score-test-test-scoring-on-feed-url-1 ()
+(ert-deftest test-scoring-on-feed-url-1 ()
   "Test scoring against entry feed URL-- regexp matching."
 
   (let* ((lorem-ipsum "Lorem ipsum dolor sit amet")
@@ -228,7 +228,7 @@
                (score (elfeed-score-scoring-score-entry entry)))
           (should (eq score 0))))))))
 
-(ert-deftest elfeed-score-test-test-scoring-on-content-0 ()
+(ert-deftest test-scoring-on-content-0 ()
   "Test scoring based on content-- substring matching."
 
   (let* ((lorem-ipsum "Lorem ipsum dolor sit amet")
@@ -252,7 +252,7 @@
                (score (elfeed-score-scoring-score-entry entry)))
           (should (eq score 0))))))))
 
-(ert-deftest elfeed-score-test-test-scoring-on-content-1 ()
+(ert-deftest test-scoring-on-content-1 ()
   "Test scoring based on content-- regexp matching."
 
   (let* ((lorem-ipsum "Lorem ipsum dolor sit amet")
@@ -275,7 +275,7 @@
                (score (elfeed-score-scoring-score-entry entry)))
           (should (eq score 0))))))))
 
-(ert-deftest elfeed-score-test-test-scoring-on-title-or-content-0 ()
+(ert-deftest test-scoring-on-title-or-content-0 ()
   "Test scoring based on title-or-content-- substring matching."
 
   (let* ((lorem-ipsum "Lorem ipsum dolor sit amet")
@@ -303,7 +303,7 @@
                (score (elfeed-score-scoring-score-entry entry)))
           (should (eq score 0))))))))
 
-(ert-deftest elfeed-score-test-test-scoring-on-title-or-content-1 ()
+(ert-deftest test-scoring-on-title-or-content-1 ()
   "Test scoring based on title-or-content-- substring matching,
 tags scoping."
 
@@ -330,7 +330,7 @@ tags scoping."
                (score (elfeed-score-scoring-score-entry entry)))
           (should (eq score 2))))))))
 
-(ert-deftest elfeed-score-test-test-scoring-on-authors-1 ()
+(ert-deftest test-scoring-on-authors-1 ()
   "Test scoring based on authors-- substring matching,
 tags scoping."
 
@@ -359,7 +359,7 @@ tags scoping."
            (eq 1 (elfeed-score-authors-rule-hits (car elfeed-score-serde-authors-rules))))
           (should (eq score 2))))))))
 
-(ert-deftest elfeed-score-test-missed-match-20200217 ()
+(ert-deftest test-scoring-missed-match-20200217 ()
   "Test whole-word scoring.
 
 Thought I had a bug; turns out I didn't understand `word-search-regexp'"
@@ -382,7 +382,7 @@ Thought I had a bug; turns out I didn't understand `word-search-regexp'"
                (score (elfeed-score-scoring-score-entry entry)))
           (should (eq score 2))))))))
 
-(ert-deftest elfeed-score-test-test-marking-as-read-0 ()
+(ert-deftest test-scoring-marking-as-read-0 ()
   "Test marking entries as read if they score low enough."
 
   (let* ((lorem-ipsum "Lorem ipsum dolor sit amet")
@@ -399,7 +399,7 @@ Thought I had a bug; turns out I didn't understand `word-search-regexp'"
           (elfeed-score-scoring-score-entry entry)
           (should (not (elfeed-tagged-p 'unread entry)))))))))
 
-(ert-deftest elfeed-score-test-tags-20200314 ()
+(ert-deftest test-scoring-tags-20200314 ()
   "Test scoring by a rule with multiple tag matches."
   (let ((test-title "Traits, dynamic dispatch and upcasting"))
     (with-elfeed-test
@@ -420,6 +420,24 @@ Thought I had a bug; turns out I didn't understand `word-search-regexp'"
                (score (elfeed-score-scoring-score-entry entry)))
           (should (eq score 2))))))))
 
-(provide 'elfeed-score-tests)
+(ert-deftest test-scoring-by-link-0 ()
+  "Smoke-test Link rules."
+  (with-elfeed-test
+   (let* ((feed (elfeed-test-generate-feed))
+          (entry (elfeed-score-test-generate-entry
+                  feed "Improved PR template by making it more succinct."
+                  "some content"
+                  :link "https://github.com/klee/klee/commit/295353")))
+     (elfeed-db-add entry)
+     (with-elfeed-score-test
+      (let* ((elfeed-score-serde-link-rules
+              (list
+               (elfeed-score-link-rule--create
+                :text "github\\.com/klee"
+                :value 1
+                :type 'r)))
+             (score (elfeed-score-scoring-score-entry entry)))
+        (should (eq score 1)))))))
 
-;;; elfeed-score-tests.el ends here
+(provide 'test-scoring)
+;;; test-scoring.el ends here

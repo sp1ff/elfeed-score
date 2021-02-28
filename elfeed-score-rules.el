@@ -659,6 +659,107 @@ defining a single rule for both.
    (elfeed-score-tags-explanation-rule match)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;                            link rules                            ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(cl-defstruct (elfeed-score-link-rule
+               ;; Disable the default ctor (the name violates Emacs
+               ;; package naming conventions)
+               (:constructor nil)
+               ;; Abuse the &aux keyword to validate our parameters; I
+               ;; can only specify type in the slot description if I
+               ;; specify a default value for the slot, which doesn't
+               ;; always make sense.
+               (:constructor
+                elfeed-score-link-rule--create
+                (&key text value type date tags (hits 0) feeds
+                      &aux
+                      (_
+                       (unless (and (stringp text) (> (length text) 0))
+                         (error "Link rule text must be a non-empty string"))
+                       (unless (numberp value)
+                         (error "Link rule value must be a number"))
+                       (unless (and (symbolp type)
+                                    (or (eq type 's)
+                                        (eq type 'S)
+                                        (eq type 'r)
+                                        (eq type 'R)
+                                        (eq type 'w)
+                                        (eq type 'W)))
+                         (error "Link type must be one of '{s,S,r,R,wW}"))))))
+  "Rule for scoring against entry links.
+
+    - text :: The rule's match text; either a string or a regular
+              expression (on which more below)
+
+    - value :: Integral value (positive or negative) to be added
+               to an entry's score if this rule matches
+
+    - type :: One of the symbols s S r R w W; s/r/w denotes
+              substring/regexp/whole word match; lower-case means
+              case-insensitive and upper case sensitive.
+              Defaults to r (case-insensitive regexp match)
+
+    - date :: time (in seconds since epoch) when this rule last
+              matched
+
+    - tags :: cons cell of the form (A . B) where A is either t
+              or nil and B is a list of symbols. The latter is
+              interpreted as a list of tags scoping the rule and
+              the former as a boolean switch possibly negating the
+              scoping. E.g. (t . (a b)) means \"apply this rule
+              if either of tags a & b are present\". Making the
+              first element nil means \"do not apply this rule if
+              any of a and b are present\".
+
+    - hits :: the number of times since upgrading to score file
+              version 5 that this rule has been matched
+
+    - feeds :: cons cell of the form (A . B) where A is either t
+               or nil and B is a list of three-tuples. Each
+               three-tuple will be matched against an entry's
+               feed:
+
+                 1. attribute: one of 't, 'u, or 'a for title,
+                 URL, or author, resp.
+                 2. match type: one of 's, 'S, 'r, 'R, 'w, or
+                 'W (the usual match types)
+                 3. match text
+
+               So, e.g. '(t s \"foo\") means do a
+               case-insensitive substring match for \"foo\"
+               against the feed title.
+
+               The first element of the cons cell is interpreted as a boolean
+               switch possibly negating the scoping. For
+               instance, (t . '((t s \"foo\") (u s
+               \"https://bar.com/feed\"))) means \"apply this rule
+               only to feeds entitled foo or from
+               https://bar/com/feed\" Making the first element nil
+               means \"do not apply this rule if the feed is
+               either foo or bar\"."
+  text value type date tags (hits 0) feeds)
+
+(cl-defstruct (elfeed-score-link-explanation
+               (:constructor nil)
+               (:constructor elfeed-score-make-link-explanation))
+  "An explanation of a link rule match."
+  matched-text rule)
+
+(defun elfeed-score-rules-pp-link-explanation (match)
+  "Pretty-print link explanation MATCH to string."
+  (let ((rule (elfeed-score-link-explanation-rule match)))
+    (format "link{%s}: \"%s\": %d"
+            (elfeed-score-link-rule-text rule)
+            (elfeed-score-link-explanation-matched-text match)
+            (elfeed-score-link-rule-value rule))))
+
+(defun elfeed-score-rules-link-explanation-contrib (match)
+  "Return the score contribution due to link explanation MATCH."
+  (elfeed-score-link-rule-value
+   (elfeed-score-link-explanation-rule match)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;                        adjust-tags rules                         ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -713,13 +814,17 @@ a cons cell"))))))
     (elfeed-score-content-rule
      (format "content{%s}" (elfeed-score-content-rule-text rule)))
     (elfeed-score-title-or-content-rule
-     (format "title-or-content{%s}" (elfeed-score-title-or-content-rule-text rule)))
+     (format "title-or-content{%s}"
+             (elfeed-score-title-or-content-rule-text rule)))
     (elfeed-score-authors-rule
      (format "authors{%s}" (elfeed-score-authors-rule-text rule)))
     (elfeed-score-tag-rule
      (format "tag{%s}" (prin1-to-string (elfeed-score-tag-rule-tags rule))))
+    (elfeed-score-link-rule
+     (format "link{%s}" (prin1-to-string (elfeed-score-link-rule-text rule))))
     (elfeed-score-adjust-tags-rule
-     (format "adjust-tags{%s}" (prin1-to-string (elfeed-score-adjust-tags-rule-tags rule))))
+     (format "adjust-tags{%s}" (prin1-to-string
+                                (elfeed-score-adjust-tags-rule-tags rule))))
     (otherwise (error "Don't know how to pretty-print %S" rule))))
 
 (provide 'elfeed-score-rules)

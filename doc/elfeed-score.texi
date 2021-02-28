@@ -446,6 +446,7 @@ better error messages on reading score files.
 * feed Rules::
 * authors Rules::
 * tag Rules::
+* link Rules::
 * adjust-tags Rules::
 * mark Rule::
 @end menu
@@ -823,6 +824,47 @@ The number of times this rule has matched any entry. elfeed-score will
 keep this entry up-to-date.
 
 @end enumerate
+
+@node link Rules
+@subsection link Rules
+
+@cindex link rules
+
+``link rules'' are rules that are matched against each entry's Link
+attribute. They are similar to @ref{title Rules} excepting the entry
+attribute to be matched. For that reason, this section will be brief--
+refer to @ref{title Rules} for the details of each element.
+
+In the score file (@pxref{The Score File}), content rules are
+represented by seven properties:
+
+@enumerate
+@item
+@code{:text} The match text
+
+@item
+@code{:value} The match value
+
+@item
+@code{:type} The match type as per @ref{match-type, above, above}.
+
+@item
+@code{:date} Last match time
+
+@item
+@code{:tags} Tag scoping rules
+
+@item
+@code{:hits} Hit count
+
+@item
+@code{:feeds} Feed scoping rules
+
+@end enumerate
+
+As @ref{title Rules, above, above}, only the first three elements are
+required, and elfeed-score will manage the last match time & hit
+count.
 
 @node adjust-tags Rules
 @subsection adjust-tags Rules

@@ -141,7 +141,6 @@ tag-scoping rules)."
   "Smoke test reading/writing score files.
 
 Format version defaulted; tag-scoping rules."
-
   (let* ((score-entries
           '(("title"
              (:text "hoping" :value -1000 :type s :tags (t . (foo bar)))
@@ -171,7 +170,8 @@ Format version defaulted; tag-scoping rules."
                             :content nil
                             :title-or-content nil
                             :authors nil
-                            :tag nil)))))
+                            :tag nil
+                            :link nil)))))
 
 (ert-deftest test-score-files-4 ()
   "Smoke test reading/writing score files.
@@ -224,7 +224,8 @@ Format version defaulted, includes adjust-tags rules."
                                      :value 10)
                                     (elfeed-score-tag-rule--create
                                      :tags '(nil . z)
-                                     :value -1)))))))
+                                     :value -1))
+                         :link nil)))))
 
 (ert-deftest test-score-files-5 ()
   "Smoke test reading/writing score files.
@@ -366,12 +367,36 @@ Format version 6; tag- and feed-scorping rules; authors rule."
          (score-entries-read (elfeed-score-serde--parse-score-file score-file)))
     (should (equal score-entries-read
                    (list :mark nil :adjust-tags nil :feeds nil
-                    :titles
-                    (list
-                     (elfeed-score-title-rule--create
-                      :text "hoping" :value -1000 :type 's))
-                    :content nil :title-or-content nil
-                    :authors nil :tag nil)))))
+                         :titles
+                         (list
+                          (elfeed-score-title-rule--create
+                           :text "hoping" :value -1000 :type 's))
+                         :content nil :title-or-content nil
+                         :authors nil :tag nil)))))
+
+(ert-deftest test-format-version-7 ()
+  "Smoke tests for format version 7."
+  (let* ((score-entries
+          '((version 7)
+            ("title"
+             (:text "hoping" :value -1000 :type s))
+            ("link"
+             (:text "foo" :value 100 :type r))))
+         (score-text (pp-to-string score-entries))
+         (score-file (make-temp-file "elfeed-score-test-" nil nil score-text))
+         (score-entries-read (elfeed-score-serde--parse-score-file score-file)))
+    (should (equal score-entries-read
+                   (list :mark nil :adjust-tags nil :feeds nil
+                         :titles
+                         (list
+                          (elfeed-score-title-rule--create
+                           :text "hoping" :value -1000 :type 's))
+                         :content nil :title-or-content nil
+                         :authors nil :tag nil
+                         :link
+                         (list
+                          (elfeed-score-link-rule--create
+                           :text "foo" :value 100 :type 'r)))))))
 
 (ert-deftest test-writes-latest-version ()
   "Be sure that the score file is written in the lastest format version."
