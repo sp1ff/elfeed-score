@@ -241,14 +241,16 @@
        ;; case-insensitive
        (with-elfeed-score-test
         (let* ((elfeed-score-serde-content-rules
-                (list (elfeed-score-content-rule--create :text "lorem" :value 1 :type 's)))
+                (list (elfeed-score-content-rule--create :text "lorem"
+                                                         :value 1 :type 's)))
                (score (elfeed-score-scoring-score-entry entry)))
           (should (eq score 1))
           (should (eq 1 (elfeed-score-content-rule-hits (car elfeed-score-serde-content-rules))))))
        ;; case-sensitive
        (with-elfeed-score-test
         (let* ((elfeed-score-serde-content-rules
-                (list (elfeed-score-content-rule--create :text "lorem" :value 1 :type 'S)))
+                (list (elfeed-score-content-rule--create :text "lorem"
+                                                         :value 1 :type 'S)))
                (score (elfeed-score-scoring-score-entry entry)))
           (should (eq score 0))))))))
 

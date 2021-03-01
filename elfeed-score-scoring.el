@@ -58,6 +58,11 @@
   :group 'elfeed-score
   :type 'string)
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;                        utility functions                         ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (defun elfeed-score-scoring-set-score-on-entry (entry score)
   "Set the score on ENTRY to SCORE."
   (setf (elfeed-meta entry elfeed-score-meta-keyword) score))
@@ -148,118 +153,160 @@ is presumably the feed scoping for a scoring rule."
         (if flag match (not match)))
     t))
 
-(defun elfeed-score-scoring--apply-title-rules (entry on-match)
-  "Apply all title scoring rules to ENTRY; call ON-MATCH for each match.
-
-ON-MATCH will be invoked with the matching rule & the matchted text."
-  (let ((title (elfeed-entry-title entry)))
-    (dolist (rule elfeed-score-serde-title-rules)
-      (let* ((match-text   (elfeed-score-title-rule-text  rule))
-		         (match-type   (elfeed-score-title-rule-type  rule))
-             (tag-rule     (elfeed-score-title-rule-tags  rule))
-             (feed-rule    (elfeed-score-title-rule-feeds rule))
-             (matched-text
-              (and
-               (elfeed-score-scoring--match-tags (elfeed-entry-tags entry) tag-rule)
-               (elfeed-score-scoring--match-feeds (elfeed-entry-feed entry) feed-rule)
-               (elfeed-score-scoring--match-text match-text title match-type))))
-        (if matched-text (funcall on-match rule matched-text))))))
-
-(defun elfeed-score-scoring--explain-title (entry)
-  "Apply all title scoring rules to ENTRY; return an explanation.
-
-The explanation will be a list of two-tuples (i.e. a list with
-two elements), one for each matching rule.  The first element of
-each two-tuple will be the matching rule & the second the
-matched text."
-  (let ((hits '()))
-    (elfeed-score-scoring--apply-title-rules
-     entry
-     (lambda (rule matched-text)
-       (setq
-        hits
-        (cons
-         (elfeed-score-make-title-explanation :matched-text matched-text :rule rule)
-         hits))))
-    hits))
-
-(defun elfeed-score-scoring--score-on-title (entry)
-  "Run all title scoring rules against ENTRY; return the summed values."
-  (let ((score 0))
-    (elfeed-score-scoring--apply-title-rules
-     entry
-     (lambda (rule matched-text)
-       (let* ((value (elfeed-score-title-rule-value rule)))
-         (elfeed-score-log
-          'debug
-          "title rule '%s' matched text '%s' for entry %s('%s'); adding %d to its score"
-          (elfeed-score-rules-pp-rule-to-string rule)
-          matched-text
-          (elfeed-entry-id entry)
-          (elfeed-entry-title entry) value)
-		     (setq score (+ score value))
-         (setf (elfeed-score-title-rule-date rule) (float-time))
-         (setf (elfeed-score-title-rule-hits rule)
-               (1+ (elfeed-score-title-rule-hits rule))))))
-    score))
-
 (defun elfeed-score-scoring--concatenate-authors (authors-list)
   "Given AUTHORS-LIST, list of plists; return string of all authors concatenated."
   (mapconcat (lambda (author) (plist-get author :name)) authors-list ", "))
 
-(defun elfeed-score-scoring--apply-authors-rules (entry on-match)
-  "Apply all authors rules to ENTRY; invoke ON-MATCH for each match.
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;                                                                  ;;
+;;                   rule-specific scoring logic                    ;;
+;;                                                                  ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ON-MATCH will be invoked with the matching rule & the matched text."
-  (let ((authors-string
-         (elfeed-score-scoring--concatenate-authors
-          (elfeed-meta entry :authors))))
-    (dolist (rule elfeed-score-serde-authors-rules)
-      (let* ((match-text   (elfeed-score-authors-rule-text  rule))
-		         (match-type   (elfeed-score-authors-rule-type  rule))
-             (tag-rule     (elfeed-score-authors-rule-tags  rule))
-             (feed-rule    (elfeed-score-authors-rule-feeds rule))
-             (matched-text
-              (and
-               (elfeed-score-scoring--match-tags (elfeed-entry-tags entry) tag-rule)
-               (elfeed-score-scoring--match-feeds (elfeed-entry-feed entry) feed-rule)
-               (elfeed-score-scoring--match-text match-text authors-string match-type))))
-        (if matched-text (funcall on-match rule matched-text))))))
+;; Each scoring rule type TYPE corresponds to three functions: the
+;; 'score', the 'explain' & the 'apply' functions. The 'score'
+;; function takes an Elfeed entry & computes its core according to the
+;; list of rules of type TYPE. The 'explain' function takes an entry
+;; and returns a list of explanations for all the rules of type TYPE
+;; that match. The 'apply' function contains the common logic for
+;; iterating over the list of rules of type TYPE & determining which
+;; instances match.
 
-(defun elfeed-score-scoring--explain-authors (entry)
-  "Apply the authors rules to ENTRY; return an explanation.
+;; Several rule types share the same essential template: they match
+;; against some textual attribute of each entry & they may be scoped
+;; by tags and/or feed. This macro expands to definitions of all three
+;; functions for a given rule type.
 
-The explanation will be a list of two-tuples (i.e. a list with
-two elements), one for each rule.  The first element of each
-two-tuple will be the rule & the second the matched text."
-  (let ((hits '()))
-    (elfeed-score-scoring--apply-authors-rules
-     entry
-     (lambda (rule match-text)
-       (setq hits (cons (elfeed-score-make-authors-explanation :matched-text match-text :rule rule) hits))))
-    hits))
+(defmacro elfeed-score-scoring--defuns (name &rest args)
+  "Define scoring functions for rules named NAME; keyword ARGS defined below.
 
-(defun elfeed-score-scoring--score-on-authors (entry)
-  "Run all title scoring rules against ENTRY; return the summed values."
-  (let ((score 0))
-    (elfeed-score-scoring--apply-authors-rules
-     entry
-     (lambda (rule match-text)
-       (let ((value (elfeed-score-authors-rule-value rule)))
-         (elfeed-score-log
-          'debug
-          "title rule '%s' matched text '%s' for entry %s('%s'); \
+Define the 'score', 'explain' & 'apply' functions for a rule named NAME."
+
+  (declare (indent defun))
+  (let ((apply-fn (intern (format "elfeed-score-scoring--apply-%s-rules" name)))
+	      (explain-fn (intern (format "elfeed-score-scoring--explain-%s" name)))
+	      (score-fn (intern (format "elfeed-score-scoring--score-on-%s" name)))
+	      (entry-attr-getter (plist-get args :entry-attribute))
+	      (rule-list  (plist-get args :rule-list))
+	      (rule-text  (plist-get args :rule-text))
+	      (rule-type  (plist-get args :rule-type))
+	      (rule-tags  (plist-get args :rule-tags))
+	      (rule-feeds (plist-get args :rule-feeds))
+	      (rule-value (plist-get args :rule-value))
+	      (rule-date  (plist-get args :rule-date))
+	      (rule-hits  (plist-get args :rule-hits))
+        (explanation-ctor (plist-get args :explain-ctor)))
+    `(progn
+       (defun ,apply-fn (entry on-match)
+	       (let ((attr
+		            ,(if (symbolp entry-attr-getter)
+		                 (list entry-attr-getter 'entry)
+		               (list 'funcall entry-attr-getter 'entry))))
+           (if attr
+	             (dolist (rule ,rule-list)
+	               (let* ((match-text (,rule-text  rule))
+		                    (match-type (,rule-type  rule))
+		                    (tags-rule  (,rule-tags  rule))
+		                    (feeds-rule (,rule-feeds rule))
+		                    (matched-text
+		                     (and
+		                      (elfeed-score-scoring--match-tags
+                           (elfeed-entry-tags entry) tags-rule)
+		                      (elfeed-score-scoring--match-feeds
+                           (elfeed-entry-feed entry) feeds-rule)
+		                      (elfeed-score-scoring--match-text
+                           match-text attr match-type))))
+	                 (if matched-text (funcall on-match rule matched-text)))))))
+       (defun ,explain-fn (entry)
+         (let ((hits '()))
+           (,apply-fn
+            entry
+            (lambda (rule matched-text)
+              (setq
+               hits
+               (cons
+                (,explanation-ctor :matched-text matched-text :rule rule)
+                hits))))
+           hits))
+       (defun ,score-fn (entry)
+         (let ((score 0))
+           (,apply-fn
+            entry
+            (lambda (rule matched-text)
+              (let* ((value (,rule-value rule)))
+                (elfeed-score-log
+                 'debug
+                 "%s rule '%s' matched text '%s' for entry %s('%s); \
 adding %d to its score"
-          (elfeed-score-rules-pp-rule-to-string rule)
-          match-text
-          (elfeed-entry-id entry)
-          (elfeed-entry-title entry)
-          value)
-		     (setq score (+ score value))
-         (setf (elfeed-score-authors-rule-date rule) (float-time))
-         (setf (elfeed-score-authors-rule-hits rule)
-               (1+ (elfeed-score-authors-rule-hits rule))))))
-    score))
+                 ,name (elfeed-score-rules-pp-rule-to-string rule)
+                 matched-text (elfeed-entry-id entry)
+                 (elfeed-entry-title entry) value)
+                (setq score (+ score value))
+                (setf (,rule-date rule) (float-time))
+                (setf (,rule-hits rule) (1+ (,rule-hits rule))))))
+           score)))))
+
+(elfeed-score-scoring--defuns
+  "title"
+  :entry-attribute elfeed-entry-title
+  :rule-list elfeed-score-serde-title-rules
+  :rule-text elfeed-score-title-rule-text
+  :rule-type elfeed-score-title-rule-type
+  :rule-tags elfeed-score-title-rule-tags
+  :rule-feeds elfeed-score-title-rule-feeds
+  :rule-value elfeed-score-title-rule-value
+  :rule-date elfeed-score-title-rule-date
+  :rule-hits elfeed-score-title-rule-hits
+  :explain-ctor elfeed-score-make-title-explanation)
+
+(elfeed-score-scoring--defuns
+  "content"
+  :entry-attribute (lambda (x) (elfeed-deref (elfeed-entry-content x)))
+  :rule-list elfeed-score-serde-content-rules
+  :rule-text elfeed-score-content-rule-text
+  :rule-type elfeed-score-content-rule-type
+  :rule-tags elfeed-score-content-rule-tags
+  :rule-feeds elfeed-score-content-rule-feeds
+  :rule-value elfeed-score-content-rule-value
+  :rule-date elfeed-score-content-rule-date
+  :rule-hits elfeed-score-content-rule-hits
+  :explain-ctor elfeed-score-make-content-explanation)
+
+(elfeed-score-scoring--defuns
+ "authors"
+ :entry-attribute (lambda (x)
+                    (elfeed-score-scoring--concatenate-authors
+                     (elfeed-meta x :authors)))
+ :rule-list elfeed-score-serde-authors-rules
+ :rule-text elfeed-score-authors-rule-text
+ :rule-type elfeed-score-authors-rule-type
+ :rule-tags elfeed-score-authors-rule-tags
+ :rule-feeds elfeed-score-authors-rule-feeds
+ :rule-value elfeed-score-authors-rule-value
+ :rule-date elfeed-score-authors-rule-date
+ :rule-hits elfeed-score-authors-rule-hits
+ :explain-ctor elfeed-score-make-authors-explanation)
+
+(elfeed-score-scoring--defuns
+  "link"
+  :entry-attribute elfeed-entry-link
+  :rule-list elfeed-score-serde-link-rules
+  :rule-text elfeed-score-link-rule-text
+  :rule-type elfeed-score-link-rule-type
+  :rule-tags elfeed-score-link-rule-tags
+  :rule-feeds elfeed-score-link-rule-feeds
+  :rule-value elfeed-score-link-rule-value
+  :rule-date elfeed-score-link-rule-date
+  :rule-hits elfeed-score-link-rule-hits
+  :explain-ctor elfeed-score-make-link-explanation)
+
+;; The remaining rule types are slightly different & I haven't figured
+;; out how to reduce the amount of code duplication, yet.
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;                            feed rules                            ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun elfeed-score-scoring--apply-feed-rules (entry on-match)
   "Run all feed rules against ENTRY; invoke ON-MATCH for each match.
@@ -272,9 +319,10 @@ ON-MATCH will be invoked with the applicable rule as well as the matched text."
              (attr         (elfeed-score-feed-rule-attr rule))
              (feed-text    (elfeed-score-scoring--get-feed-attr feed attr))
              (tag-rule     (elfeed-score-feed-rule-tags rule))
-             (matched-text (and
-                            (elfeed-score-scoring--match-tags (elfeed-entry-tags entry) tag-rule)
-                            (elfeed-score-scoring--match-text match-text feed-text match-type))))
+             (matched-text
+              (and
+               (elfeed-score-scoring--match-tags (elfeed-entry-tags entry) tag-rule)
+               (elfeed-score-scoring--match-text match-text feed-text match-type))))
         (if matched-text (funcall on-match rule matched-text))))))
 
 (defun elfeed-score-scoring--explain-feed (entry)
@@ -287,7 +335,11 @@ will be the rule that matched & the second the matched text."
     (elfeed-score-scoring--apply-feed-rules
      entry
      (lambda (rule match-text)
-       (setq hits (cons (elfeed-score-make-feed-explanation :matched-text match-text :rule rule) hits))))
+       (setq
+        hits
+        (cons
+         (elfeed-score-make-feed-explanation :matched-text match-text :rule rule)
+         hits))))
     hits))
 
 (defun elfeed-score-scoring--score-on-feed (entry)
@@ -311,59 +363,9 @@ adding %d to its score"
                (1+ (elfeed-score-feed-rule-hits rule))))))
     score))
 
-(defun elfeed-score-scoring--apply-content-rules (entry on-match)
-  "Apply the content scoring rules to ENTRY; invoke ON-MATCH for each match.
-
-ON-MATCH will be invoked with each matching rule and the ENTRY
-text on which it matched."
-  (let ((content (elfeed-deref (elfeed-entry-content entry))))
-    (if content
-        (dolist (rule elfeed-score-serde-content-rules)
-          (let* ((match-text    (elfeed-score-content-rule-text  rule))
-		             (match-type    (elfeed-score-content-rule-type  rule))
-                 (tag-rule      (elfeed-score-content-rule-tags  rule))
-                 (feed-rule     (elfeed-score-content-rule-feeds rule))
-                 (matched-text  (and
-                                 (elfeed-score-scoring--match-tags (elfeed-entry-tags entry) tag-rule)
-                                 (elfeed-score-scoring--match-feeds (elfeed-entry-feed entry) feed-rule)
-                                 (elfeed-score-scoring--match-text match-text content match-type))))
-            (if matched-text (funcall on-match rule matched-text)))))))
-
-(defun elfeed-score-scoring--explain-content (entry)
-  "Apply the content scoring rules to ENTRY, return an explanation.
-
-The explanation is a list of two-tuples (i.e. a list with two elements); the
-first member of each list element will be the rule that matched & the second
-the matched text."
-
-  (let ((hits '()))
-    (elfeed-score-scoring--apply-content-rules
-     entry
-     (lambda (rule match-text)
-       (setq hits (cons (elfeed-score-make-content-explanation :matched-text match-text :rule rule) hits))))
-    hits))
-
-(defun elfeed-score-scoring--score-on-content (entry)
-  "Run all content scoring rules against ENTRY; return the summed values."
-  (let ((score 0))
-    (elfeed-score-scoring--apply-content-rules
-     entry
-     (lambda (rule match-text)
-       (let ((value (elfeed-score-content-rule-value rule)))
-         (elfeed-score-log
-          'debug "content rule '%s' matched text '%s' for entry %s('%s'); \
-adding %d to its score"
-          (elfeed-score-rules-pp-rule-to-string rule)
-          match-text
-          (elfeed-entry-id entry)
-          (elfeed-entry-title entry)
-          value)
-		     (setq score (+ score value))
-		     (setf (elfeed-score-content-rule-date rule)
-               (float-time))
-         (setf (elfeed-score-content-rule-hits rule)
-               (1+ (elfeed-score-content-rule-hits rule))))))
-    score))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;                      title-or-content rules                      ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun elfeed-score-scoring--apply-title-or-content-rules (entry on-match)
   "Apply the title-or-content rules to ENTRY; invoke ON-MATCH for each match.
@@ -379,8 +381,10 @@ match (t) or a content match (nil)."
 		         (match-type      (elfeed-score-title-or-content-rule-type        rule))
              (tag-rule        (elfeed-score-title-or-content-rule-tags        rule))
              (feed-rule       (elfeed-score-title-or-content-rule-feeds       rule))
-             (matched-tags    (elfeed-score-scoring--match-tags  (elfeed-entry-tags entry) tag-rule))
-             (matched-feeds   (elfeed-score-scoring--match-feeds (elfeed-entry-feed entry) feed-rule))
+             (matched-tags    (elfeed-score-scoring--match-tags
+                               (elfeed-entry-tags entry) tag-rule))
+             (matched-feeds   (elfeed-score-scoring--match-feeds
+                               (elfeed-entry-feed entry) feed-rule))
              (matched-title
               (and
                matched-tags
@@ -444,6 +448,10 @@ for a title match & nil for a content match."
                  (1+ (elfeed-score-title-or-content-rule-hits rule)))))))
     score))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;                            tags rules                            ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (defun elfeed-score-scoring--apply-tag-rules (entry on-match)
   "Apply the tag scoring rules to ENTRY; invoke ON-MATCH for each match.
 
@@ -483,60 +491,9 @@ On match, ON-MATCH will be called with the matching rule."
                (1+ (elfeed-score-tag-rule-hits rule))))))
     score))
 
-(defun elfeed-score-scoring--apply-link-rules (entry on-match)
-  "Apply the link scoring rules to ENTRY; invoke ON-MATCH for each match.
-
-On match, ON-MATCH will be called with the matching rule."
-  (let ((link (elfeed-entry-link entry)))
-    (dolist (rule elfeed-score-serde-link-rules)
-      (let* ((match-text   (elfeed-score-link-rule-text  rule))
-		         (match-type   (elfeed-score-link-rule-type  rule))
-             (tag-rule     (elfeed-score-link-rule-tags  rule))
-             (feed-rule    (elfeed-score-link-rule-feeds rule))
-             (matched-text
-              (and
-               (elfeed-score-scoring--match-tags (elfeed-entry-tags entry) tag-rule)
-               (elfeed-score-scoring--match-feeds (elfeed-entry-feed entry) feed-rule)
-               (elfeed-score-scoring--match-text match-text link match-type))))
-        (if matched-text (funcall on-match rule matched-text))))))
-
-(defun elfeed-score-scoring--explain-link (entry)
-  "Apply all title scoring rules to ENTRY; return an explanation.
-
-The explanation will be a list of two-tuples (i.e. a list with
-two elements), one for each matching rule.  The first element of
-each two-tuple will be the matching rule & the second the
-matched text."
-  (let ((hits '()))
-    (elfeed-score-scoring--apply-link-rules
-     entry
-     (lambda (rule matched-text)
-       (setq
-        hits
-        (cons
-         (elfeed-score-make-link-explanation :matched-text matched-text :rule rule)
-         hits))))
-    hits))
-
-(defun elfeed-score-scoring--score-on-link (entry)
-  "Run all link scoring rules against ENTRY; return the summed values."
-  (let ((score 0))
-    (elfeed-score-scoring--apply-link-rules
-     entry
-     (lambda (rule matched-text)
-       (let* ((value (elfeed-score-link-rule-value rule)))
-         (elfeed-score-log
-          'debug
-          "link rule '%s' matched text '%s' for entry %s('%s'); adding %d to its score"
-          (elfeed-score-rules-pp-rule-to-string rule)
-          matched-text
-          (elfeed-entry-id entry)
-          (elfeed-entry-title entry) value)
-		     (setq score (+ score value))
-         (setf (elfeed-score-link-rule-date rule) (float-time))
-         (setf (elfeed-score-link-rule-hits rule)
-               (1+ (elfeed-score-link-rule-hits rule))))))
-    score))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;                        adjust-tags rules                         ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun elfeed-score-scoring--adjust-tags (entry score)
   "Run all tag adjustment rules against ENTRY for score SCORE."
@@ -552,24 +509,31 @@ matched text."
             (if rule-switch
                 (progn
                   ;; add `actual-tags'...
-                  (elfeed-score-log 'debug "Tag adjustment rule %s matched score %d for entry \
+                  (elfeed-score-log
+                   'debug "Tag adjustment rule %s matched score %d for entry \
 %s(%s); adding tag(s) %s"
-                                    rule-tags score (elfeed-entry-id entry)
-                                    (elfeed-entry-title entry) actual-tags)
+                   rule-tags score (elfeed-entry-id entry)
+                   (elfeed-entry-title entry) actual-tags)
                   (apply #'elfeed-tag entry actual-tags)
                   (setf (elfeed-score-adjust-tags-rule-date adj-tags) (float-time))
                   (setf (elfeed-score-adjust-tags-rule-hits adj-tags)
                         (1+ (elfeed-score-adjust-tags-rule-hits adj-tags))))
               (progn
                 ;; else rm `actual-tags'
-                (elfeed-score-log 'debug "Tag adjustment rule %s matched score %d for entry \
+                (elfeed-score-log
+                 'debug "Tag adjustment rule %s matched score %d for entry \
 %s(%s); removing tag(s) %s"
-                                  rule-tags score (elfeed-entry-id entry)
-                                  (elfeed-entry-title entry) actual-tags)
+                 rule-tags score (elfeed-entry-id entry)
+                 (elfeed-entry-title entry) actual-tags)
                 (apply #'elfeed-untag entry actual-tags)
                 (setf (elfeed-score-adjust-tags-rule-date adj-tags) (float-time))
                 (setf (elfeed-score-adjust-tags-rule-hits adj-tags)
                       (1+ (elfeed-score-adjust-tags-rule-hits adj-tags))))))))))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;                         public functions                         ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun elfeed-score-scoring-score-entry (entry)
   "Score an Elfeed ENTRY.

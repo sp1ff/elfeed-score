@@ -1,5 +1,8 @@
 elfeed-score News -- history of user-visible changes -*- outline -*-
 
+* Changes in elfeed-score 0.7.6
+
+No user-visible changes in this build; strictly re-factoring.
 * Changes in elfeed-score 0.7.5
 
 ** Bugfixes

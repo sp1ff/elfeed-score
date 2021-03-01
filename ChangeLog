@@ -5,6 +5,10 @@
 	If there is an error on copy, say so & continue (i.e. don't
 	error out).
 
+2021-03-01  Michael Herstine  <sp1ff@pobox.com>
+
+	Re-factor 'elfeed-score-scoring.el' to define the logic for title, content, authors & link rules via macro rather than individually.
+
 2021-02-27  Michael Herstine  <sp1ff@pobox.com>
 
 	Address issue #11.
