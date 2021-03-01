@@ -1,5 +1,13 @@
 elfeed-score News -- history of user-visible changes -*- outline -*-
 
+* Changes in elfeed-score 0.7.5
+
+** Bugfixes
+
+*** Address issue 12
+
+Announce the fact when making a backup copy of the score file. If there is an error on copy, say so & continue (i.e. don't error out).
+
 * Changes in elfeed-score 0.7.4
 
 ** User-visible Changes

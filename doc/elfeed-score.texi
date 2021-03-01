@@ -325,6 +325,19 @@ recent score file.
 
 @cindex score file version
 
+When elfeed-score loads a score file that uses an archaic
+version (i.e. a version less than
+@code{elfeed-score-serde-current-format}) it will announce the fact
+that your score file will be updated and make a backup of your current
+score file in @code{%s.~%d~} where @code{%s} is replaced by
+@code{elfeed-score-serde-score-file} and @code{%d} is replaced by your
+score file's current version (so that you will end up with a copy of
+the last score file in each format over time).
+
+@defvar elfeed-score-serde-current-format
+The version of the score file format employed by elfeed-score.
+@end defvar
+
 @item
 ``title''
 The sublist named by the string ``title'' contains rules that

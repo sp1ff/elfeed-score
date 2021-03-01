@@ -661,7 +661,16 @@ into a property list with the following properties:
 			        (buffer-string)))))
          (version (elfeed-score-serde--parse-version sexp)))
     (unless (eq version elfeed-score-serde-current-format)
-      (copy-file score-file (format "%s.~%d~" score-file version)))
+      (let ((backup-name (format "%s.~%d~" score-file version)))
+        (message "elfeed-score will upgrade your score file to version %d; \
+a backup file will be in %s."
+                 elfeed-score-serde-current-format backup-name)
+        (condition-case
+         data
+         (copy-file score-file backup-name)
+         (error
+          (message "Tried to backup your score file to %s: %s."
+                   backup-name (cadr data))))))
     (elfeed-score-serde--parse-scoring-sexp sexp)))
 
 (define-obsolete-function-alias 'elfeed-score/write-score-file

@@ -387,5 +387,36 @@ Format version 6; tag- and feed-scorping rules; authors rule."
       (should (eq elfeed-score-serde-current-format
                   (car (alist-get 'version sexp)))))))
 
+(ert-deftest test-issue-12 ()
+  "Test my fix to issue #12."
+  (let* ((score-entries
+          '((version 5)
+            ("title"
+             ("hoping" -1000 s nil (t . (foo bar)) 0 (t . ((t . "foo"))))
+             ("long way( home)?" +100 r))
+            ("feed"
+             ("foo.com" +100 s u nil nil 0)
+             ("title" -100 s t))
+            ("authors"
+             ("esr" +100 s nil nil 100 (t . ((t . "foo")
+                                             (u . "http://bar.com/feed")))))
+            ("tag"
+             ((t . (a b c)) +10)
+             ((nil . z) -1))
+            ("adjust-tags"
+             ((t . 100) (t . important))
+             ((nil . -100) (nil . important)))
+            (mark -2500)))
+         (score-text (pp-to-string score-entries))
+         (score-file (make-temp-file "elfeed-score-test-" nil nil score-text))
+         ;; Pre-create the backup-file
+         (backup-name (format "%s.~5~" score-file)))
+    (with-temp-buffer
+      (insert score-text)
+      (write-file backup-name nil))
+    ;; This will attempt to make a backup, but stumble across the one
+    ;; we just made; should *not* error out
+    (elfeed-score-serde--parse-score-file score-file)))
+
 (provide 'test-serde)
 ;;; test-serde.el ends here

@@ -1,3 +1,14 @@
+2021-02-28  Michael Herstine  <sp1ff@pobox.com>
+
+	Fix issue #12.
+	Announce the fact when making a backup copy of the score file.
+	If there is an error on copy, say so & continue (i.e. don't
+	error out).
+
+2021-02-26  Michael Herstine  <sp1ff@pobox.com>
+
+	Fixed a few typos in the release workflow.
+
 2021-02-25  Michael Herstine  <sp1ff@pobox.com>
 
 	Initial 0.7 release.
