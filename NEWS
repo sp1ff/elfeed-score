@@ -1,5 +1,10 @@
 elfeed-score News -- history of user-visible changes -*- outline -*-
 
+* Changes in elfeed-score 0.7.7
+
+** New Features
+
+*** When reading an older score file, immediately re-write in the most recent format
 * Changes in elfeed-score 0.7.6
 
 No user-visible changes in this build; strictly re-factoring.

@@ -1,15 +1,15 @@
-2021-02-28  Michael Herstine  <sp1ff@pobox.com>
+2021-03-02  Michael Herstine  <sp1ff@pobox.com>
 
-	Fix issue #12.
-	Announce the fact when making a backup copy of the score file.
-	If there is an error on copy, say so & continue (i.e. don't
-	error out).
+	Upgrade the score file on initial load.
+	This commit causes elfeed-score to immediately re-write the
+	score file in the current format version when it is asked to
+	load a score file in an archaic version.
 
 2021-03-01  Michael Herstine  <sp1ff@pobox.com>
 
 	Re-factor 'elfeed-score-scoring.el' to define the logic for title, content, authors & link rules via macro rather than individually.
 
-2021-02-27  Michael Herstine  <sp1ff@pobox.com>
+2021-03-01  Michael Herstine  <sp1ff@pobox.com>
 
 	Address issue #11.
 	This commit introduces a new rule type: link. Link scoring rules
@@ -17,6 +17,13 @@
 	TheLugal).
 
 	Additionally, this commit raises the format version to 7.
+
+2021-02-28  Michael Herstine  <sp1ff@pobox.com>
+
+	Fix issue #12.
+	Announce the fact when making a backup copy of the score file.
+	If there is an error on copy, say so & continue (i.e. don't
+	error out).
 
 2021-02-26  Michael Herstine  <sp1ff@pobox.com>
 

@@ -757,7 +757,8 @@ into a property list with the following properties:
     - :adjust-tags
     - :title-or-content
     - :tags
-    - :links"
+    - :links
+    - :version"
 
   (let* ((sexp
           (car
@@ -769,15 +770,15 @@ into a property list with the following properties:
     (unless (eq version elfeed-score-serde-current-format)
       (let ((backup-name (format "%s.~%d~" score-file version)))
         (message "elfeed-score will upgrade your score file to version %d; \
-a backup file will be in %s."
+a backup file will be left in %s."
                  elfeed-score-serde-current-format backup-name)
         (condition-case
          data
          (copy-file score-file backup-name)
          (error
-          (message "Tried to backup your score file to %s: %s."
+          (message "Tried to backup your score file to %s but failed: %s."
                    backup-name (cadr data))))))
-    (elfeed-score-serde--parse-scoring-sexp sexp)))
+    (plist-put (elfeed-score-serde--parse-scoring-sexp sexp) :version version)))
 
 (define-obsolete-function-alias 'elfeed-score/write-score-file
   #'elfeed-score-serde-write-score-file "0.2.0" "Move to standard-compliant naming.")
@@ -859,7 +860,11 @@ Read SCORE-FILE, store scoring rules into
           elfeed-score-serde-tag-rules               (plist-get score-entries :tag)
           elfeed-score-serde-authors-rules           (plist-get score-entries :authors)
           elfeed-score-serde-score-mark              (plist-get score-entries :mark)
-          elfeed-score-serde-adjust-tags-rules       (plist-get score-entries :adjust-tags))))
+          elfeed-score-serde-adjust-tags-rules       (plist-get score-entries :adjust-tags))
+    ;; If this is an upgrade in file format; re-write the score file in the new
+    ;; format right away (https://github.com/sp1ff/elfeed-score/issues/12)
+    (unless (eq elfeed-score-serde-current-format (plist-get score-entries :version))
+      (elfeed-score-serde-write-score-file score-file))))
 
 (provide 'elfeed-score-serde)
 ;;; elfeed-score-serde.el ends here

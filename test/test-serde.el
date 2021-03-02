@@ -58,7 +58,7 @@ Test reading a trival score file (format version 1)."
                                        (elfeed-score-title-rule--create
                                         :text "long way( home)?" :value 100
                                         :type 'r))
-                         :content nil)))))
+                         :content nil :version 1)))))
 
 (ert-deftest test-score-files-1 ()
   "Smoke test reading/writing score files.
@@ -91,7 +91,7 @@ Test reading a trival score file (format version 2)."
                                         :text "long way( home)?" :value 100
                                         :type 'r))
                          :content nil
-                         :title-or-content nil)))))
+                         :title-or-content nil :version 2)))))
 
 (ert-deftest test-score-files-2 ()
   "Smoke test reading/writing score files.
@@ -135,7 +135,8 @@ tag-scoping rules)."
                             :title-or-content
                             (list (elfeed-score-title-or-content-rule--create
                                    :text "now is the time..." :title-value 150
-                                   :content-value 100 :type 's :tags '(t . (foo bar)))))))))
+                                   :content-value 100 :type 's :tags '(t . (foo bar))))
+                            :version 2)))))
 
 (ert-deftest test-score-files-3 ()
   "Smoke test reading/writing score files.
@@ -171,7 +172,8 @@ Format version defaulted; tag-scoping rules."
                             :title-or-content nil
                             :authors nil
                             :tag nil
-                            :link nil)))))
+                            :link nil
+                            :version elfeed-score-serde-current-format)))))
 
 (ert-deftest test-score-files-4 ()
   "Smoke test reading/writing score files.
@@ -225,7 +227,8 @@ Format version defaulted, includes adjust-tags rules."
                                     (elfeed-score-tag-rule--create
                                      :tags '(nil . z)
                                      :value -1))
-                         :link nil)))))
+                         :link nil
+                         :version elfeed-score-serde-current-format)))))
 
 (ert-deftest test-score-files-5 ()
   "Smoke test reading/writing score files.
@@ -282,7 +285,8 @@ Format version 4."
                                      :value 10)
                                     (elfeed-score-tag-rule--create
                                      :tags '(nil . z)
-                                     :value -1)))))))
+                                     :value -1))
+                          :version 4)))))
 
 (ert-deftest test-score-files-6 ()
   "Smoke test reading/writing score files.
@@ -344,7 +348,8 @@ Format version 6; tag- and feed-scorping rules; authors rule."
                                 :value 10)
                                (elfeed-score-tag-rule--create
                                 :tags '(nil . z)
-                                :value -1)))))))
+                                :value -1))
+                    :version 5)))))
 
 (ert-deftest test-issue-7 ()
   "Check that the error in issue #7 is caught."
@@ -372,7 +377,7 @@ Format version 6; tag- and feed-scorping rules; authors rule."
                           (elfeed-score-title-rule--create
                            :text "hoping" :value -1000 :type 's))
                          :content nil :title-or-content nil
-                         :authors nil :tag nil)))))
+                         :authors nil :tag nil :version 6)))))
 
 (ert-deftest test-format-version-7 ()
   "Smoke tests for format version 7."
@@ -396,7 +401,8 @@ Format version 6; tag- and feed-scorping rules; authors rule."
                          :link
                          (list
                           (elfeed-score-link-rule--create
-                           :text "foo" :value 100 :type 'r)))))))
+                           :text "foo" :value 100 :type 'r))
+                         :version 7)))))
 
 (ert-deftest test-writes-latest-version ()
   "Be sure that the score file is written in the lastest format version."
@@ -434,14 +440,51 @@ Format version 6; tag- and feed-scorping rules; authors rule."
             (mark -2500)))
          (score-text (pp-to-string score-entries))
          (score-file (make-temp-file "elfeed-score-test-" nil nil score-text))
-         ;; Pre-create the backup-file
          (backup-name (format "%s.~5~" score-file)))
+    ;; Pre-create the backup-file
     (with-temp-buffer
       (insert score-text)
       (write-file backup-name nil))
     ;; This will attempt to make a backup, but stumble across the one
     ;; we just made; should *not* error out
     (elfeed-score-serde--parse-score-file score-file)))
+
+(ert-deftest test-issue-12-a ()
+  "Test a secondary aspect to my fix to issue #12.
+
+When elfeed-score reads a score file in an archaic format, it
+should immediately re-write the file in the new format (as well
+as make a backup copy of the file in the old format--
+cf. `test-issue-12'."
+  (let* ((score-entries
+          '((version 5)
+            ("title"
+             ("hoping" -1000 s nil (t . (foo bar)) 0 (t . ((t . "foo"))))
+             ("long way( home)?" +100 r))
+            ("feed"
+             ("foo.com" +100 s u nil nil 0)
+             ("title" -100 s t))
+            ("authors"
+             ("esr" +100 s nil nil 100 (t . ((t . "foo")
+                                             (u . "http://bar.com/feed")))))
+            ("tag"
+             ((t . (a b c)) +10)
+             ((nil . z) -1))
+            ("adjust-tags"
+             ((t . 100) (t . important))
+             ((nil . -100) (nil . important)))
+            (mark -2500)))
+         (score-text (pp-to-string score-entries))
+         (score-file (make-temp-file "elfeed-score-test-" nil nil score-text))
+         (backup-name (format "%s.~5~" score-file)))
+    (elfeed-score-serde-load-score-file score-file)
+    ;; This should leave us with:
+    ;; 1. a copy of the score file in `backup-name'
+    (should (file-exists-p backup-name))
+    ;; 2. `score-file' updated to `elfeed-score-serde-current-format'
+    (should
+     (eq elfeed-score-serde-current-format
+         (plist-get (elfeed-score-serde--parse-score-file score-file) :version)))))
 
 (provide 'test-serde)
 ;;; test-serde.el ends here
