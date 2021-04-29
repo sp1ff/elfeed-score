@@ -1,3 +1,10 @@
+2021-04-28  Michael Herstine  <sp1ff@pobox.com>
+
+	Fix issue #14.
+	Embarrasingly, I forgot to update 'elfeed-score-serde-link-rules'
+	in 'elfeed-score-serde-load-score-file'-- fixed. Thanks to
+	@jpowellrussell for pointing it out.
+
 2021-03-02  Michael Herstine  <sp1ff@pobox.com>
 
 	Upgrade the score file on initial load.

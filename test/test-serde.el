@@ -27,6 +27,7 @@
 (require 'elfeed-lib)
 (require 'elfeed-score)
 (require 'elfeed-db-tests)
+(require 'elfeed-score-tests)
 
 (ert-deftest score-files-smoke-test ()
   "Smoke test reading/writing score files.
@@ -485,6 +486,19 @@ cf. `test-issue-12'."
     (should
      (eq elfeed-score-serde-current-format
          (plist-get (elfeed-score-serde--parse-score-file score-file) :version)))))
+
+(ert-deftest test-issue-14 ()
+  "Test my fix to issue #14 (and that there is no regression)."
+  (let* ((score-entries
+          '((version 7)
+            ("link"
+             (:text "reddit" :value 30 :type s)
+             (:text "twitter" :value 30 :type s))))
+         (score-text (pp-to-string score-entries))
+         (score-file (make-temp-file "elfeed-score-test-" nil nil score-text)))
+    (with-elfeed-score-test
+     (elfeed-score-serde-load-score-file score-file)
+     (should elfeed-score-serde-link-rules))))
 
 (provide 'test-serde)
 ;;; test-serde.el ends here

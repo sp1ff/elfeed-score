@@ -859,6 +859,7 @@ Read SCORE-FILE, store scoring rules into
           elfeed-score-serde-title-or-content-rules  (plist-get score-entries :title-or-content)
           elfeed-score-serde-tag-rules               (plist-get score-entries :tag)
           elfeed-score-serde-authors-rules           (plist-get score-entries :authors)
+          elfeed-score-serde-link-rules              (plist-get score-entries :link)
           elfeed-score-serde-score-mark              (plist-get score-entries :mark)
           elfeed-score-serde-adjust-tags-rules       (plist-get score-entries :adjust-tags))
     ;; If this is an upgrade in file format; re-write the score file in the new
