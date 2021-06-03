@@ -1,10 +1,19 @@
 elfeed-score News -- history of user-visible changes -*- outline -*-
 
+* Changes in elfeed-score 0.7.9
+
+** Bugfixes
+
+*** Address issue 10
+
+When setting scores "manually" via `elfeed-score-set-score' will "stick": subsequently scoring that entry through the new entry hook or as part of scoring an entire search will not overwrite the manuall-set score.
+
+Since this is a new feature, I've put it behind a configuration option `elfeed-score-scoring-manual-is-sticky' which defaults to true, but if the user dislikes this they can set it to nil to disable the feature.
 * Changes in elfeed-score 0.7.8
 
 ** Bugfixes
 
-** Address issue 12
+*** Address issue 12
 
 'link' rules were not being read in correctly--fixed.
 * Changes in elfeed-score 0.7.7

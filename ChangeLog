@@ -1,4 +1,23 @@
-2021-04-28  Michael Herstine  <sp1ff@pobox.com>
+2021-06-05  Michael Herstine  <sp1ff@pobox.com>
+
+	Fix issue #10.
+	This commit adds an optional parameter to
+	`elfeed-score-scoring-set-score-on-entry`: `sticky`. If the caller
+	sets this to true an additional bit of metadata will be set on the
+	entry indicating that this score should not be changed by
+	subsequent invocations unless the `sticky` parameter is also set.
+
+	`elfeed-score-set-score` is the only function to specify the
+	`sticky` flag. In this way, scores that are set manually will
+	"stick": while scores set through the new entry hook or as part of
+	scoring an entire search will not overwrite them.
+
+	Since this is a new feature, I've put it behind a configuration
+	option `elfeed-score-scoring-manual-is-sticky` which defaults
+	to true, but if the user dislikes this they can set it to nil to
+	disable the feature.
+
+2021-04-29  Michael Herstine  <sp1ff@pobox.com>
 
 	Fix issue #14.
 	Embarrasingly, I forgot to update 'elfeed-score-serde-link-rules'

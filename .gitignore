@@ -18,3 +18,4 @@ smoke-test.el
 *.tar.xz
 package-test.el
 upgrade-test.el
+package-test-341.el

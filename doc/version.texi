@@ -1,4 +1,4 @@
-@set UPDATED 2 March 2021
-@set UPDATED-MONTH March 2021
-@set EDITION 0.7.8
-@set VERSION 0.7.8
+@set UPDATED 5 June 2021
+@set UPDATED-MONTH June 2021
+@set EDITION 0.7.9
+@set VERSION 0.7.9

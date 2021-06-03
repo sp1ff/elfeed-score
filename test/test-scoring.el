@@ -441,5 +441,41 @@ Thought I had a bug; turns out I didn't understand `word-search-regexp'"
              (score (elfeed-score-scoring-score-entry entry)))
         (should (eq score 1)))))))
 
+(ert-deftest test-sticky-scores ()
+  "Check sticky scores.
+
+Exercise `elfeed-score-scoring-set-score-on-entry' & its `sticky'
+parameter."
+  
+  (with-elfeed-test
+   (let* ((feed (elfeed-test-generate-feed))
+          (entry1 (elfeed-score-test-generate-entry
+                  feed
+                  "Test fix to issue #10 - entry #1"
+                  "Test entry #1 for my fix to issue #10"))
+          (entry2 (elfeed-score-test-generate-entry
+                  feed
+                  "Test fix to issue #10 - entry #2"
+                  "Test entry #2 for my fix to issue #10")))
+     (elfeed-db-add entry1)
+     (elfeed-db-add entry2)
+     ;; Feature flag set to t, `sticky' param set to t: should set the
+     ;; score...
+     (let ((elfeed-score-scoring-manual-is-sticky t))
+       (elfeed-score-scoring-set-score-on-entry entry1 100 t)
+       ;; and ignore an invocation with the `sticky' parameter defauled.
+       (elfeed-score-scoring-set-score-on-entry entry1 200)
+       (should (eq (elfeed-score-scoring-get-score-from-entry entry1) 100))
+       ;; *but*, if I pass `sticky' = t, this time, it should take!
+       (elfeed-score-scoring-set-score-on-entry entry1 200 t)
+       (should (eq (elfeed-score-scoring-get-score-from-entry entry1) 200)))
+     ;; Feature flag set to nil, `sticky' param set to t: should set the
+     ;; score...
+     (let ((elfeed-score-scoring-manual-is-sticky nil))
+       (elfeed-score-scoring-set-score-on-entry entry2 100 t)
+       ;; and accept an invocation with the `sticky' parameter defauled.
+       (elfeed-score-scoring-set-score-on-entry entry2 200)
+       (should (eq (elfeed-score-scoring-get-score-from-entry entry1) 200))))))
+
 (provide 'test-scoring)
 ;;; test-scoring.el ends here

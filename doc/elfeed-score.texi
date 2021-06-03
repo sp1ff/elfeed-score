@@ -106,6 +106,15 @@ information on building & hacking on elfeed-score, see the
 @node Scoring
 @section Scoring
 
+@c Generate the nodes for this menu with `C-c C-u C-m'.
+@menu
+* Scoring Generalities::
+* Manual Scoring::
+@end menu
+
+@node Scoring Generalities
+@subsection Scoring Generalities
+
 @url{https://github.com/skeeto/elfeed, elfeed} is an extensible RSS &
 Atom reader for Emacs. By default, it will display entries in reverse
 chronological order. This package defines a bit of metadata for each
@@ -118,21 +127,21 @@ in reverse chronological order). It also provides an entry display
 function for the search buffer that displays each entry's score,
 should you choose to install it.
 
-While you can manually assign a score to an entry, you will likely
-find it more convenient to create rules for scoring that will be
-automatically applied to each new entry every time you update
-Elfeed. You can score against title, feed, content & authors by
-defining strings that will be matched against those attributes by
-substring, regexp or whole-word match. You can score against the
-feed. You can also score against the presence or absence of tags. Most
-kinds of rules can be scoped by Elfeed entry tags, so that a rule will
-only be applied if an entry has certain tags (or does not have certain
-tags). Many kinds of rules may also be scoped by feed, so that a rule
-will only be applied to entries from certain feeds (or not from
-certain feeds). Each rule defines an integral value, and the rules are
-applied in order of definition. The new entry's score begins at
-@code{elfeed-score-scoring-default-score}, and is adjusted by the
-value defined by each matching scoring rule.
+While you can manually assign a score to an entry (@pxref{Manual
+Scoring}), you will likely find it more convenient to create rules for
+scoring that will be automatically applied to each new entry every
+time you update Elfeed. You can score against title, feed, content &
+authors by defining strings that will be matched against those
+attributes by substring, regexp or whole-word match. You can score
+against the feed. You can also score against the presence or absence
+of tags. Most kinds of rules can be scoped by Elfeed entry tags, so
+that a rule will only be applied if an entry has certain tags (or does
+not have certain tags). Many kinds of rules may also be scoped by
+feed, so that a rule will only be applied to entries from certain
+feeds (or not from certain feeds). Each rule defines an integral
+value, and the rules are applied in order of definition. The new
+entry's score begins at @code{elfeed-score-scoring-default-score}, and
+is adjusted by the value defined by each matching scoring rule.
 
 @defvr {User Option} elfeed-score-scoring-default-score
 The default score for an elfeed entry.
@@ -177,6 +186,30 @@ least be a valid Lisp s-expression.
 
 For details of how to form s-expressions elfeed-score will understand,
 see @ref{Score File Format, below, below}.
+
+@node Manual Scoring
+@subsection Manual Scoring
+
+Scores may also be set on entries manually:
+
+@deffn Command elfeed-score-set-score score ignore-region
+Set the score of one or more Elfeed entries to @var{score}.
+@end deffn
+
+Since these scores are presumably significant to the user who took the
+trouble to set them, such scores will not be overwritten by other
+scoring operations (such the new entry hook which elfeed-score
+installs). Since this behavior was implemented only
+@url{https://github.com/sp1ff/elfeed-score/issues/10, recently}, it is
+controlled by a configuration variable:
+
+@defvr {User Option} elfeed-score-scoring-manual-is-sticky
+This customization variable, if true, will make manual scores
+``sticky'' in that they will not be overwritten by other scoring
+operations (they can, however, be overwritten by a subsequent manual
+scoring operation). If nil, manual scoring is treated no differently
+than any other scoring operation.
+@end defvr
 
 @node Starting elfeed-score
 @section Starting elfeed-score

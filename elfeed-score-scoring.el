@@ -48,6 +48,11 @@
   :group 'elfeed-score
   :type 'symbol)
 
+(defcustom elfeed-score-scoring-meta-sticky-keyword :elfeed-score/sticky
+  "Default keyword for marking scores as sticky in Elfeed entry metadata."
+  :group 'elfeed-score
+  :type 'symbol)
+
 (define-obsolete-variable-alias 'elfeed-score-explanation-buffer-name
   'elfeed-score-scoring-explanation-buffer-name "0.7.0"
   "Re-factoring elfeed-score.el.")
@@ -58,14 +63,48 @@
   :group 'elfeed-score
   :type 'string)
 
+(defcustom elfeed-score-scoring-manual-is-sticky
+  t
+  "Set to nil to make manual scores \"sticky\".
+
+If t, scores set manually will not be overwritten by subsequent
+scoring operations.  If nil, they will be (i.e. the behavior
+prior to 0.7.9."
+  :group 'elfeed-score
+  :type 'boolean)
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;                        utility functions                         ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun elfeed-score-scoring-set-score-on-entry (entry score)
-  "Set the score on ENTRY to SCORE."
-  (setf (elfeed-meta entry elfeed-score-meta-keyword) score))
+(defun elfeed-score-scoring-set-score-on-entry (entry score &optional sticky)
+  "Set the score on ENTRY to SCORE (perhaps making it STICKY).
+
+This is the one location in `elfeed-score' that actually
+manipulates scoring-related metadata on Elfeed entries.
+
+Scores may optionally be \"sticky\": if the caller marks this
+entry's score as such, subsequent invocations of this method will
+be ignored unless & until `sticky' is again set to t by the
+caller.  The intent of this (somewhat non-obvious) contract is to
+enable manually applied scores to avoid being overwritten by
+subsequent \"bulk\" operations like scoring an entire view."
+
+  ;; | s\f | nil           | t                                                 |
+  ;; |-----+---------------+---------------------------------------------------|
+  ;; | nil | set the score | set the score *unless* the extant score is sticky |
+  ;; | t   | set the score | set the score *and* mark it as sticky             |
+  ;; "s\f" denotes "sticky param\feature flag"
+
+  (if elfeed-score-scoring-manual-is-sticky
+      (if sticky
+          (progn
+            (setf (elfeed-meta entry elfeed-score-scoring-meta-keyword) score)
+            (setf (elfeed-meta entry elfeed-score-scoring-meta-sticky-keyword) t))
+        (unless (elfeed-meta entry elfeed-score-scoring-meta-sticky-keyword)
+          (setf (elfeed-meta entry elfeed-score-scoring-meta-keyword) score)))
+    (setf (elfeed-meta entry elfeed-score-scoring-meta-keyword) score)))
 
 (defun elfeed-score-scoring-get-score-from-entry (entry)
   "Retrieve the score from ENTRY."
@@ -539,7 +578,9 @@ On match, ON-MATCH will be called with the matching rule."
   "Score an Elfeed ENTRY.
 
 This function will return the entry's score, update it's meta-data, and
-update the \"last matched\" time of the salient rules."
+update the \"last matched\" time of the salient rules.
+
+This function is used in `elfeed-new-entry-hook'."
 
   (let ((score (+ elfeed-score-default-score
                   (elfeed-score-scoring--score-on-title            entry)
@@ -549,6 +590,7 @@ update the \"last matched\" time of the salient rules."
                   (elfeed-score-scoring--score-on-authors          entry)
                   (elfeed-score-scoring--score-on-tags             entry)
                   (elfeed-score-scoring--score-on-link             entry))))
+    ;; Take care to not pass t for the `sticky' parameter!
     (elfeed-score-scoring-set-score-on-entry entry score)
     (elfeed-score-scoring--adjust-tags entry score)
 	  (if (and elfeed-score-serde-score-mark
