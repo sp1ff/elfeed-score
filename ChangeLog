@@ -1,5 +1,13 @@
 2021-06-05  Michael Herstine  <sp1ff@pobox.com>
 
+	Touch-up to the new feature:
+	    - Corrected a bug in `elfeed-score-set-score` wherein the prefix
+	      argument was marked optional instead of mandatory
+	    - Score explanations now note sticky scores
+	    - The scoring log messages reflect sticky scores
+
+2021-06-05  Michael Herstine  <sp1ff@pobox.com>
+
 	Fix issue #10.
 	This commit adds an optional parameter to
 	`elfeed-score-scoring-set-score-on-entry`: `sticky`. If the caller

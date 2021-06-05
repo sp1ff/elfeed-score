@@ -4,6 +4,7 @@ elfeed-score News -- history of user-visible changes -*- outline -*-
 
 ** Bugfixes
 
+*** Make `score' mandatory in `elfeed-score-set-score' not optional
 *** Address issue 10
 
 When setting scores "manually" via `elfeed-score-set-score' will "stick": subsequently scoring that entry through the new entry hook or as part of scoring an entire search will not overwrite the manuall-set score.

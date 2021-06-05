@@ -91,20 +91,32 @@ caller.  The intent of this (somewhat non-obvious) contract is to
 enable manually applied scores to avoid being overwritten by
 subsequent \"bulk\" operations like scoring an entire view."
 
-  ;; | s\f | nil           | t                                                 |
-  ;; |-----+---------------+---------------------------------------------------|
-  ;; | nil | set the score | set the score *unless* the extant score is sticky |
-  ;; | t   | set the score | set the score *and* mark it as sticky             |
-  ;; "s\f" denotes "sticky param\feature flag"
+  (let ((score-was-set nil))
+    ;; | s\f | nil           | t                                                 |
+    ;; |-----+---------------+---------------------------------------------------|
+    ;; | nil | set the score | set the score *unless* the extant score is sticky |
+    ;; | t   | set the score | set the score *and* mark it as sticky             |
+    ;; "s\f" denotes "sticky param\feature flag"
 
-  (if elfeed-score-scoring-manual-is-sticky
-      (if sticky
-          (progn
-            (setf (elfeed-meta entry elfeed-score-scoring-meta-keyword) score)
-            (setf (elfeed-meta entry elfeed-score-scoring-meta-sticky-keyword) t))
-        (unless (elfeed-meta entry elfeed-score-scoring-meta-sticky-keyword)
-          (setf (elfeed-meta entry elfeed-score-scoring-meta-keyword) score)))
-    (setf (elfeed-meta entry elfeed-score-scoring-meta-keyword) score)))
+    (if elfeed-score-scoring-manual-is-sticky
+        (if sticky
+            (progn
+              (setf (elfeed-meta entry elfeed-score-scoring-meta-keyword) score)
+              (setf (elfeed-meta entry elfeed-score-scoring-meta-sticky-keyword) t)
+              (setq score-was-set t))
+          (if (elfeed-meta entry elfeed-score-scoring-meta-sticky-keyword)
+              (elfeed-score-log 'info "Not scoring %s(\"%s\") as %d because it already has a sticky score of %d."
+                                (elfeed-entry-id entry) (elfeed-entry-title entry) score
+                                (elfeed-meta entry elfeed-score-scoring-meta-keyword))
+            (progn
+              (setf (elfeed-meta entry elfeed-score-scoring-meta-keyword) score)
+              (setq score-was-set t))))
+      (progn
+        (setf (elfeed-meta entry elfeed-score-scoring-meta-keyword) score)
+        (setq score-was-set t)))
+    (if score-was-set
+        (elfeed-score-log 'info "entry %s('%s') has been given a score of %d"
+                          (elfeed-entry-id entry) (elfeed-entry-title entry) score))))
 
 (defun elfeed-score-scoring-get-score-from-entry (entry)
   "Retrieve the score from ENTRY."
@@ -671,13 +683,20 @@ understanding of scoring rules."
            '+
            matches
            :key #'elfeed-score-scoring--get-match-contribution
-           :initial-value elfeed-score-default-score)))
+           :initial-value elfeed-score-default-score))
+         (sticky (and elfeed-score-scoring-manual-is-sticky
+                      (elfeed-meta entry elfeed-score-scoring-meta-sticky-keyword))))
     (with-current-buffer-window
         elfeed-score-scoring-explanation-buffer-name
         nil nil
       (goto-char (point-max))
-      (insert (format "\"%s\" matches %d rules" (elfeed-entry-title entry)
-                      (length matches)))
+      (if sticky
+          (insert (format "\"%s\" has a sticky score of %d\nIt *would* match %d rules"
+                          (elfeed-entry-title entry)
+                          (elfeed-meta entry elfeed-score-scoring-meta-keyword)
+                          (length matches)))
+        (insert (format "\"%s\" matches %d rules" (elfeed-entry-title entry)
+                        (length matches))))
       (if (> (length matches) 0)
           (progn
             (insert (format " for a score of %d:\n" candidate-score))

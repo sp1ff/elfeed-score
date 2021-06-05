@@ -193,7 +193,8 @@ see @ref{Score File Format, below, below}.
 Scores may also be set on entries manually:
 
 @deffn Command elfeed-score-set-score score ignore-region
-Set the score of one or more Elfeed entries to @var{score}.
+Set the score of one or more Elfeed entries to @var{score} (given as a
+prefix argument).
 @end deffn
 
 Since these scores are presumably significant to the user who took the
