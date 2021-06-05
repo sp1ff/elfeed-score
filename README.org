@@ -2,9 +2,10 @@
 #+DESCRIPTION: Gnus-style scoring for Elfeed
 #+AUTHOR: Michael Herstine
 #+EMAIL: sp1ff@pobox.com
-#+DATE: <2021-06-02 Wed 18:43>
+#+DATE: <2021-06-05 Sat 15:30>
 #+AUTODATE: t
 #+OPTIONS: toc:nil org-md-headline-style:setext *:t ^:nil
+#+STARTUP: overview
 
 [[https://melpa.org/#/elfeed-score][file:https://melpa.org/packages/elfeed-score-badge.svg]]
 [[https://stable.melpa.org/#/elfeed-score][file:https://stable.melpa.org/packages/elfeed-score-badge.svg]]
@@ -68,7 +69,7 @@ The easiest way to install elfeed-score is [[https://github.com/melpa/melpa][MEL
 
 ** Download the Package
 
-You can also download the Emacs package file on the GitHub releases [[https://github.com/sp1ff/elfeed-score/releases][page]] or from my personal [[https://www.unwoundstack/distros.html][page]]. Then say:
+If you would prefer to install the package manually, you can also download the Emacs package file on the GitHub releases [[https://github.com/sp1ff/elfeed-score/releases][page]] or from my personal [[https://www.unwoundstack/distros.html][page]]. Then say:
 
 #+BEGIN_SRC elisp
 (package-install-file "elfeed-score-0.7.9.tar")
@@ -88,7 +89,7 @@ make
 sudo make install
 #+END_SRC
 
-Unless you already use =EMACSLOADPATH= as part of your usual invocation of Emacs, this isn't likely to work as written-- you'll need to work out exactly how to tell Emacs to pick-up the rest of its LISP files. On an old Ubuntu 18.04 system of mine, for instance, =EMACSLOADPATH=$HOME/.emacs.d/elpa/elfeed-20200209.1942:/usr/share/emacs/25.2/lisp= works.
+Unless you already use =EMACSLOADPATH= as part of your usual invocation of Emacs, this isn't likely to work as written-- you'll need to work out exactly how to tell Emacs to pick-up the rest of its LISP files. On an old Ubuntu 18.04 system of mine, for instance, =EMACSLOADPATH=$HOME/.emacs.d/elpa/elfeed-20200209.1942:/usr/share/emacs/25.2/lisp= worked.
 *** Running the Unit Tests
 
 The unit tests require some macros defined by the [[https://github.com/skeeto/elfeed][Elfeed]] test suite, which is not distributed with the MELPA package. Therefore, you'll need to clone the Elfeed git repo & develop against that:
@@ -106,7 +107,6 @@ sudo make install
 #+END_SRC
 
 Again, unless you already use =EMACSLOADPATH=, you'll need to set =EMACSLOADPATH= appropriately to your system, something like =EMACSLOADPATH=/tmp/elfeed-score-0.7.9:/tmp/elfeed:/tmp/elfeed/tests:/usr/share/emacs/25.2/lisp=.
-
 ** Building From Source
 
 Finally, you can of course just clone this repo & build there. I've started a [[https://github.com/sp1ff/elfeed-score/wiki][wiki]], whose intended audience are people looking to hack on elfeed-score, that includes build instructions.
@@ -114,19 +114,18 @@ Finally, you can of course just clone this repo & build there. I've started a [[
 
 The format of the score file is updated fairly regularly to accomodate new features, new rule types, and so forth. elfeed-score maintains backward compatibility in that score files in older format versions are still recognized. The most recent format version will always be used when the score file is written to disk, however. Note than an older elfeed-score will reject a more recent score file (since it will not know how to parse it).
 
-When elfeed-score loads a score file that uses an archaic format (i.e. a format verseion less than =elfeed-scor-serde-current-format=) it will:
+When elfeed-score loads a score file that uses an archaic format (i.e. a format verseion less than =elfeed-score-serde-current-format=) it will:
 
   - announce the fact that your score file will be updated
   - make a backup of your current score file in a file by the same name with a suffix of =~%d~= appended, where "%d" is the current format version
   - on successful parse, immediately re-write the score file in the most recent version
 
 This should all be transparent to the user.
-
 * Status and Roadmap
 
 I've been using [[https://github.com/sp1ff/elfeed-score][elfeed-score]] day in & day out for my RSS reading for over a year now. I wrote a post on how [[https://github.com/sp1ff/elfeed-score][elfeed-score]] works, along with the process of submitting code to MELPA, [[https://www.unwoundstack.com/blog/scoring-elfeed-entries.html][here]]. [[https://github.com/C-J-Cundy][Chris]] wrote a post on how he uses it to [[https://cundy.me/post/elfeed/][manage ArXiv RSS Feeds]]. 
 
-The current version number (0.N) was chosen to suggest a preliminary release, but I'm thinking about calling this 1.0 soon. Preparatory to that, I've been re-factoring the code (it used to reside in a single file that had grown to over 2K LoC) and breaking up the documentation into a brief README (this file) a developer's wiki, and proper user documentation.
+The current version number (0.N) was chosen to suggest a preliminary release, but I'm thinking about calling this 1.0 soon. Preparatory to that, I've re-factored the code (it used to reside in a single file that had grown to over 2K LoC) and broke up the documentation into a brief README (this file) a developer's wiki, and proper user documentation.
 
 I plan next to introduce commands for adding rules interactively (e.g. while reading an entry, you could say "score this entry's author higher", or "add a rule matching titles against this text I've selected in the current entry").
 
