@@ -24,6 +24,7 @@
 (require 'elfeed-search)
 (require 'elfeed-score-log)
 (require 'elfeed-score-rules)
+(require 'elfeed-score-rule-stats)
 (require 'elfeed-score-serde)
 
 (define-obsolete-variable-alias 'elfeed-score/default-score
@@ -53,7 +54,7 @@
   :group 'elfeed-score
   :type 'symbol)
 
-(define-obsolete-variable-alias 'elfeed-score-explanation-buffer-name
+(define-obsolete-variable-alias 'elfeed-score-explanationb-uffer-name
   'elfeed-score-scoring-explanation-buffer-name "0.7.0"
   "Re-factoring elfeed-score.el.")
 
@@ -245,8 +246,6 @@ Define the 'score', 'explain' & 'apply' functions for a rule named NAME."
 	      (rule-tags  (plist-get args :rule-tags))
 	      (rule-feeds (plist-get args :rule-feeds))
 	      (rule-value (plist-get args :rule-value))
-	      (rule-date  (plist-get args :rule-date))
-	      (rule-hits  (plist-get args :rule-hits))
         (explanation-ctor (plist-get args :explain-ctor)))
     `(progn
        (defun ,apply-fn (entry on-match)
@@ -294,8 +293,7 @@ adding %d to its score"
                  matched-text (elfeed-entry-id entry)
                  (elfeed-entry-title entry) value)
                 (setq score (+ score value))
-                (setf (,rule-date rule) (float-time))
-                (setf (,rule-hits rule) (1+ (,rule-hits rule))))))
+                (elfeed-score-rule-stats-on-match rule))))
            score)))))
 
 (elfeed-score-scoring--defuns
@@ -307,8 +305,6 @@ adding %d to its score"
   :rule-tags elfeed-score-title-rule-tags
   :rule-feeds elfeed-score-title-rule-feeds
   :rule-value elfeed-score-title-rule-value
-  :rule-date elfeed-score-title-rule-date
-  :rule-hits elfeed-score-title-rule-hits
   :explain-ctor elfeed-score-make-title-explanation)
 
 (elfeed-score-scoring--defuns
@@ -320,8 +316,6 @@ adding %d to its score"
   :rule-tags elfeed-score-content-rule-tags
   :rule-feeds elfeed-score-content-rule-feeds
   :rule-value elfeed-score-content-rule-value
-  :rule-date elfeed-score-content-rule-date
-  :rule-hits elfeed-score-content-rule-hits
   :explain-ctor elfeed-score-make-content-explanation)
 
 (elfeed-score-scoring--defuns
@@ -335,8 +329,6 @@ adding %d to its score"
  :rule-tags elfeed-score-authors-rule-tags
  :rule-feeds elfeed-score-authors-rule-feeds
  :rule-value elfeed-score-authors-rule-value
- :rule-date elfeed-score-authors-rule-date
- :rule-hits elfeed-score-authors-rule-hits
  :explain-ctor elfeed-score-make-authors-explanation)
 
 (elfeed-score-scoring--defuns
@@ -348,8 +340,6 @@ adding %d to its score"
   :rule-tags elfeed-score-link-rule-tags
   :rule-feeds elfeed-score-link-rule-feeds
   :rule-value elfeed-score-link-rule-value
-  :rule-date elfeed-score-link-rule-date
-  :rule-hits elfeed-score-link-rule-hits
   :explain-ctor elfeed-score-make-link-explanation)
 
 ;; The remaining rule types are slightly different & I haven't figured
@@ -409,9 +399,7 @@ adding %d to its score"
           (elfeed-entry-id entry)
           (elfeed-entry-title entry) value)
 		     (setq score (+ score value))
-		     (setf (elfeed-score-feed-rule-date rule) (float-time))
-         (setf (elfeed-score-feed-rule-hits rule)
-               (1+ (elfeed-score-feed-rule-hits rule))))))
+         (elfeed-score-rule-stats-on-match rule))))
     score))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -482,10 +470,7 @@ for a title match & nil for a content match."
                                (elfeed-score-rules-pp-rule-to-string rule)
                                match-text (elfeed-entry-id entry) value)
 		         (setq score (+ score value))
-             (setf (elfeed-score-title-or-content-rule-date rule)
-                   (float-time))
-             (setf (elfeed-score-title-or-content-rule-hits rule)
-                   (1+ (elfeed-score-title-or-content-rule-hits rule))))
+             (elfeed-score-rule-stats-on-match rule))
          (let ((value (elfeed-score-title-or-content-rule-content-value rule)))
            (elfeed-score-log 'debug "title-or-content rule '%s' matched text\
  '%s' in the content of entry '%s'; adding %d to its score"
@@ -493,10 +478,7 @@ for a title match & nil for a content match."
                              match-text (elfeed-entry-id entry)
                              value)
 		       (setq score (+ score value))
-		       (setf (elfeed-score-title-or-content-rule-date rule)
-                 (float-time))
-           (setf (elfeed-score-title-or-content-rule-hits rule)
-                 (1+ (elfeed-score-title-or-content-rule-hits rule)))))))
+           (elfeed-score-rule-stats-on-match rule)))))
     score))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -537,9 +519,11 @@ On match, ON-MATCH will be called with the matching rule."
           (elfeed-entry-title entry)
           rule-value)
          (setq score (+ score rule-value))
-         (setf (elfeed-score-tag-rule-date rule) (float-time))
-         (setf (elfeed-score-tag-rule-hits rule)
-               (1+ (elfeed-score-tag-rule-hits rule))))))
+         (elfeed-score-rule-stats-on-match rule)
+         ;; (setf (elfeed-score-tag-rule-date rule) (float-time))
+         ;; (setf (elfeed-score-tag-rule-hits rule)
+         ;;       (1+ (elfeed-score-tag-rule-hits rule)))
+         )))
     score))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -566,9 +550,7 @@ On match, ON-MATCH will be called with the matching rule."
                    rule-tags score (elfeed-entry-id entry)
                    (elfeed-entry-title entry) actual-tags)
                   (apply #'elfeed-tag entry actual-tags)
-                  (setf (elfeed-score-adjust-tags-rule-date adj-tags) (float-time))
-                  (setf (elfeed-score-adjust-tags-rule-hits adj-tags)
-                        (1+ (elfeed-score-adjust-tags-rule-hits adj-tags))))
+                  (elfeed-score-rule-stats-on-match adj-tags))
               (progn
                 ;; else rm `actual-tags'
                 (elfeed-score-log
@@ -577,9 +559,7 @@ On match, ON-MATCH will be called with the matching rule."
                  rule-tags score (elfeed-entry-id entry)
                  (elfeed-entry-title entry) actual-tags)
                 (apply #'elfeed-untag entry actual-tags)
-                (setf (elfeed-score-adjust-tags-rule-date adj-tags) (float-time))
-                (setf (elfeed-score-adjust-tags-rule-hits adj-tags)
-                      (1+ (elfeed-score-adjust-tags-rule-hits adj-tags))))))))))
+                (elfeed-score-rule-stats-on-match adj-tags))))))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

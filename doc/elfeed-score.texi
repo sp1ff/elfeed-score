@@ -110,6 +110,7 @@ information on building & hacking on elfeed-score, see the
 @menu
 * Scoring Generalities::
 * Manual Scoring::
+* Scoring Statistics::
 @end menu
 
 @node Scoring Generalities
@@ -152,28 +153,22 @@ For instance, here's a subset of my scoring file at the moment:
 @lisp
 ;;; Elfeed score file                                     -*- lisp -*-
   (("title"
-    (:text "OPEN THREAD" :value -1000 :type S :date 1576681345.4086394)
-    (:text "raymond c\\(hen\\)?" :value 250 :type r
-    :date 1576808786.1558545) :tags (t .(@@dev)))
+    (:text "OPEN THREAD" :value -1000 :type S)
+    (:text "raymond c\\(hen\\)?" :value 250 :type r)
+    :tags (t .(@@dev)))
    ("content"
-    (:text "type erasure" :value 500 :type s :date 1576808786.043517))
+    (:text "type erasure" :value 500 :type s))
    ("title-or-content"
-    (:text "california" 150 100 :type s :date 1576808786.4068587)
-    (:text "china" 150 100 :type w :date 1576808786.1848788))
+    (:text "california" 150 100 :type s)
+    (:text "china" 150 100 :type w))
    ("feed"
-    (:text "Essays in Idleness" :value 250 :type S :attr t
-    :date 1576808786.1956885)
-    (:text "Irreal" :value 250 :type S :attr t
-    :date 1576808786.1765869)
-    (:text "Julia Evans" :value 100 :type :type s :attr t
-    :date 1576808786.4092398)
-    (:text "National Weather Service" :value 400 :type S :attr t
-    :date 1576808786.1117532)
-    (:text "emacs-news – sacha chua" :value 350 :type S :attr t
-    :date 1576808785.3807983))
+    (:text "Essays in Idleness" :value 250 :type S :attr t)
+    (:text "Irreal" :value 250 :type S :attr t)
+    (:text "Julia Evans" :value 100 :type :type s :attr t)
+    (:text "National Weather Service" :value 400 :type S :attr t)
+    (:text "emacs-news – sacha chua" :value 350 :type S :attr t))
    ("authors"
-     (:text "Jim Geraghty" :value 500 :type s :date 1611757856.1711636
-      :hits 150))
+     (:text "Jim Geraghty" :value 500 :type s))
    ("tag"
     (:tags (t . reddit-question)
      :value 750))
@@ -199,7 +194,7 @@ prefix argument).
 
 Since these scores are presumably significant to the user who took the
 trouble to set them, such scores will not be overwritten by other
-scoring operations (such the new entry hook which elfeed-score
+scoring operations (such as the new entry hook which elfeed-score
 installs). Since this behavior was implemented only
 @url{https://github.com/sp1ff/elfeed-score/issues/10, recently}, it is
 controlled by a configuration variable:
@@ -211,6 +206,37 @@ operations (they can, however, be overwritten by a subsequent manual
 scoring operation). If nil, manual scoring is treated no differently
 than any other scoring operation.
 @end defvr
+
+@node Scoring Statistics
+@subsection Scoring Statistics
+
+elfeed-score maintains statistics on when & how frequently each rule
+matches an entry (on which more @ref{Score File Format, below,
+below}). In earlier versions of the package, each rule's stats were
+maintained in the rule structure itself & were persisted along with
+each rule to the score file.
+
+This @ref{The Score File, turned out, turned out} to be ill-conceived,
+leading to
+@url{https://www.unwoundstack.com/blog/elfeed-score-state.html,
+split-brain} when the user edited their score file with un-written
+stats still in memory.
+
+Today, elfeed-score maintains a separate datastructure holding this
+information & automatically writes it to disk in a separate file. The
+location of the stats file is defined in
+@code{elfeed-score-rule-stats-file}.
+
+@defvr {User Option} elfeed-score-rule-stats-file
+The location at which scoring rule stats are maintained.
+
+The default value is @file{elfeed.stats} in
+@code{user-emacs-directory}, which see @ref{Init File,
+user-emacs-directory, user-emacs-directory, elisp, Emacs Lisp}.
+@end defvr
+
+Since this file is meant to be maintained automatically by
+elfeed-score, this manual won't go over the file format.
 
 @node Starting elfeed-score
 @section Starting elfeed-score
@@ -233,14 +259,17 @@ explicitly enable the package for that:
 @end lisp
 
 This will install the new sort function & new entry hook, as well as
-read your score file. NB. @code{elfeed-score-enable} is autoloaded, so
-if you've installed this package in the usual way, you should be able
-to just invoke the function & have the package loaded & enabled
-automatically.
+read your score & stats files. It will also install an elfeed update
+hook; this is to detect when an update has completed so that we can
+write-out the new rule stats to disk. NB. @code{elfeed-score-enable}
+is autoloaded, so if you've installed this package in the usual way,
+you should be able to just invoke the function & have the package
+loaded & enabled automatically.
 
 @deffn Command elfeed-score-enable
-Install the new sort function & the new entry hook. Read the score
-file. With prefix arg do @emph{not} install the custom sort function.
+Install the new sort function, the new entry hook & the update
+hook. Read the score & stats files. With prefix arg do @emph{not}
+install the custom sort function.
 @end deffn
 
 Some elfeed users have already customized
@@ -315,17 +344,21 @@ user-emacs-directory, user-emacs-directory, elisp, Emacs Lisp}.
 We'll go over the format in more detail @ref{Score File Format, below,
 below}.
 
-One important thing to note is that while the score file is initially
-hand-authored by the user, elfeed-score itself updates it. In other
-words, the score file is maintained collaboratively by the user and by
-elfeed-score.  The user is responsible for authoring
-rules. elfeed-score, on startup, will read the file into memory, and
-after each scoring operation, will write the contents back out to the
-scoring file, with attributes such as last match time and the number
-of matches for each rule updated. This means that if you update your
-rules by hand, you need to tell elfeed-score to re-load it before
-(re-)scoring any elfeed entries. You can do this by invoking
-@code{elfeed-score-load-score-file} (@kbd{= l}):
+It is important to note that the score file is authored & maintained
+by the user: elfeed-score will only read from it, not write to
+it. Prior versions of elfeed-score kept assorted statistics about each
+rule (how many times it matched, for instance) in the rule structures
+themselves, and would periodically write them out to the score
+file. This @url{https://github.com/sp1ff/elfeed-score/issues/13, led}
+to situations where users would lose edits to their score file when
+elfeed-score blindly wrote out its in-memory state. Beginning with
+elfeed-score 0.7.10, those statistics are tracked & persisted
+separately, which will hopefully put an end to this problem.
+
+That said, if you update your rules by hand, you need to tell
+elfeed-score to re-load it before (re-)scoring any elfeed entries. You
+can do this by invoking @code{elfeed-score-load-score-file} (@kbd{=
+l}):
 
 @deffn Command elfeed-score-load-score-file
 Load the score file into the current session.
@@ -459,7 +492,7 @@ of saying:
 ("match text" 100...)
 @end lisp
 
-you'll now have to say:
+one now has to say:
 
 @lisp
 (:text "match text" :value 100...)
@@ -532,14 +565,6 @@ Whole word matching just feeds the match text to
 Search, elisp, Emacs Lisp}) before doing a regexp search.
 
 @item
-@code{:date}: Last match time.
-
-The last time this rule matched an entry, in seconds since Unix
-epoch. When defining rules, this element & all those following are
-optional & need not be supplied by the score file author. This field
-will be automatically kept up-to-date by elfeed-score.
-
-@item
 @code{:tags}: Tag scoping rules.
 
 You may wish to apply this rule only to entries that have certain tags
@@ -547,12 +572,6 @@ You may wish to apply this rule only to entries that have certain tags
 Tags} for how to do that.
 
 This property is optional.
-
-@item
-@code{:hits}: Hit count.
-
-The number of times this rule has matched an entry. This field will be
-automatically kept up-to-date by elfeed-score.
 
 @item
 @code{:feeds}: Feed scoping rules.
@@ -579,22 +598,6 @@ score of any entry that matches.
 Note that it takes advantage of the fact that only the @code{:text},
 @code{:value} & @code{:type} properties are required.
 
-After this rule has been running for some time, and the rule has been
-updated by elfeed-score, it will be written down in the score file as
-something like this:
-
-@lisp
-("title"
-  (:text "rust.*who.s hiring" :value 1500 :type r
-  :date 1612278560.2936354 :hits 46))
-@end lisp
-
-The additional elements indicate that this was last matched at
-Tuesday, February 2, 2021 3:09:20.293 PM UTC & that it has matched
-forty-six entries since it was created. Note that since it is not
-scoped to any particular tags or to any particular feed(s), those
-properties are not recorded.
-
 @node content Rules
 @subsection content Rules
 
@@ -619,13 +622,7 @@ represented by seven properties:
 @code{:type} The match type as per @ref{match-type, above, above}.
 
 @item
-@code{:date} Last match time
-
-@item
 @code{:tags} Tag scoping rules
-
-@item
-@code{:hits} Hit count
 
 @item
 @code{:feeds} Feed scoping rules
@@ -633,8 +630,7 @@ represented by seven properties:
 @end enumerate
 
 As @ref{title Rules, above, above}, only the first three elements are
-required, and elfeed-score will manage the last match time & hit
-count.
+required.
 
 @node title-or-content Rules
 @subsection title-or-content Rules
@@ -668,15 +664,7 @@ The value by which an entry's score will be adjusted when the
 @code{:type} The match type as per @ref{match-type, above, above}.
 
 @item
-@code{:date} Last match time
-Again, this & all following elements are optional, and elfeed-score
-will keep this element up-to-date.
-
-@item
 @code{:tags} Tag scoping rules
-
-@item
-@code{:hits} Hit count
 
 @item
 @code{:feeds} Feed scoping rules
@@ -727,21 +715,10 @@ author respectively; this determines the attribute of the feed against
 which this rule's text will be matched.
 
 @item
-@code{:date}: Last match date
-The last time this rule matched, in seconds since Unix epoch. This
-element and all that follow it are optional. This element will be
-maintained by elfeed-score.
-
-@item
 @code{:tags}: Tag scoping rules
 You may wish to apply this rule only to entries that have certain tags
 (or that do @emph{not} have certain tags). See @ref{Scoping Rules by
 Tags, below, below} for how to do that.
-
-@item
-@code{:hits}: Hit count
-The number of times this rule has matched an entry. This field will be
-automatically kept up-to-date by elfeed-score.
 
 @end enumerate
 
@@ -782,25 +759,11 @@ should be adjusted, should the text match
 @code{:type}: The match type
 
 @item
-@code{:date}: Last match time
-
-The last time this rule matched an entry, in seconds since Unix
-epoch. When defining rules, this element & all those following are
-optional & need not be supplied by the score file author. This field
-will be automatically kept up-to-date by elfeed-score.
-
-@item
 @code{:tags}: Tag scoping rules
 
 You may wish to apply this rule only to entries that have certain tags
 (or that do @emph{not} have certain tags). See @ref{Scoping Rules by
 Tags, below, below} for how to do that.
-
-@item
-@code{:hits}: Hit count
-
-The number of times this rule has matched an entry. This field will be
-automatically kept up-to-date by elfeed-score.
 
 @item
 @code{:feeds}: Feed scoping rules
@@ -848,17 +811,6 @@ will apply to entries who posses @emph{none} of the tags in
 The amount by which an entry's score shall be adjusted should this
 rule match.
 
-@item
-@code{:date}: Last matched time
-The time, in seconds since Unix epoch, at which this rule last matched
-an entry. This and the next element are optional, and elfeed-score
-will keep this entry up-to-date.
-
-@item
-@code{:hits}: Hit count
-The number of times this rule has matched any entry. elfeed-score will
-keep this entry up-to-date.
-
 @end enumerate
 
 @node link Rules
@@ -885,13 +837,7 @@ represented by seven properties:
 @code{:type} The match type as per @ref{match-type, above, above}.
 
 @item
-@code{:date} Last match time
-
-@item
 @code{:tags} Tag scoping rules
-
-@item
-@code{:hits} Hit count
 
 @item
 @code{:feeds} Feed scoping rules
@@ -899,8 +845,7 @@ represented by seven properties:
 @end enumerate
 
 As @ref{title Rules, above, above}, only the first three elements are
-required, and elfeed-score will manage the last match time & hit
-count.
+required.
 
 @node adjust-tags Rules
 @subsection adjust-tags Rules
@@ -953,20 +898,6 @@ If @code{switch} is @code{t} & the rule applies, @code{tags} (either a
 single tag or a list of tags) will be added to the entry; if
 @code{switch} is @code{nil}, they will be removed
 
-@item
-@code{:date}: Last match time
-
-The last time this rule matched an entry, in seconds since Unix
-epoch. This element is optional, need not be supplied by the score
-file author, and will be automatically kept up-to-date by the package.
-
-@item
-@code{:hits}: Hit count
-
-The number of times this rule has matched an entry. This element is
-optional, need not be supplied by the score file author, and will be
-automatically kept up-to-date by the package.
-
 @end enumerate
 
 For example, the following rules:
@@ -980,7 +911,6 @@ For example, the following rules:
 will add the tag @code{'a} to all entries whose score is 1000 or more,
 and remove tag @code{'b} from all entries whose score is -1000 or
 less.
-
 
 @node mark Rule
 @subsection mark Rule
@@ -1128,34 +1058,25 @@ writing. Working score files tend to grow much larger than this
 
 @lisp
 ;;; Elfeed score file                                     -*- lisp -*-
-((version 5)
+((version 8)
  ("title"
-  (:text "rust.*who.s hiring" :value 1500 :type r
-   :date 1612278560.2936354 :hits 46)
+  (:text "rust.*who.s hiring" :value 1500 :type r)
   (:text "Microsoft Security Response Center" :value 1500 :type s))
  ("content"
-  (:text "/u/I_am_dom_" :value 250 :type s :date 1592054264.5130005
-   :tags (t @@china)))
+  (:text "/u/I_am_dom_" :value 250 :type s :tags (t @@china)))
  ("title-or-content"
-  (:text "california" :title-value 150 :content-value 100 :type s
-   :date 1612451934.031678 :hits 3077)
+  (:text "california" :title-value 150 :content-value 100 :type s)
   (:text "melpa" :title-value 250 :content-value 150 :type s
-   :date 1612363625.193721
-   :tags (t @@dev @@emacs)
-   :hits 108)
+   :tags (t @@dev @@emacs))
   (:text "workspace" :title-value 150 :content-value 75 :type s
-   :date 1612451475.3151736
-   :tags (t linux)
-   :hits 50))
+   :tags (t linux)))
  ("tag"
   (:tags (t . reddit-question)
-   :value 750 :date 1602258238.98633))
+   :value 750))
  ("authors"
-  (:text "Jim Geraghty" :value 500 :type s
-   :date 1612451618.429526 :hits 172))
+  (:text "Jim Geraghty" :value 500 :type s))
  ("feed"
-  (:text "Hacker News" :value 150 :type S :attr t
-   :date 1612451901.966745 :hits 985))
+  (:text "Hacker News" :value 150 :type S :attr t))
  (mark -2500)
  ("adjust-tags"))
 @end lisp
@@ -1183,7 +1104,7 @@ scoring an entry more than once will always result in it having the
 same score assigned. This means you can load an Elfeed search, and
 then, in the Elfeed search buffer @code{*elfeed-search*}, score all
 results with @code{elfeed-score-score-search}, or @kbd{= v}. When the
-command completes, the view will be re-sorted by score. Your score
+command completes, the view will be re-sorted by score. Your stats
 file will also have been updated on disk (to record the last time that
 each rule matched).
 
@@ -1225,10 +1146,10 @@ Explain an Elfeed ENTRY.
 
 This function will apply all scoring rules to an entry, but will not
 change anything (e.g.  update the entry's meta-data, or the
-last-matched timestamp in the matching rules); instead, it will
-provide a human-readable description of what would happen if the entry
-were to be scored, presumably for purposes of debugging or
-understanding of scoring rules.
+last-matched timestamp); instead, it will provide a human-readable
+description of what would happen if the entry were to be scored,
+presumably for purposes of debugging or understanding of scoring
+rules.
 @end deffn
 
 @node Rule Maintenance
@@ -1284,8 +1205,7 @@ categories will be displayed.
 I've sketched some thoughts on elfeed-score's future in the
 @url{https://github.com/sp1ff/elfeed-score, README}. The focus now is
 getting it to a place where I'd feel comfortable calling it
-``1.0''. This includes re-factoring the code and re-writing the
-serialization logic.
+``1.0''.
 
 Bugs & feature requests are welcome in the
 @url{https://github.com/sp1ff/elfeed-score/issues, Issues} section of

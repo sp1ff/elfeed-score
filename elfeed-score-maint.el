@@ -24,6 +24,7 @@
 
 (require 'elfeed-score-rules)
 (require 'elfeed-score-serde)
+(require 'elfeed-score-rule-stats)
 
 (defun elfeed-score-maint--get-last-match-date (rule)
   "Retrieve the time at which RULE was last matched.
@@ -32,48 +33,20 @@ Return the time, in seconds since epoch, at which RULE was most
 recently matched against an entry (floating point).  Note that
 RULE may be any rule struct."
 
-  (let ((date
-	 (cl-typecase rule
-	   (elfeed-score-title-rule
-	    (elfeed-score-title-rule-date rule))
-	   (elfeed-score-feed-rule
-	    (elfeed-score-feed-rule-date rule))
-	   (elfeed-score-content-rule
-	    (elfeed-score-content-rule-date rule))
-	   (elfeed-score-title-or-content-rule
-	    (elfeed-score-title-or-content-rule-date rule))
-	   (elfeed-score-authors-rule
-	    (elfeed-score-authors-rule-date rule))
-	   (elfeed-score-tag-rule
-	    (elfeed-score-tag-rule-date rule))
-	   (elfeed-score-adjust-tags-rule
-	    (elfeed-score-adjust-tags-rule-date rule))
-	   (otherwise (error "Unknown rule type %S" rule)))))
-    (or date 0.0)))
+  (let ((stats (elfeed-score-rule-stats-get rule)))
+    (if stats
+        (elfeed-score-rule-stats-date stats)
+      0.0)))
 
 (defun elfeed-score-maint--get-hits (rule)
   "Retrieve the number of times RULE has matched an entry.
 
 Note that RULE may be an instance of any rule structure."
 
-  (let ((hits
-         (cl-typecase rule
-	         (elfeed-score-title-rule
-	          (elfeed-score-title-rule-hits rule))
-	         (elfeed-score-feed-rule
-	          (elfeed-score-feed-rule-hits rule))
-	         (elfeed-score-content-rule
-	          (elfeed-score-content-rule-hits rule))
-	         (elfeed-score-title-or-content-rule
-	          (elfeed-score-title-or-content-rule-hits rule))
-	         (elfeed-score-authors-rule
-	          (elfeed-score-authors-rule-hits rule))
-	         (elfeed-score-tag-rule
-	          (elfeed-score-tag-rule-hits rule))
-	         (elfeed-score-adjust-tags-rule
-	          (elfeed-score-adjust-tags-rule-hits rule))
-	         (otherwise (error "Unknown rule type %S" rule)))))
-    (or hits 0)))
+  (let ((stats (elfeed-score-rule-stats-get rule)))
+    (if stats
+        (elfeed-score-rule-stats-hits stats)
+      0)))
 
 (defun elfeed-score-maint--sort-rules-by-last-match (rules)
   "Sort RULES in decreasing order of last match.
@@ -84,6 +57,7 @@ structs of any kind understood by
   (sort
    rules
    (lambda (lhs rhs)
+     (message "%s|%s" lhs rhs)
      (> (elfeed-score-maint--get-last-match-date lhs)
         (elfeed-score-maint--get-last-match-date rhs)))))
 

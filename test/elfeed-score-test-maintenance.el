@@ -19,39 +19,40 @@
 
 ;;; Commentary:
 
-;;; Code:
+;; None.
 
-(require 'elfeed-score)
+;;; Code:
+(require 'elfeed-score-maint)
 
 (ert-deftest elfeed-score-test-getting-date-or-hits ()
-  "Test `elfeed-score--get-{last-match-date,hits}.'"
+  "Test retrieving dates & hit counts."
 
   (let ((r1 (elfeed-score-title-rule--create
              :text "Bar" :value 1 :type 's))
         (r2 (elfeed-score-feed-rule--create
-             :text "feed" :value 1 :type 's :attr 't :date 0.0
-             :hits 0))
+             :text "feed" :value 1 :type 's :attr 't))
         (r3 (elfeed-score-content-rule--create
-             :text "lorem" :value 1 :type 's :date 1604184127.0
-             :hits 123))
-        (r4 (elfeed-score-title-or-content-rule--create
-             :text "lorem ipsum" :title-value 2 :content-value 1
-             :type 's :date 1604184127.0 :hits 123))
-        (r5 (elfeed-score-authors-rule--create
-             :text "Hancock" :value 1 :type 's :date 1604184127.0
-             :hits 123)))
+             :text "lorem" :value 1 :type 's)))
 
-    (should (equal (elfeed-score-maint--get-last-match-date r1) 0.0))
-    (should (equal (elfeed-score-maint--get-last-match-date r2) 0.0))
-    (should (equal (elfeed-score-maint--get-last-match-date r3) 1604184127.0))
-    (should (equal (elfeed-score-maint--get-last-match-date r4) 1604184127.0))
-    (should (equal (elfeed-score-maint--get-last-match-date r5) 1604184127.0))
+    (elfeed-score-rule-stats-on-match r1)
 
-    (should (equal (elfeed-score-maint--get-hits r1) 0))
-    (should (equal (elfeed-score-maint--get-hits r2) 0))
-    (should (equal (elfeed-score-maint--get-hits r3) 123))
-    (should (equal (elfeed-score-maint--get-hits r4) 123))
-    (should (equal (elfeed-score-maint--get-hits r5) 123))))
+    (let ((s1 (elfeed-score-rule-stats-get r1))
+          (s2 (elfeed-score-rule-stats-get r2)))
+      (should (equal 1 (elfeed-score-rule-stats-hits s1)))
+      (should (< 0.0 (elfeed-score-rule-stats-date s1)))
+      (should (not s2)))
+
+    (elfeed-score-rule-stats-on-match r1)
+    (elfeed-score-rule-stats-on-match r3)
+
+    (let ((s1 (elfeed-score-rule-stats-get r1))
+          (s2 (elfeed-score-rule-stats-get r2))
+          (s3 (elfeed-score-rule-stats-get r3)))
+      (should (equal 2 (elfeed-score-rule-stats-hits s1)))
+      (should (< 0.0 (elfeed-score-rule-stats-date s1)))
+      (should (not s2))
+      (should (equal 1 (elfeed-score-rule-stats-hits s3)))
+      (should (< 0.0 (elfeed-score-rule-stats-date s3))))))
 
 (provide 'elfeed-score-test-maintenace)
 

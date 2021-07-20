@@ -3,7 +3,7 @@
 ;; Copyright (C) 2019-2021 Michael Herstine <sp1ff@pobox.com>
 
 ;; Author: Michael Herstine <sp1ff@pobox.com>
-;; Version: 0.7.9
+;; Version: 0.7.10
 ;; Package-Requires: ((emacs "26.1") (elfeed "3.3.0"))
 ;; Keywords: news
 ;; URL: https://github.com/sp1ff/elfeed-score
@@ -39,11 +39,12 @@
 
 (require 'elfeed-score-log)
 (require 'elfeed-score-rules)
+(require 'elfeed-score-rule-stats)
 (require 'elfeed-score-serde)
 (require 'elfeed-score-scoring)
 (require 'elfeed-score-maint)
 
-(defconst elfeed-score-version "0.7.9")
+(defconst elfeed-score-version "0.7.10")
 
 (defgroup elfeed-score nil
   "Gnus-style scoring for Elfeed entries."
@@ -142,7 +143,6 @@ formatting.  This implementation is based on that of
             (concat pad string))))
        (string)))))
 
-
 (defun elfeed-score-explain (&optional ignore-region)
   "Explain why some entries were scored the way they were.
 
@@ -168,8 +168,6 @@ entry under point will be explained."
                     elfeed-score-serde-score-file)))
   (elfeed-score-serde-load-score-file score-file))
 
-
-
 (define-obsolete-function-alias 'elfeed-score/score
   #'elfeed-score-score "0.2.0" "Move to standard-compliant naming.")
 
@@ -182,12 +180,17 @@ region is not active, only the entry under point will be scored."
 
   (interactive "P")
 
-  (let ((entries (elfeed-search-selected ignore-region)))
+  ;; Inhibit automatic flushing of rule stats to file...
+  (let ((entries (elfeed-search-selected ignore-region))
+        (elfeed-score-rule-stats-dirty-threshold nil))
     (dolist (entry entries)
       (elfeed-score-scoring-score-entry entry))
-    (if elfeed-score-serde-score-file
-       (elfeed-score-serde-write-score-file elfeed-score-serde-score-file))
-    (elfeed-search-update t)))
+    (if elfeed-score-rule-stats-file
+        (elfeed-score-rule-stats-write elfeed-score-rule-stats-file))
+    (elfeed-search-update t))
+  ;; *Now* flush stats.
+  (if elfeed-score-rule-stats-file
+      (elfeed-score-rule-stats-write elfeed-score-rule-stats-file)))
 
 (define-obsolete-function-alias 'elfeed-score/score-search
   #'elfeed-score-score-search "0.2.0" "Move to standard-compliant naming.")
@@ -197,11 +200,16 @@ region is not active, only the entry under point will be scored."
 
   (interactive)
 
-  (dolist (entry elfeed-search-entries)
-    (elfeed-score-scoring-score-entry entry))
-  (if elfeed-score-serde-score-file
-	    (elfeed-score-serde-write-score-file elfeed-score-serde-score-file))
-  (elfeed-search-update t))
+  ;; Inhibit automatic flushing of rule stats to file...
+  (let ((elfeed-score-rule-stats-dirty-threshold nil))
+    (dolist (entry elfeed-search-entries)
+      (elfeed-score-scoring-score-entry entry))
+    (if elfeed-score-rule-stats-file
+	      (elfeed-score-rule-stats-write elfeed-score-rule-stats-file))
+    (elfeed-search-update t))
+  ;; *Now* flush stats.
+  (if elfeed-score-rule-stats-file
+      (elfeed-score-rule-stats-write elfeed-score-rule-stats-file)))
 
 (defvar elfeed-score-map
   (let ((map (make-sparse-keymap)))
@@ -267,23 +275,34 @@ This implementation is derived from `elfeed-search-print-entry--default'."
     (setq elfeed-score--old-sort-function        elfeed-search-sort-function
           elfeed-search-sort-function            #'elfeed-score-sort
           elfeed-score--old-print-entry-function elfeed-search-print-entry-function))
-  ;; & load the default score file, if it's defined & exists.
+  ;; load the default score file (if it's defined & exists)...
   (if (and elfeed-score-serde-score-file
            (file-exists-p elfeed-score-serde-score-file))
-      (elfeed-score-load-score-file elfeed-score-serde-score-file)))
+      (elfeed-score-load-score-file elfeed-score-serde-score-file))
+  ;; load the stats file (again if it's defined & exists)...
+  (if (and elfeed-score-rule-stats-file
+           (file-exists-p elfeed-score-rule-stats-file))
+      (elfeed-score-rule-stats-read elfeed-score-rule-stats-file))
+  (elfeed-score-serde-cleanup-stats)
+  ;; & finally, arrange to write stats after every `elfeed' update.
+  (add-hook 'elfeed-update-hooks #'elfeed-score-rule-stats-update-hook))
 
 (defun elfeed-score-unload ()
   "Unload `elfeed-score'."
 
   (interactive)
 
-  (if elfeed-score-serde-score-file
-	    (elfeed-score-serde-write-score-file elfeed-score-serde-score-file))
+  ;; No need to write the score file at this point; what's on-disk is
+  ;; the SoT, anyway.
+  (elfeed-score-serde-cleanup-stats)
+  (if elfeed-score-rule-stats-file
+	    (elfeed-score-rule-stats-write elfeed-score-rule-stats-file))
   (if elfeed-score--old-sort-function
       (setq elfeed-search-sort-function elfeed-score--old-sort-function))
   (if elfeed-score--old-print-entry-function
       (setq elfeed-search-print-entry-function elfeed-score--old-print-entry-function))
-  (remove-hook 'elfeed-new-entry-hook #'elfeed-score-scoring-score-entry))
+  (remove-hook 'elfeed-new-entry-hook #'elfeed-score-scoring-score-entry)
+  (remove-hook 'elfeed-update-hooks #'elfeed-score-rule-stats-update-hook))
 
 (provide 'elfeed-score)
 

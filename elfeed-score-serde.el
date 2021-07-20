@@ -23,6 +23,7 @@
 ;;; Code:
 (require 'cl-lib)
 (require 'elfeed-score-rules)
+(require 'elfeed-score-rule-stats)
 
 (define-obsolete-variable-alias 'elfeed-score/score-file
   'elfeed-score-score-file "0.2.0" "Move to standard-compliant naming.")
@@ -42,7 +43,7 @@ deserialization of scoring rules."
   :group 'elfeed-score
   :type 'file)
 
-(defconst elfeed-score-serde-current-format 7
+(defconst elfeed-score-serde-current-format 8
   "The most recent score file format version.")
 
 (defvar elfeed-score-serde-title-rules nil
@@ -103,25 +104,25 @@ those slots will be serialized when non-nil with names of :_n
 where n is the zero-baesd slot number."
 
   (let ((plist)
-	      (type-tag (plist-get params :type-tag))
+        (type-tag (plist-get params :type-tag))
         (ty (plist-get params :type)))
     (cl-loop for i upfrom 0
-	           for (slot . rest) in
-	           (cl-struct-slot-info
+             for (slot . rest) in
+             (cl-struct-slot-info
               (cond
-		           ((integerp ty) (elfeed-score-serde--nth x ty))
-		           ((and ty (symbolp ty)) ty)
-		           (t (elfeed-score-serde--nth x 0))))
-	           do
-	           (let ((val (elfeed-score-serde--nth x i)))
-	             (cond
-		            ((eq slot 'cl-tag-slot)
-		             (if type-tag
-		                 (setq plist (plist-put plist :_type val))))
-		            ((eq slot 'cl-skip-slot)
-		             (if val
+               ((integerp ty) (elfeed-score-serde--nth x ty))
+               ((and ty (symbolp ty)) ty)
+               (t (elfeed-score-serde--nth x 0))))
+             do
+             (let ((val (elfeed-score-serde--nth x i)))
+               (cond
+                ((eq slot 'cl-tag-slot)
+                 (if type-tag
+                     (setq plist (plist-put plist :_type val))))
+                ((eq slot 'cl-skip-slot)
+                 (if val
                      (setq plist (plist-put plist (intern (format ":_%d" i)) val))))
-		            (t
+                (t
                  ;; We write `val' if it is *not* the default
                  (if (not (equal val (eval (car rest))))
                      (setq
@@ -149,7 +150,7 @@ Else, the caller must supply the type name with the keyword
 argument :type."
   
   (let ((ty (plist-get plist :_type))
-	      (vals))
+        (vals))
     (unless ty (setq ty (plist-get params :type)))
     (cl-loop
      for i upfrom 0
@@ -163,7 +164,7 @@ argument :type."
        (setq vals (append vals (list (plist-get plist (intern (format ":_%d" i)))))))
       (t
        (let ((val (plist-get plist (intern (concat ":" (symbol-name slot))))))
-	       (setq vals (append vals (list (if val val (eval (car rest))))))))))
+         (setq vals (append vals (list (if val val (eval (car rest))))))))))
     (let ((seq-ty (cl-struct-sequence-type ty)))
       (cond
        ((eq seq-ty 'list) vals)
@@ -177,20 +178,25 @@ Each sub-list shall have the form (TEXT VALUE TYPE DATE TAGS HITS
 FEEDS).  NB Over the course of successive score file versions,
 new fields have been added at the end so as to maintain backward
 compatibility (i.e. this function can be used to read all
-versions of the title rule serialization format.)"
-  (let (title-rules)
-    (dolist (item sexps)
-      (let ((struct (elfeed-score-title-rule--create
-                     :text  (nth 0 item)
-                     :value (nth 1 item)
-                     :type  (nth 2 item)
-                     :date  (nth 3 item)
-                     :tags  (nth 4 item)
-                     :hits  (let ((hits (nth 5 item))) (or hits 0))
-                     :feeds (nth 6 item))))
-        (unless (member struct title-rules)
-          (setq title-rules (append title-rules (list struct))))))
-    title-rules))
+versions of the title rule serialization format prior to version
+6).
+
+Due to the change to storing rule stats outside the rule itself
+beginning with version 8, this method will now return a list of
+cons cells each of whose car is the rule structure and whose cdr
+is the stats structure."
+  (cl-mapcar
+   (lambda (item)
+     (cons
+      (elfeed-score-title-rule--create :text  (nth 0 item)
+                                       :value (nth 1 item)
+                                       :type  (nth 2 item)
+                                       :tags  (nth 4 item)
+                                       :feeds (nth 6 item))
+      (elfeed-score-rule-stats--create
+       :date  (nth 3 item)
+       :hits  (let ((hits (nth 5 item))) (or hits 0)))))
+   sexps))
 
 (defun elfeed-score-serde--parse-feed-rule-sexps (sexps)
   "Parse a list of lists SEXPS into a list of feed rules.
@@ -199,20 +205,25 @@ Each sub-list shall have the form (TEXT VALUE TYPE ATTR DATE TAGS
 HITS).  NB Over the course of successive score file versions, new
 fields have been added at the end so as to maintain backward
 compatibility (i.e. this function can be used to read all
-versions of the feed rule serialization format.)"
-  (let (feed-rules)
-    (dolist (item sexps)
-      (let ((struct (elfeed-score-feed-rule--create
-                     :text  (nth 0 item)
-                     :value (nth 1 item)
-                     :type  (nth 2 item)
-                     :attr  (nth 3 item)
-                     :date  (nth 4 item)
-                     :tags  (nth 5 item)
-                     :hits  (let ((hits (nth 6 item))) (or hits 0)))))
-        (unless (member struct feed-rules)
-          (setq feed-rules (append feed-rules (list struct))))))
-    feed-rules))
+versions of the feed rule serialization format prior to version
+6).
+
+Due to the change to storing rule stats outside the rule itself
+beginning with version 8, this method will now return a list of
+cons cells each of whose car is the rule structure and whose cdr
+is the stats structure."
+  (cl-mapcar
+   (lambda (item)
+     (cons
+      (elfeed-score-feed-rule--create :text  (nth 0 item)
+                                      :value (nth 1 item)
+                                      :type  (nth 2 item)
+                                      :attr  (nth 3 item)
+                                      :tags  (nth 5 item))
+      (elfeed-score-rule-stats--create
+       :date  (nth 4 item)
+       :hits  (let ((hits (nth 6 item))) (or hits 0)))))
+   sexps))
 
 (defun elfeed-score-serde--parse-content-rule-sexps (sexps)
   "Parse a list of lists SEXPS into a list of content rules.
@@ -221,20 +232,25 @@ Each sub-list shall have the form (TEXT VALUE TYPE DATE TAGS HITS
 FEEDS).  NB Over the course of successive score file versions,
 new fields have been added at the end so as to maintain backward
 compatibility (i.e. this function can be used to read all
-versions of the content rule serialization format.)"
-  (let (content-rules)
-    (dolist (item sexps)
-      (let ((struct (elfeed-score-content-rule--create
-                     :text  (nth 0 item)
-                     :value (nth 1 item)
-                     :type  (nth 2 item)
-                     :date  (nth 3 item)
-                     :tags  (nth 4 item)
-                     :hits  (let ((hits (nth 5 item))) (or hits 0))
-                     :feeds (nth 6 item))))
-        (unless (member struct content-rules)
-          (setq content-rules (append content-rules (list struct))))))
-    content-rules))
+versions of the content rule serialization format prior to
+version 6).
+
+Due to the change to storing rule stats outside the rule itself
+beginning with version 8, this method will now return a list of
+cons cells each of whose car is the rule structure and whose cdr
+is the stats structure."
+  (cl-mapcar
+   (lambda (item)
+     (cons
+      (elfeed-score-content-rule--create :text  (nth 0 item)
+                                         :value (nth 1 item)
+                                         :type  (nth 2 item)
+                                         :tags  (nth 4 item)
+                                         :feeds (nth 6 item))
+      (elfeed-score-rule-stats--create
+       :date  (nth 3 item)
+       :hits  (let ((hits (nth 5 item))) (or hits 0)))))
+   sexps))
 
 (defun elfeed-score-serde--parse-title-or-content-rule-sexps (sexps)
   "Parse a list of lists SEXPS into a list of title-or-content rules.
@@ -244,21 +260,238 @@ CONTENT-VALUE TYPE DATE TAGS HITS FEEDS).  NB Over the course of
 successive score file versions, new fields have been added at the
 end so as to maintain backward compatibility (i.e. this function
 can be used to read all versions of the title-or-content rule
-serialization format.)"
-  (let (toc-rules)
-    (dolist (item sexps)
-      (let ((struct (elfeed-score-title-or-content-rule--create
-                     :text          (nth 0 item)
-                     :title-value   (nth 1 item)
-                     :content-value (nth 2 item)
-                     :type          (nth 3 item)
-                     :date          (nth 4 item)
-                     :tags          (nth 5 item)
-                     :hits          (let ((hits (nth 6 item))) (or hits 0))
-                     :feeds         (nth 7 item))))
-        (unless (member struct toc-rules)
-          (setq toc-rules (append toc-rules (list struct))))))
-    toc-rules))
+serialization format prior to version 6).
+
+Due to the change to storing rule stats outside the rule itself
+beginning with version 8, this method will now return a list of
+cons cells each of whose car is the rule structure and whose cdr
+is the stats structure."
+  (cl-mapcar
+   (lambda (item)
+     (cons
+      (elfeed-score-title-or-content-rule--create
+       :text          (nth 0 item)
+       :title-value   (nth 1 item)
+       :content-value (nth 2 item)
+       :type          (nth 3 item)
+       :tags          (nth 5 item)
+       :feeds         (nth 7 item))
+      (elfeed-score-rule-stats--create
+       :date (nth 4 item)
+       :hits (let ((hits (nth 6 item))) (or hits 0)))))
+   sexps))
+
+(defun elfeed-score-serde--parse-scoring-sexp-1 (sexp)
+  "Interpret the S-expression SEXP as scoring rules version 1.
+
+Parse version 1 of the scoring S-expression.  This function will
+fail if SEXP has a \"version\" key with a value other than 1 (the
+caller may want to remove it via `assoc-delete-all' or some
+such).  Return a property list with the following keys & values:
+
+    - :title : list of cons cells whose car-s are
+      elfeed-score-title-rule structs & whose cdr-s are stats
+      structs
+
+    - :content : similar list of elfeed-score-content-rule &
+      stats structs
+
+    - :feed : similar list of elfeed-score-feed-rule & stats
+      structs
+
+    - :mark : score below which entries shall be marked read"
+
+  (let (mark titles feeds content)
+    (dolist (raw-item sexp)
+      (let ((key  (car raw-item))
+            (rest (cdr raw-item)))
+        (cond
+         ((string= key "version")
+          (unless (eq 1 (car rest))
+            (error "Unsupported score file version %s" (car rest))))
+         ((string= key "title")
+          (setq titles (elfeed-score-serde--parse-title-rule-sexps rest)))
+         ((string= key "content")
+          (setq content (elfeed-score-serde--parse-content-rule-sexps rest)))
+         ((string= key "feed")
+          (setq feeds (elfeed-score-serde--parse-feed-rule-sexps rest)))
+         ((eq key 'mark)
+          ;; set `mark' to (cdr rest) if (not mark) or (< mark (cdr rest))
+          (let ((rest (car rest)))
+            (if (or (not mark)
+                    (< mark rest))
+                (setq mark rest))))
+         (t
+          (error "Unknown score file key %s" key)))))
+    (list
+     :mark mark
+     :feeds feeds
+     :titles titles
+     :content content)))
+
+(defun elfeed-score-serde--parse-scoring-sexp-2 (sexp)
+  "Interpret the S-expression SEXP as scoring rules version 2.
+
+Parse version 2 of the scoring S-expression.  Return a property list
+with the following keys & values:
+
+    - :title : list of cons cells, each of whose car is an
+      elfeed-score-title-rule struct & whose cdr is a stats
+      struct
+
+    - :content : similar list of cons cells containing
+      elfeed-score-content-rule & stats structs
+
+    - :title-or-content: similar list of cons cells containing
+      elfeed-score-title-or-content-rule & stats structs
+
+    - :feed : similar list of cons cells containing
+      elfeed-score-feed-rule & stats structs
+
+    - :mark : score below which entries shall be marked read"
+
+  (let (mark titles feeds content tocs)
+    (dolist (raw-item sexp)
+      (let ((key  (car raw-item))
+            (rest (cdr raw-item)))
+        (cond
+         ((string= key "version")
+          (unless (eq 2 (car rest))
+            (error "Unsupported score file version %s" (car rest))))
+         ((string= key "title")
+          (setq titles (elfeed-score-serde--parse-title-rule-sexps rest)))
+         ((string= key "content")
+          (setq content (elfeed-score-serde--parse-content-rule-sexps rest)))
+         ((string= key "feed")
+          (setq feeds (elfeed-score-serde--parse-feed-rule-sexps rest)))
+         ((string= key "title-or-content")
+          (setq tocs (elfeed-score-serde--parse-title-or-content-rule-sexps rest)))
+         ((eq key 'mark)
+          ;; set `mark' to (cdr rest) if (not mark) or (< mark (cdr rest))
+          (let ((rest (car rest)))
+            (if (or (not mark)
+                    (< mark rest))
+                (setq mark rest))))
+         (t
+          (error "Unknown score file key %s" key)))))
+    (list
+     :mark mark
+     :feeds feeds
+     :titles titles
+     :content content
+     :title-or-content tocs)))
+
+(defun elfeed-score-serde--parse-tag-rule-sexps (sexps)
+  "Parse a list of lists SEXPS into a list of tag rules.
+
+Each sub-list shall have the form '(TAGS VALUE DATE HITS).  NB
+Over the course of successive score file versions, new fields
+have been added at the end so as to maintain backward
+compatibility (i.e. this function can be used to read all
+versions of the tag rule serialization format prior to version
+6).
+
+Due to the change to storing rule stats outside the rule itself
+beginning with version 8, this method will now return a list of
+cons cells each of whose car is the rule structure and whose cdr
+is the stats structure."
+  (cl-mapcar
+   (lambda (item)
+     (cons
+      (elfeed-score-tag-rule--create :tags  (nth 0 item)
+                                     :value (nth 1 item))
+      (elfeed-score-rule-stats--create
+       :date (nth 2 item)
+       :hits (let ((hits (nth 5 item))) (or hits 0)))))
+   sexps))
+
+(defun elfeed-score-serde--parse-adjust-tags-rule-sexps (sexps)
+  "Parse a list of lists SEXPS into a list of adjust-tags rules.
+
+Each sub-list shall have the form '(TAGS VALUE DATE HITS).  NB
+Over the course of successive score file versions, new fields
+have been added at the end so as to maintain backward
+compatibility (i.e. this function can be used to read all
+versions of the adjust-tag rule serialization format prior to
+version 6).
+
+Due to the change to storing rule stats outside the rule itself
+beginning with version 8, this method will now return a list of
+cons cells each of whose car is the rule structure and whose cdr
+is the stats structure."
+  (cl-mapcar
+   (lambda (item)
+     (cons
+      (elfeed-score-adjust-tags-rule--create :threshold (nth 0 item)
+                                             :tags      (nth 1 item))
+      (elfeed-score-rule-stats--create
+       :date (nth 2 item)
+       :hits (let ((hits (nth 5 item))) (or hits 0)))))
+   sexps))
+
+(defun elfeed-score-serde--parse-scoring-sexp-3 (sexp)
+  "Interpret the S-expression SEXP as scoring rules version 3.
+
+Parse version 3 of the scoring S-expression.  Return a property list
+with the following keys & values:
+
+    - :title : list of cons cells each of whose car is an
+      elfeed-score-title-rule struct & each of whose cdr is a
+      stats struct
+
+    - :content : similar list of cons cells containing
+      elfeed-score-content-rule & stats structs
+
+    - :title-or-content: similar list of cons cells containing
+      elfeed-score-title-or-content-rule & stats structs
+
+    - :feed : similar list of cons cells containing
+      elfeed-score-feed-rule & stats structs
+
+    - :tag : similar list of cons cells containing
+      elfeed-score-tag-rule & stats structs
+
+    - :adjust-tags : similar list of cons cells containing
+      elfeed-score-adjust-tags-rule & stats structs
+
+    - :mark : score below which entries shall be marked read"
+
+  (let (mark titles feeds content tocs tags adj-tags)
+    (dolist (raw-item sexp)
+      (let ((key  (car raw-item))
+            (rest (cdr raw-item)))
+        (cond
+         ((string= key "version")
+          (unless (eq 3 (car rest))
+            (error "Unsupported score file version %s" (car rest))))
+         ((string= key "title")
+          (setq titles (elfeed-score-serde--parse-title-rule-sexps rest)))
+         ((string= key "content")
+          (setq content (elfeed-score-serde--parse-content-rule-sexps rest)))
+         ((string= key "feed")
+          (setq feeds (elfeed-score-serde--parse-feed-rule-sexps rest)))
+         ((string= key "title-or-content")
+          (setq tocs (elfeed-score-serde--parse-title-or-content-rule-sexps rest)))
+         ((string= key "tag")
+          (setq tags (elfeed-score-serde--parse-tag-rule-sexps rest)))
+         ((string= key "adjust-tags")
+          (setq adj-tags (elfeed-score-serde--parse-adjust-tags-rule-sexps rest)))
+         ((eq key 'mark)
+          ;; set `mark' to (cdr rest) if (not mark) or (< mark (cdr rest))
+          (let ((rest (car rest)))
+            (if (or (not mark)
+                    (< mark rest))
+                (setq mark rest))))
+         (t
+          (error "Unknown score file key %s" key)))))
+    (list
+     :mark mark
+     :adjust-tags adj-tags
+     :feeds feeds
+     :titles titles
+     :content content
+     :title-or-content tocs
+     :tag tags)))
 
 (defun elfeed-score-serde--parse-authors-rule-sexps (sexps)
   "Parse a list of lists SEXPS into a list of authors rules.
@@ -267,181 +500,25 @@ Each sub-list shall have the form '(TEXT VALUE TYPE DATE TAGS
 HITS FEEDS).  NB Over the course of successive score file
 versions, new fields have been added at the end so as to maintain
 backward compatibility (i.e. this function can be used to read
-all versions of the authors rule serialization format.)"
-  (let (authors-rules)
-    (dolist (item sexps)
-      (let ((struct (elfeed-score-authors-rule--create
-                     :text  (nth 0 item)
-                     :value (nth 1 item)
-                     :type  (nth 2 item)
-                     :date  (nth 3 item)
-                     :tags  (nth 4 item)
-                     :hits  (let ((hits (nth 5 item))) (or hits 0))
-                     :feeds (nth 6 item))))
-        (unless (member struct authors-rules)
-          (setq authors-rules (append authors-rules (list struct))))))
-    authors-rules))
+all versions of the authors rule serialization format prior to
+version 6).
 
-(defun elfeed-score-serde--parse-scoring-sexp-1 (sexp)
-  "Interpret the S-expression SEXP as scoring rules version 1.
-
-Parse version 1 of the scoring S-expression.  This function will
-fail if SEXP has a \"version\" key with a value other than 1 (the
-caller may want to remove it via `assoc-delete-all' or some
-such).  Return a property list with the following keys:
-
-    - :title : list of elfeed-score-title-rule structs
-    - :content : list of elfeed-score-content-rule structs
-    - :feed : list of elfeed-score-feed-rule structs
-    - :mark : score below which entries shall be marked read"
-
-  (let (mark titles feeds content)
-    (dolist (raw-item sexp)
-      (let ((key  (car raw-item))
-	          (rest (cdr raw-item)))
-	      (cond
-         ((string= key "version")
-          (unless (eq 1 (car rest))
-            (error "Unsupported score file version %s" (car rest))))
-	       ((string= key "title")
-          (setq titles (elfeed-score-serde--parse-title-rule-sexps rest)))
-         ((string= key "content")
-          (setq content (elfeed-score-serde--parse-content-rule-sexps rest)))
-         ((string= key "feed")
-          (setq feeds (elfeed-score-serde--parse-feed-rule-sexps rest)))
-	       ((eq key 'mark)
-          ;; set `mark' to (cdr rest) if (not mark) or (< mark (cdr rest))
-          (let ((rest (car rest)))
-            (if (or (not mark)
-                    (< mark rest))
-                (setq mark rest))))
-	       (t
-	        (error "Unknown score file key %s" key)))))
-    (list
-     :mark mark
-	   :feeds feeds
-	   :titles titles
-     :content content)))
-
-(defun elfeed-score-serde--parse-scoring-sexp-2 (sexp)
-  "Interpret the S-expression SEXP as scoring rules version 2.
-
-Parse version 2 of the scoring S-expression.  Return a property list
-with the following keys:
-
-    - :title : list of elfeed-score-title-rule structs
-    - :content : list of elfeed-score-content-rule structs
-    - :title-or-content: list of elfeed-score-title-or-content-rule
-                         structs
-    - :feed : list of elfeed-score-feed-rule structs
-    - :mark : score below which entries shall be marked read"
-
-  (let (mark titles feeds content tocs)
-    (dolist (raw-item sexp)
-      (let ((key  (car raw-item))
-	          (rest (cdr raw-item)))
-	      (cond
-         ((string= key "version")
-          (unless (eq 2 (car rest))
-            (error "Unsupported score file version %s" (car rest))))
-	       ((string= key "title")
-          (setq titles (elfeed-score-serde--parse-title-rule-sexps rest)))
-         ((string= key "content")
-          (setq content (elfeed-score-serde--parse-content-rule-sexps rest)))
-         ((string= key "feed")
-          (setq feeds (elfeed-score-serde--parse-feed-rule-sexps rest)))
-         ((string= key "title-or-content")
-          (setq tocs (elfeed-score-serde--parse-title-or-content-rule-sexps rest)))
-	       ((eq key 'mark)
-          ;; set `mark' to (cdr rest) if (not mark) or (< mark (cdr rest))
-          (let ((rest (car rest)))
-            (if (or (not mark)
-                    (< mark rest))
-                (setq mark rest))))
-	       (t
-	        (error "Unknown score file key %s" key)))))
-    (list
-     :mark mark
-	   :feeds feeds
-	   :titles titles
-     :content content
-     :title-or-content tocs)))
-
-(defun elfeed-score-serde--parse-tag-rule-sexps (sexps)
-  "Parse a list of lists SEXPS into a list of tag rules."
-  (let ((tag-rules))
-    (dolist (item sexps)
-      (let ((struct (elfeed-score-tag-rule--create
-                     :tags  (nth 0 item)
-                     :value (nth 1 item)
-                     :date  (nth 2 item))))
-        (unless (member struct tag-rules)
-          (setq tag-rules (append tag-rules (list struct))))))
-    tag-rules))
-
-(defun elfeed-score-serde--parse-adjust-tags-rule-sexps (sexps)
-  "Parse a list of lists SEXPS into a list of adjust-tags rules."
-  (let ((adj-tag-rules))
-    (dolist (item sexps)
-      (let ((struct (elfeed-score-adjust-tags-rule--create
-                     :threshold (nth 0 item)
-                     :tags      (nth 1 item)
-                     :date      (nth 2 item))))
-        (unless (member struct adj-tag-rules)
-          (setq adj-tag-rules (append adj-tag-rules (list struct))))))
-    adj-tag-rules))
-
-(defun elfeed-score-serde--parse-scoring-sexp-3 (sexp)
-  "Interpret the S-expression SEXP as scoring rules version 3.
-
-Parse version 3 of the scoring S-expression.  Return a property list
-with the following keys:
-
-    - :title : list of elfeed-score-title-rule structs
-    - :content : list of elfeed-score-content-rule structs
-    - :title-or-content: list of elfeed-score-title-or-content-rule
-                         structs
-    - :feed : list of elfeed-score-feed-rule structs
-    - :tag : list of elfeed-score-tag-rule structs
-    - :mark : score below which entries shall be marked read
-    - :adjust-tags : list of elfeed-score-adjust-tags-rule structs"
-
-  (let (mark titles feeds content tocs tags adj-tags)
-    (dolist (raw-item sexp)
-      (let ((key  (car raw-item))
-	          (rest (cdr raw-item)))
-	      (cond
-         ((string= key "version")
-          (unless (eq 3 (car rest))
-            (error "Unsupported score file version %s" (car rest))))
-	       ((string= key "title")
-          (setq titles (elfeed-score-serde--parse-title-rule-sexps rest)))
-         ((string= key "content")
-          (setq content (elfeed-score-serde--parse-content-rule-sexps rest)))
-         ((string= key "feed")
-          (setq feeds (elfeed-score-serde--parse-feed-rule-sexps rest)))
-         ((string= key "title-or-content")
-          (setq tocs (elfeed-score-serde--parse-title-or-content-rule-sexps rest)))
-         ((string= key "tag")
-          (setq tags (elfeed-score-serde--parse-tag-rule-sexps rest)))
-         ((string= key "adjust-tags")
-          (setq adj-tags (elfeed-score-serde--parse-adjust-tags-rule-sexps rest)))
-	       ((eq key 'mark)
-          ;; set `mark' to (cdr rest) if (not mark) or (< mark (cdr rest))
-          (let ((rest (car rest)))
-            (if (or (not mark)
-                    (< mark rest))
-                (setq mark rest))))
-	       (t
-	        (error "Unknown score file key %s" key)))))
-    (list
-     :mark mark
-     :adjust-tags adj-tags
-	   :feeds feeds
-	   :titles titles
-     :content content
-     :title-or-content tocs
-     :tag tags)))
+Due to the change to storing rule stats outside the rule itself
+beginning with version 8, this method will now return a list of
+cons cells each of whose car is the rule structure and whose cdr
+is the stats structure."
+  (cl-mapcar
+   (lambda (item)
+     (cons
+      (elfeed-score-authors-rule--create :text  (nth 0 item)
+                                         :value (nth 1 item)
+                                         :type  (nth 2 item)
+                                         :tags  (nth 4 item)
+                                         :feeds (nth 6 item))
+      (elfeed-score-rule-stats--create
+       :date (nth 3 item)
+       :hits (let ((hits (nth 5 item))) (or hits 0)))))
+   sexps))
 
 (defun elfeed-score-serde--parse-scoring-sexp-4 (sexp)
   "Interpret the S-expression SEXP as scoring rules version 4.
@@ -449,25 +526,39 @@ with the following keys:
 Parse version 4 of the scoring S-expression.  Return a property list
 with the following keys:
 
-    - :title : list of elfeed-score-title-rule structs
-    - :content : list of elfeed-score-content-rule structs
-    - :title-or-content: list of elfeed-score-title-or-content-rule
-                         structs
-    - :feed : list of elfeed-score-feed-rule structs
-    - :authors : list of elfeed-score-authors-rule-structs
-    - :tag : list of elfeed-score-tag-rule structs
-    - :mark : score below which entries shall be marked read
-    - :adjust-tags : list of elfeed-score-adjust-tags-rule structs"
+    - :title : list of cons cells each of whose car is an
+      elfeed-score-title-rule struct & each of whose cdr is a
+      stats struct
+
+    - :content : similar list of cons cells containing
+      elfeed-score-content-rule & stats structs
+
+    - :title-or-content: similar list of cons cells containing
+      elfeed-score-title-or-content-rule & stats structs
+
+    - :feed : similar list of cons cells containing
+      elfeed-score-feed-rule & stats structs
+
+    - :tag : similar list of cons cells containing
+      elfeed-score-tag-rule & stats structs
+
+    - :adjust-tags : similar list of cons cells containing
+      elfeed-score-adjust-tags-rule & stats structs
+
+    - :authors : similar list of cons cells containing
+      elfeed-score-authors-rule & stats structs
+
+    - :mark : score below which entries shall be marked read"
 
   (let (mark titles feeds content tocs authors tags adj-tags)
     (dolist (raw-item sexp)
       (let ((key  (car raw-item))
-	          (rest (cdr raw-item)))
-	      (cond
+            (rest (cdr raw-item)))
+        (cond
          ((string= key "version")
           (unless (or (eq 4 (car rest)) (eq 5 (car rest)))
             (error "Unsupported score file version %s" (car rest))))
-	       ((string= key "title")
+         ((string= key "title")
           (setq titles (elfeed-score-serde--parse-title-rule-sexps rest)))
          ((string= key "content")
           (setq content (elfeed-score-serde--parse-content-rule-sexps rest)))
@@ -475,116 +566,200 @@ with the following keys:
           (setq feeds (elfeed-score-serde--parse-feed-rule-sexps rest)))
          ((string= key "title-or-content")
           (setq tocs (elfeed-score-serde--parse-title-or-content-rule-sexps rest)))
-	       ((string= key "authors")
+         ((string= key "authors")
           (setq authors (elfeed-score-serde--parse-authors-rule-sexps rest)))
          ((string= key "tag")
           (setq tags (elfeed-score-serde--parse-tag-rule-sexps rest)))
          ((string= key "adjust-tags")
           (setq adj-tags (elfeed-score-serde--parse-adjust-tags-rule-sexps rest)))
-	       ((eq key 'mark)
+         ((eq key 'mark)
           ;; set `mark' to (cdr rest) if (not mark) or (< mark (cdr rest))
           (let ((rest (car rest)))
             (if (or (not mark)
                     (< mark rest))
                 (setq mark rest))))
-	       (t
-	        (error "Unknown score file key %s" key)))))
+         (t
+          (error "Unknown score file key %s" key)))))
     (list
      :mark mark
      :adjust-tags adj-tags
-	   :feeds feeds
-	   :titles titles
+     :feeds feeds
+     :titles titles
      :content content
      :title-or-content tocs
      :authors authors
      :tag tags)))
 
+(defun elfeed-score-serde--plist-to-ctor (plist attrs ctor)
+  "Pull ATTRS from PLIST & hand them to CTOR.
+
+ATTRS shall be a list of keywords (:text, or :date, e.g.).  This
+function creates a list of those keywords followed by that
+keyword's value in PLIST (if any) & applies CTOR to that list."
+
+  (let* ((zip (cl-mapcar
+               #'cons
+               attrs
+               (cl-mapcar (lambda (x) (plist-get plist x)) attrs)))
+         (elems))
+    ;; `zip' is a list of cons cells (keyword . value)
+    (while (consp zip)
+      (let ((elem (pop zip)))
+        (if (cdr elem)
+            (setq elems (append elems (list (car elem) (cdr elem)))))))
+    (apply ctor elems)))
+
+;; For score file version 6 & 7, we need to deserialize to both a rule
+;; & a stats object.
+(defun elfeed-score-serde--plist-to-struct-6-7 (plist ty)
+  "Deserialize PLIST to a struct of type TY in score file versions 6 & 7.
+
+Prior to version 8 of the score file format, rule statistics were
+kept with the corresponding rule and serialized to the same
+property list.  Therefore, to deserialize, we need to read the
+property lists into two structures: the rule & the stats.  Both
+are returned as a cons cell."
+  (cons
+   (cond
+    ((eq ty 'elfeed-score-title-rule)
+     (elfeed-score-serde--plist-to-ctor
+      plist '(:text :value :type :tags :feeds)
+      #'elfeed-score-title-rule--create))
+    ((eq ty 'elfeed-score-feed-rule)
+     (elfeed-score-serde--plist-to-ctor
+      plist '(:text :value :type :attr :tags)
+      #'elfeed-score-feed-rule--create))
+    ((eq ty 'elfeed-score-content-rule)
+     (elfeed-score-serde--plist-to-ctor
+      plist '(:text :value :type :tags :feeds)
+      #'elfeed-score-content-rule--create))
+    ((eq ty 'elfeed-score-title-or-content-rule)
+     (elfeed-score-serde--plist-to-ctor
+      plist '(:text :title-value :content-value :type :tags :feeds)
+      #'elfeed-score-title-or-content-rule--create))
+    ((eq ty 'elfeed-score-authors-rule)
+     (elfeed-score-serde--plist-to-ctor
+      plist '(:text :value :type :tags :feeds)
+      #'elfeed-score-authors-rule--create))
+    ((eq ty 'elfeed-score-tag-rule)
+     (elfeed-score-serde--plist-to-ctor
+      plist '(:tags :value)
+      #'elfeed-score-tag-rule--create))
+    ((eq ty 'elfeed-score-link-rule)
+     (elfeed-score-serde--plist-to-ctor
+      plist '(:text :value :type :tags :feeds)
+      #'elfeed-score-link-rule--create))
+    ((eq ty 'elfeed-score-adjust-tags-rule)
+     (elfeed-score-serde--plist-to-ctor
+      plist '(:threshold :tags)
+      #'elfeed-score-adjust-tags-rule--create))
+    (t
+     (error "Unknown rule type %s" ty)))
+   (elfeed-score-serde--plist-to-ctor
+                 plist '(:hits :date) #'elfeed-score-rule-stats--create)))
+
 (defun elfeed-score-serde--parse-scoring-sexp-6 (sexp)
   "Interpret the S-expression SEXP as scoring rules version 6.
 
-Parse version 6 of the scoring S-expression.  Return a property list
-with the following keys:
+Parse version 6 of the scoring S-expression.  Version 6
+introduced keywords to the serialization format.  Return a
+property list with the following keys:
 
-    - :title : list of elfeed-score-title-rule structs
-    - :content : list of elfeed-score-content-rule structs
-    - :title-or-content: list of elfeed-score-title-or-content-rule
-                         structs
-    - :feed : list of elfeed-score-feed-rule structs
-    - :authors : list of elfeed-score-authors-rule-structs
-    - :tag : list of elfeed-score-tag-rule structs
-    - :mark : score below which entries shall be marked read
-    - :adjust-tags : list of elfeed-score-adjust-tags-rule structs"
+    - :title : list of cons cells each of whose car is an
+      elfeed-score-title-rule struct & each of whose cdr is a
+      stats struct
+
+    - :content : similar list of cons cells containing
+      elfeed-score-content-rule & stats structs
+
+    - :title-or-content: similar list of cons cells containing
+      elfeed-score-title-or-content-rule & stats structs
+
+    - :feed : similar list of cons cells containing
+      elfeed-score-feed-rule & stats structs
+
+    - :tag : similar list of cons cells containing
+      elfeed-score-tag-rule & stats structs
+
+    - :adjust-tags : similar list of cons cells containing
+      elfeed-score-adjust-tags-rule & stats structs
+
+    - :authors : similar list of cons cells containing
+      elfeed-score-authors-rule & stats structs
+
+    - :mark : score below which entries shall be marked read"
 
   (let (mark titles feeds content tocs authors tags adj-tags)
     (dolist (raw-item sexp)
       (let ((key  (car raw-item))
-	          (rest (cdr raw-item)))
-	      (cond
+            (rest (cdr raw-item)))
+        (cond
          ((string= key "version")
           (unless (eq 6 (car rest))
             (error "Unsupported score file version %s" (car rest))))
-	       ((string= key "title")
+         ((string= key "title")
           (setq
            titles
            (mapcar
             (lambda (plist)
-              (elfeed-score-serde-plist-to-struct plist :type 'elfeed-score-title-rule))
+              (elfeed-score-serde--plist-to-struct-6-7 plist 'elfeed-score-title-rule))
             rest)))
          ((string= key "content")
           (setq
            content
            (mapcar
             (lambda (plist)
-              (elfeed-score-serde-plist-to-struct plist :type 'elfeed-score-content-rule))
+              (elfeed-score-serde--plist-to-struct-6-7 plist 'elfeed-score-content-rule))
             rest)))
          ((string= key "feed")
           (setq
            feeds
            (mapcar
             (lambda (plist)
-              (elfeed-score-serde-plist-to-struct plist :type 'elfeed-score-feed-rule))
+              (elfeed-score-serde--plist-to-struct-6-7 plist 'elfeed-score-feed-rule))
             rest)))
          ((string= key "title-or-content")
           (setq
            tocs
            (mapcar
             (lambda (plist)
-              (elfeed-score-serde-plist-to-struct plist :type 'elfeed-score-title-or-content-rule))
+              (elfeed-score-serde--plist-to-struct-6-7
+               plist 'elfeed-score-title-or-content-rule))
             rest)))
-	       ((string= key "authors")
+         ((string= key "authors")
           (setq
            authors
            (mapcar
             (lambda (plist)
-              (elfeed-score-serde-plist-to-struct plist :type 'elfeed-score-authors-rule))
+              (elfeed-score-serde--plist-to-struct-6-7 plist 'elfeed-score-authors-rule))
             rest)))
          ((string= key "tag")
           (setq
            tags
            (mapcar
             (lambda (plist)
-              (elfeed-score-serde-plist-to-struct plist :type 'elfeed-score-tag-rule))
+              (elfeed-score-serde--plist-to-struct-6-7 plist 'elfeed-score-tag-rule))
             rest)))
          ((string= key "adjust-tags")
           (setq
            adj-tags
            (mapcar
             (lambda (plist)
-              (elfeed-score-serde-plist-to-struct plist :type 'elfeed-score-adjust-tags-rule))
+              (elfeed-score-serde--plist-to-struct-6-7 plist 'elfeed-score-adjust-tags-rule))
             rest)))
-	       ((eq key 'mark)
+         ((eq key 'mark)
           ;; set `mark' to (cdr rest) if (not mark) or (< mark (cdr rest))
           (let ((rest (car rest)))
             (if (or (not mark)
                     (< mark rest))
                 (setq mark rest))))
-	       (t
-	        (error "Unknown score file key %s" key)))))
+         (t
+          (error "Unknown score file key %s" key)))))
     (list
      :mark mark
      :adjust-tags adj-tags
-	   :feeds feeds
-	   :titles titles
+     :feeds feeds
+     :titles titles
      :content content
      :title-or-content tocs
      :authors authors
@@ -593,97 +768,241 @@ with the following keys:
 (defun elfeed-score-serde--parse-scoring-sexp-7 (sexp)
   "Interpret the S-expression SEXP as scoring rules version 7.
 
-Parse version 6 of the scoring S-expression.  Return a property list
+Parse version 7 of the scoring S-expression.  Return a property list
 with the following keys:
 
-    - :title : list of elfeed-score-title-rule structs
-    - :content : list of elfeed-score-content-rule structs
-    - :title-or-content: list of elfeed-score-title-or-content-rule
-                         structs
-    - :feed : list of elfeed-score-feed-rule structs
-    - :authors : list of elfeed-score-authors-rule-structs
-    - :tag : list of elfeed-score-tag-rule structs
-    - :link : list of elfeed-score-link-rule structs
-    - :mark : score below which entries shall be marked read
-    - :adjust-tags : list of elfeed-score-adjust-tags-rule structs"
+    - :title : list of cons cells each of whose car is an
+      elfeed-score-title-rule struct & each of whose cdr is a
+      stats struct
+
+    - :content : similar list of cons cells containing
+      elfeed-score-content-rule & stats structs
+
+    - :title-or-content: similar list of cons cells containing
+      elfeed-score-title-or-content-rule & stats structs
+
+    - :feed : similar list of cons cells containing
+      elfeed-score-feed-rule & stats structs
+
+    - :tag : similar list of cons cells containing
+      elfeed-score-tag-rule & stats structs
+
+    - :adjust-tags : similar list of cons cells containing
+      elfeed-score-adjust-tags-rule & stats structs
+
+    - :authors : similar list of cons cells containing
+      elfeed-score-authors-rule & stats structs
+
+    - :link : similar list of cons cells containing
+      elfeed-score-link-rule & stats structs
+
+    - :mark : score below which entries shall be marked read"
 
   (let (mark titles feeds content tocs authors tags links adj-tags)
     (dolist (raw-item sexp)
       (let ((key  (car raw-item))
-	          (rest (cdr raw-item)))
-	      (cond
+            (rest (cdr raw-item)))
+        (cond
          ((string= key "version")
           (unless (eq 7 (car rest))
             (error "Unsupported score file version %s" (car rest))))
-	       ((string= key "title")
+         ((string= key "title")
           (setq
            titles
            (mapcar
             (lambda (plist)
-              (elfeed-score-serde-plist-to-struct plist :type 'elfeed-score-title-rule))
+              (elfeed-score-serde--plist-to-struct-6-7 plist 'elfeed-score-title-rule))
             rest)))
          ((string= key "content")
           (setq
            content
            (mapcar
             (lambda (plist)
-              (elfeed-score-serde-plist-to-struct plist :type 'elfeed-score-content-rule))
+              (elfeed-score-serde--plist-to-struct-6-7 plist 'elfeed-score-content-rule))
             rest)))
          ((string= key "feed")
           (setq
            feeds
            (mapcar
             (lambda (plist)
-              (elfeed-score-serde-plist-to-struct plist :type 'elfeed-score-feed-rule))
+              (elfeed-score-serde--plist-to-struct-6-7 plist 'elfeed-score-feed-rule))
             rest)))
          ((string= key "title-or-content")
           (setq
            tocs
            (mapcar
             (lambda (plist)
-              (elfeed-score-serde-plist-to-struct plist :type 'elfeed-score-title-or-content-rule))
+              (elfeed-score-serde--plist-to-struct-6-7
+               plist 'elfeed-score-title-or-content-rule))
             rest)))
-	       ((string= key "authors")
+         ((string= key "authors")
           (setq
            authors
            (mapcar
             (lambda (plist)
-              (elfeed-score-serde-plist-to-struct plist :type 'elfeed-score-authors-rule))
+              (elfeed-score-serde--plist-to-struct-6-7 plist 'elfeed-score-authors-rule))
             rest)))
          ((string= key "tag")
           (setq
            tags
            (mapcar
             (lambda (plist)
-              (elfeed-score-serde-plist-to-struct plist :type 'elfeed-score-tag-rule))
+              (elfeed-score-serde--plist-to-struct-6-7 plist 'elfeed-score-tag-rule))
             rest)))
          ((string= key "link")
           (setq
            links
            (mapcar
             (lambda (plist)
-              (elfeed-score-serde-plist-to-struct plist :type 'elfeed-score-link-rule))
+              (elfeed-score-serde--plist-to-struct-6-7 plist 'elfeed-score-link-rule))
             rest)))
          ((string= key "adjust-tags")
           (setq
            adj-tags
            (mapcar
             (lambda (plist)
-              (elfeed-score-serde-plist-to-struct plist :type 'elfeed-score-adjust-tags-rule))
+              (elfeed-score-serde--plist-to-struct-6-7 plist 'elfeed-score-adjust-tags-rule))
             rest)))
-	       ((eq key 'mark)
+         ((eq key 'mark)
           ;; set `mark' to (cdr rest) if (not mark) or (< mark (cdr rest))
           (let ((rest (car rest)))
             (if (or (not mark)
                     (< mark rest))
                 (setq mark rest))))
-	       (t
-	        (error "Unknown score file key %s" key)))))
+         (t
+          (error "Unknown score file key %s" key)))))
     (list
      :mark mark
      :adjust-tags adj-tags
-	   :feeds feeds
-	   :titles titles
+     :feeds feeds
+     :titles titles
+     :content content
+     :title-or-content tocs
+     :authors authors
+     :tag tags
+     :link links)))
+
+(defun elfeed-score-serde--parse-scoring-sexp-8 (sexp)
+  "Interpret the S-expression SEXP as scoring rules version 8.
+
+Parse version 8 of the scoring S-expression.  With version 8 of
+the score file format, the rule stats are stored separately, so
+this file won't load them.  However, it will still return lists
+of cons cells (with the cdr set to nil) to allow uniform
+processing in our caller):
+
+    - :title : list of cons cells each of whose car is an
+      elfeed-score-title-rule struct & each of whose cdr is nil
+
+    - :content : similar list of cons cells containing
+      elfeed-score-content-rule structs
+
+    - :title-or-content: similar list of cons cells containing
+      elfeed-score-title-or-content-rule structs
+
+    - :feed : similar list of cons cells containing
+      elfeed-score-feed-rule structs
+
+    - :tag : similar list of cons cells containing
+      elfeed-score-tag-rule structs
+
+    - :adjust-tags : similar list of cons cells containing
+      elfeed-score-adjust-tags-rule structs
+
+    - :authors : similar list of cons cells containing
+      elfeed-score-authors-rule structs
+
+    - :link : similar list of cons cells containing
+      elfeed-score-link-rule structs
+
+    - :mark : score below which entries shall be marked read"
+
+  (let (mark titles feeds content tocs authors tags links adj-tags)
+    (dolist (raw-item sexp)
+      (let ((key  (car raw-item))
+            (rest (cdr raw-item)))
+        (cond
+         ((string= key "version")
+          (unless (eq 8 (car rest))
+            (error "Unsupported score file version %s" (car rest))))
+         ((string= key "title")
+          (setq
+           titles
+           (mapcar
+            (lambda (plist)
+              (list
+               (elfeed-score-serde-plist-to-struct plist :type 'elfeed-score-title-rule)))
+            rest)))
+         ((string= key "content")
+          (setq
+           content
+           (mapcar
+            (lambda (plist)
+              (list
+               (elfeed-score-serde-plist-to-struct plist :type 'elfeed-score-content-rule)))
+            rest)))
+         ((string= key "feed")
+          (setq
+           feeds
+           (mapcar
+            (lambda (plist)
+              (list
+               (elfeed-score-serde-plist-to-struct plist :type 'elfeed-score-feed-rule)))
+            rest)))
+         ((string= key "title-or-content")
+          (setq
+           tocs
+           (mapcar
+            (lambda (plist)
+              (list
+               (elfeed-score-serde-plist-to-struct
+                plist :type 'elfeed-score-title-or-content-rule)))
+            rest)))
+         ((string= key "authors")
+          (setq
+           authors
+           (mapcar
+            (lambda (plist)
+              (list
+               (elfeed-score-serde-plist-to-struct plist :type 'elfeed-score-authors-rule)))
+            rest)))
+         ((string= key "tag")
+          (setq
+           tags
+           (mapcar
+            (lambda (plist)
+              (list
+               (elfeed-score-serde-plist-to-struct plist :type 'elfeed-score-tag-rule)))
+            rest)))
+         ((string= key "link")
+          (setq
+           links
+           (mapcar
+            (lambda (plist)
+              (list
+               (elfeed-score-serde-plist-to-struct plist :type 'elfeed-score-link-rule)))
+            rest)))
+         ((string= key "adjust-tags")
+          (setq
+           adj-tags
+           (mapcar
+            (lambda (plist)
+              (list
+               (elfeed-score-serde-plist-to-struct plist :type 'elfeed-score-adjust-tags-rule)))
+            rest)))
+         ((eq key 'mark)
+          ;; set `mark' to (cdr rest) if (not mark) or (< mark (cdr rest))
+          (let ((rest (car rest)))
+            (if (or (not mark)
+                    (< mark rest))
+                (setq mark rest))))
+         (t
+          (error "Unknown score file key %s" key)))))
+    (list
+     :mark mark
+     :adjust-tags adj-tags
+     :feeds feeds
+     :titles titles
      :content content
      :title-or-content tocs
      :authors authors
@@ -737,8 +1056,10 @@ with the following keys:
       (elfeed-score-serde--parse-scoring-sexp-4 sexps))
      ((eq version 6)
       (elfeed-score-serde--parse-scoring-sexp-6 sexps))
-     ((eq version elfeed-score-serde-current-format)
+     ((eq version 7)
       (elfeed-score-serde--parse-scoring-sexp-7 sexps))
+     ((eq version elfeed-score-serde-current-format)
+      (elfeed-score-serde--parse-scoring-sexp-8 sexps))
      (t
       (error "Unknown version %s" version)))))
 
@@ -762,10 +1083,10 @@ into a property list with the following properties:
 
   (let* ((sexp
           (car
-		       (read-from-string
-		        (with-temp-buffer
-			        (insert-file-contents score-file)
-			        (buffer-string)))))
+           (read-from-string
+            (with-temp-buffer
+              (insert-file-contents score-file)
+              (buffer-string)))))
          (version (elfeed-score-serde--parse-version sexp)))
     (unless (eq version elfeed-score-serde-current-format)
       (let ((backup-name (format "%s.~%d~" score-file version)))
@@ -779,6 +1100,71 @@ a backup file will be left in %s."
           (message "Tried to backup your score file to %s but failed: %s."
                    backup-name (cadr data))))))
     (plist-put (elfeed-score-serde--parse-scoring-sexp sexp) :version version)))
+
+(defun elfeed-score-serde-load-score-file (score-file)
+  "Load SCORE-FILE into our internal scoring rules.
+
+Read SCORE-FILE, store scoring rules into
+`elfeed-score-serde-*-rules'.  If SCORE-FILE is in an archaic
+format (which is to say its version is less than
+`elfeed-score-serde-current-format') SCORE-FILE will be upgraded
+to the current format.  A backup will be left in the same
+directory, and the file will be re-written in the most recent
+format."
+
+  ;; The need to support all former serialization formats has
+  ;; complicated this method considerably.  We begin by parsing
+  ;; SCORE-FILE into a property list.  Outside of :version & :mark,
+  ;; each property is a list of cons cells.  This odd format is due to
+  ;; the fact that prior to score file version 8, rule stats were
+  ;; stored in the score file alongside the rules themselves.  Today,
+  ;; they're stored separately, but we have to handle both cases.
+
+  ;; Consequently, the parsing routine returns lists of cons cells. In
+  ;; all cases, the car of each cell will point to a scoring rule.  If
+  ;; SCORE-FILE is in a version less than 8, the cdr will point to the
+  ;; stats struct we created therefrom. In 8 & above, the cdr will
+  ;; just be nil.
+
+  (let ((entries (elfeed-score-serde--parse-score-file score-file)))
+    (setq elfeed-score-serde-score-mark             (plist-get entries :mark)
+          elfeed-score-serde-title-rules            (cl-mapcar #'car (plist-get entries :titles))
+          elfeed-score-serde-feed-rules             (cl-mapcar #'car (plist-get entries :feeds))
+          elfeed-score-serde-content-rules          (cl-mapcar #'car (plist-get entries :content))
+          elfeed-score-serde-title-or-content-rules (cl-mapcar #'car (plist-get entries :title-or-content))
+          elfeed-score-serde-tag-rules              (cl-mapcar #'car (plist-get entries :tag))
+          elfeed-score-serde-authors-rules          (cl-mapcar #'car (plist-get entries :authors))
+          elfeed-score-serde-link-rules             (cl-mapcar #'car (plist-get entries :link))
+          elfeed-score-serde-adjust-tags-rules      (cl-mapcar #'car (plist-get entries :adjust-tags)))
+    ;; & update the stats.
+    (cl-mapcar
+     (lambda (cell) (if (cdr cell) (elfeed-score-rule-stats-set (car cell) (cdr cell))))
+     (plist-get entries :titles))
+    (cl-mapcar
+     (lambda (cell) (if (cdr cell) (elfeed-score-rule-stats-set (car cell) (cdr cell))))
+     (plist-get entries :feeds))
+    (cl-mapcar
+     (lambda (cell) (if (cdr cell) (elfeed-score-rule-stats-set (car cell) (cdr cell))))
+     (plist-get entries :content))
+    (cl-mapcar
+     (lambda (cell) (if (cdr cell) (elfeed-score-rule-stats-set (car cell) (cdr cell))))
+     (plist-get entries :title-or-content))
+    (cl-mapcar
+     (lambda (cell) (if (cdr cell) (elfeed-score-rule-stats-set (car cell) (cdr cell))))
+     (plist-get entries :tag))
+    (cl-mapcar
+     (lambda (cell) (if (cdr cell) (elfeed-score-rule-stats-set (car cell) (cdr cell))))
+     (plist-get entries :authors))
+    (cl-mapcar
+     (lambda (cell) (if (cdr cell) (elfeed-score-rule-stats-set (car cell) (cdr cell))))
+     (plist-get entries :link))
+    (cl-mapcar
+     (lambda (cell) (if (cdr cell) (elfeed-score-rule-stats-set (car cell) (cdr cell))))
+     (plist-get entries :adjust-tags))
+    ;; If this is an upgrade in file format; re-write the score file in the new
+    ;; format right away (https://github.com/sp1ff/elfeed-score/issues/12)
+    (unless (eq elfeed-score-serde-current-format (plist-get entries :version))
+      (elfeed-score-serde-write-score-file score-file))))
 
 (define-obsolete-function-alias 'elfeed-score/write-score-file
   #'elfeed-score-serde-write-score-file "0.2.0" "Move to standard-compliant naming.")
@@ -800,19 +1186,19 @@ a backup file will be left in %s."
     ";;; Elfeed score file                                     -*- lisp -*-\n%s"
     (let ((print-level nil)
           (print-length nil))
-	    (pp-to-string
-	     (list
-	      (list 'version elfeed-score-serde-current-format)
+      (pp-to-string
+       (list
+        (list 'version elfeed-score-serde-current-format)
         (append
          '("title")
-	       (mapcar
+         (mapcar
           #'elfeed-score-serde-struct-to-plist
-	        elfeed-score-serde-title-rules))
+          elfeed-score-serde-title-rules))
         (append
          '("content")
-	       (mapcar
+         (mapcar
           #'elfeed-score-serde-struct-to-plist
-	        elfeed-score-serde-content-rules))
+          elfeed-score-serde-content-rules))
         (append
          '("title-or-content")
          (mapcar
@@ -825,19 +1211,19 @@ a backup file will be left in %s."
           elfeed-score-serde-tag-rules))
         (append
          '("authors")
-	       (mapcar
+         (mapcar
           #'elfeed-score-serde-struct-to-plist
-	        elfeed-score-serde-authors-rules))
+          elfeed-score-serde-authors-rules))
         (append
          '("feed")
-	       (mapcar
+         (mapcar
           #'elfeed-score-serde-struct-to-plist
-	        elfeed-score-serde-feed-rules))
+          elfeed-score-serde-feed-rules))
         (append
          '("link")
-	       (mapcar
+         (mapcar
           #'elfeed-score-serde-struct-to-plist
-	        elfeed-score-serde-link-rules))
+          elfeed-score-serde-link-rules))
         (list 'mark elfeed-score-serde-score-mark)
         (append
          '("adjust-tags")
@@ -846,26 +1232,29 @@ a backup file will be left in %s."
           elfeed-score-serde-adjust-tags-rules))))))
    nil score-file))
 
-(defun elfeed-score-serde-load-score-file (score-file)
-  "Load SCORE-FILE into our internal scoring rules.
+(defun elfeed-score-serde-cleanup-stats ()
+  "Remove any stats that are no longer relevant.
 
-Read SCORE-FILE, store scoring rules into
-`elfeed-score-serde-*-rules'."
+The hash table in which we store rule statistics can become
+out-of-date as the set of rules changes, in that the hash table
+may contain entries for rules that no longer exist.  That is
+generally harmless, inasmuch as it won't produce incorrect
+behavior.  Any operation that depends on the hash table having no
+stale entries, however, should invoke this method first to
+guarantee that.  Additionally, this method should be invoked
+periodically simply to prevent the hash table from growing
+without bound."
 
-  (let ((score-entries (elfeed-score-serde--parse-score-file score-file)))
-    (setq elfeed-score-serde-title-rules             (plist-get score-entries :titles)
-          elfeed-score-serde-feed-rules              (plist-get score-entries :feeds)
-          elfeed-score-serde-content-rules           (plist-get score-entries :content)
-          elfeed-score-serde-title-or-content-rules  (plist-get score-entries :title-or-content)
-          elfeed-score-serde-tag-rules               (plist-get score-entries :tag)
-          elfeed-score-serde-authors-rules           (plist-get score-entries :authors)
-          elfeed-score-serde-link-rules              (plist-get score-entries :link)
-          elfeed-score-serde-score-mark              (plist-get score-entries :mark)
-          elfeed-score-serde-adjust-tags-rules       (plist-get score-entries :adjust-tags))
-    ;; If this is an upgrade in file format; re-write the score file in the new
-    ;; format right away (https://github.com/sp1ff/elfeed-score/issues/12)
-    (unless (eq elfeed-score-serde-current-format (plist-get score-entries :version))
-      (elfeed-score-serde-write-score-file score-file))))
+  (elfeed-score-rule-stats-clean
+   (append
+    elfeed-score-serde-title-rules
+    elfeed-score-serde-feed-rules
+    elfeed-score-serde-authors-rules
+    elfeed-score-serde-content-rules
+    elfeed-score-serde-title-or-content-rules
+    elfeed-score-serde-tag-rules
+    elfeed-score-serde-link-rules
+    elfeed-score-serde-adjust-tags-rules)))
 
 (provide 'elfeed-score-serde)
 ;;; elfeed-score-serde.el ends here

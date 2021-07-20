@@ -1,0 +1,209 @@
+;;; elfeed-score-rule-stats.el --- Maintain statistics on `elfeed-score' rules  -*- lexical-binding: t -*-
+
+;; Copyright (C) 2021 Michael Herstine <sp1ff@pobox.com>
+
+;; This program is free software; you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
+
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+
+;; You should have received a copy of the GNU General Public License
+;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+;;; Commentary:
+
+;; This package maintains statistics on `elfeed-score' rules, such as
+;; how many times a particular rule has matched and when it last
+;; matched.  This information *used* to be a part of the rule itself,
+;; which led to a situation where state in memory could drift
+;; out-of-sync with that on disk (see
+;; <https://github.com/sp1ff/elfeed-score/issues/13> and
+;; <https://www.unwoundstack.com/blog/elfeed-score-state.html>).
+
+;; Today, we maintain that state here, in struct
+;; `elfeed-score-rule-stats'.  Instances of this struct are maintained
+;; in a hash table `elfeed-score-rule-stats--table' whose keys are the
+;; rules and whose values are `elfeed-score-rule-stats' instances.
+
+;; This neatly splits our state: the source-of-truth for rules is the
+;; usual score file, whereas the source-of-truth for stats is the
+;; in-memory hash table.  We write the hash table out to memory
+;; periodically for durability's sake, but here is no chance for the
+;; two to interfere with one another.
+
+;; The reader may be tempted to change the hash table to make the
+;; :weakness setting 'key, so as to automate clean-up when rules
+;; change.  That would be a mistake: that causes entries to be
+;; cleaned-up based on *physical* identity of the keys.  Imagine
+;; reading in a previously serialized hash table-- because no one else
+;; will have references to those particular rule instances, the table
+;; is liable to be cleaned up at any moment.
+
+;; This, of course, makes it incumbent on the user of this package to
+;; periodically clean-up the hash table (by invoking
+;; `elfeed-score-rule-stats-clean').
+
+;;; Code:
+(require 'elfeed)
+
+(require 'elfeed-score-log)
+
+(defcustom elfeed-score-rule-stats-file
+  (concat (expand-file-name user-emacs-directory) "elfeed.stats")
+  "Location at which to persist scoring rules statistics."
+  :group 'elfeed-score
+  :type 'file)
+
+(defcustom elfeed-score-rule-stats-dirty-threshold 64
+  "Maximum # of in-memory stats updates before flushing to file.
+
+Set this variable to nil to inhibit flushing when starting an
+operation that will update many statistics with a let form."
+  :group 'elfeed-score
+  :type 'integer)
+
+(defconst elfeed-score-rule-stats-current-format 1
+  "The most recent stats file format version.")
+
+(cl-defstruct (elfeed-score-rule-stats
+               ;; Disable the default ctor (the name violates Emacs
+               ;; package naming conventions)
+               (:constructor nil)
+               (:constructor elfeed-score-rule-stats--create (&key hits date)))
+  "Statistics regarding `elfeed-score' rules."
+  (hits 0 :type 'integer)
+  (date nil :type 'float))
+
+(defun elfeed-score-rule-stats--make-table ()
+  "Create an empty hash table mapping rules to statistics."
+  (make-hash-table :test 'equal :weakness nil))
+
+(defvar elfeed-score-rule-stats--table
+  (elfeed-score-rule-stats--make-table)
+  "Hash table mapping `elfeed-score' rules to stat instances.
+
+The hash table's :weakness is set to 'key, meaning that when
+rules disappear their hash table entries will be reaped
+automatically.")
+
+(defun elfeed-score-rule-stats-read (stats-file)
+  "Charge the in-memory stats from STATS-FILE."
+  (interactive
+   (list
+    (read-file-name "stats file: " nil elfeed-score-rule-stats-file t
+                    elfeed-score-rule-stats-file)))
+  (let* ((plist
+          (car
+           (read-from-string
+            (with-temp-buffer
+              (insert-file-contents stats-file)
+              (buffer-string)))))
+         (version (plist-get plist :version)))
+    (if (not (eq version elfeed-score-rule-stats-current-format))
+        (error "Unknown (or missing) stats file format version: %s" version))
+    (setq elfeed-score-rule-stats--table (plist-get plist :stats))
+    (elfeed-score-log 'info "Read stats for %d rules from disk."
+                      (hash-table-count elfeed-score-rule-stats--table))))
+
+(defvar elfeed-score-rule-stats--dirty-stats 0
+  "Current count of in-memory stats changes.")
+
+(defun elfeed-score-rule-stats-write (stats-file)
+  "Write the in-memory stats to STATS-FILE."
+  (interactive
+   (list
+    (read-file-name "stats file: " nil elfeed-score-rule-stats-file t
+                    elfeed-score-rule-stats-file)))
+  (write-region
+   (format
+    ";;; Elfeed score rule stats file DO NOT EDIT       -*- lisp -*-\n%s"
+    (let ((print-level nil)
+          (print-length nil))
+      (pp-to-string
+       (list
+        :version elfeed-score-rule-stats-current-format
+        :stats elfeed-score-rule-stats--table))))
+   nil stats-file)
+  (setq elfeed-score-rule-stats--dirty-stats 0)
+  (elfeed-score-log 'info "Wrote stats for %d rules to disk."
+                    (hash-table-count elfeed-score-rule-stats--table)))
+
+(defun elfeed-score-rule-stats-on-match (rule &optional time)
+  "Record the fact that RULE has matched at time TIME."
+
+  (let ((entry (or (gethash rule elfeed-score-rule-stats--table)
+                   (elfeed-score-rule-stats--create)))
+        (time (or time (float-time))))
+    (setf (elfeed-score-rule-stats-hits entry) (1+ (elfeed-score-rule-stats-hits entry)))
+    (setf (elfeed-score-rule-stats-date entry) time)
+    (puthash rule entry elfeed-score-rule-stats--table)
+    (setq elfeed-score-rule-stats--dirty-stats (1+ elfeed-score-rule-stats--dirty-stats))
+    ;; Time to flush in-memory stats to disk?
+    (if (and elfeed-score-rule-stats-dirty-threshold
+             (>= elfeed-score-rule-stats--dirty-stats
+                 elfeed-score-rule-stats-dirty-threshold)
+             elfeed-score-rule-stats-file)
+        (progn
+          (elfeed-score-rule-stats-write elfeed-score-rule-stats-file)))))
+
+;; I go back & forth on the contract for this method-- if `rule' isn't
+;; a key in the hash table, should I return nil, or return a
+;; default-constructed stats table? At this point, I'm going with nil,
+;; to be as explicit as possible.
+(defun elfeed-score-rule-stats-get (rule)
+  "Retrieve the statistics for RULE.
+
+Returns nil if RULE isn't in the table."
+  (gethash rule elfeed-score-rule-stats--table))
+
+(defun elfeed-score-rule-stats-get-with-default (rule)
+  "Retrieve the statistics for RULE.
+
+Returns a default-constructed stats object if RULE isn't in the table."
+  (or (gethash rule elfeed-score-rule-stats--table)
+      (elfeed-score-rule-stats--create)))
+
+(defun elfeed-score-rule-stats-set (rule stats)
+  "Record stats STATS for RULE."
+  (puthash rule stats elfeed-score-rule-stats--table))
+
+;; NB Unlike other scoring operations, we don't inhibit the periodic
+;; flushing of score files to disk during updates.  We could set
+;; `elfeed-score-rule-stats-dirty-threshold' to nil in
+;; `elfeed-update-init-hooks' & restore it here, but I'm uncomfortable
+;; with the risk that the update may be interrupted somehow, leaving
+;; `elfeed-score-rule-stats-dirty-threshold' "stuck" from then on.
+(defun elfeed-score-rule-stats-update-hook (_url)
+  "Write stats when an elfeed update is complete."
+  (when (and (eq (elfeed-queue-count-total) 0)
+             elfeed-score-rule-stats-file)
+    (elfeed-score-rule-stats-write elfeed-score-rule-stats-file)))
+
+(defun elfeed-score-rule-stats-clean (rules)
+  "Remove hash for anything not in RULES."
+
+  ;; This is not super efficient-- O(n^2). I suppose the in-memory
+  ;; datastructures are due for a re-think.
+
+  ;; Do this in two passes, since I'm not sure what will happen
+  ;; if I modify the hash table while traversing it.
+  (let ((to-be-killed))
+    (maphash
+     (lambda (key _value)
+       (unless (member key rules)
+         (setq to-be-killed (cons key to-be-killed))))
+     elfeed-score-rule-stats--table)
+    (elfeed-score-log 'info "Ejecting statistics for %d stale rules."
+                      (length to-be-killed))
+    (cl-mapcar
+     (lambda (key)
+       (remhash key elfeed-score-rule-stats--table))
+     to-be-killed)))
+
+(provide 'elfeed-score-rule-stats)
+;;; elfeed-score-rule-stats.el ends here

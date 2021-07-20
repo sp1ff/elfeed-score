@@ -19,3 +19,4 @@ smoke-test.el
 package-test.el
 upgrade-test.el
 package-test-341.el
+smoke-test-core.el

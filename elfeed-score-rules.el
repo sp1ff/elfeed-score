@@ -38,7 +38,7 @@
                ;; always make sense.
                (:constructor
                 elfeed-score-title-rule--create
-                (&key text value type date tags (hits 0) feeds
+                (&key text value type tags feeds
                       &aux
                       (_
                        (unless (and (stringp text) (> (length text) 0))
@@ -52,7 +52,7 @@
                                         (eq type 'R)
                                         (eq type 'w)
                                         (eq type 'W)))
-                         (error "Title type must be one of '{s,S,r,R,wW}"))))))
+                         (error "Title type must be one of '{s,S,r,R,w,W}"))))))
   "Rule for scoring against entry titles.
 
     - text :: The rule's match text; either a string or a regular
@@ -66,9 +66,6 @@
               case-insensitive and upper case sensitive.
               Defaults to r (case-insensitive regexp match)
 
-    - date :: time (in seconds since epoch) when this rule last
-              matched
-
     - tags :: cons cell of the form (A . B) where A is either t
               or nil and B is a list of symbols. The latter is
               interpreted as a list of tags scoping the rule and
@@ -77,9 +74,6 @@
               if either of tags a & b are present\". Making the
               first element nil means \"do not apply this rule if
               any of a and b are present\".
-
-    - hits :: the number of times since upgrading to score file
-              version 5 that this rule has been matched
 
     - feeds :: cons cell of the form (A . B) where A is either t
                or nil and B is a list of three-tuples. Each
@@ -104,7 +98,7 @@
                https://bar/com/feed\" Making the first element nil
                means \"do not apply this rule if the feed is
                either foo or bar\"."
-  text value type date tags (hits 0) feeds)
+  text value type tags feeds)
 
 (cl-defstruct (elfeed-score-title-explanation
                (:constructor nil)
@@ -147,7 +141,7 @@
                ;; always make sense.
                (:constructor
                 elfeed-score-feed-rule--create
-                (&key text value type attr date tags (hits 0)
+                (&key text value type attr tags
                       &aux
                       (_
                        (unless (and (stringp text) (> (length text) 0))
@@ -179,9 +173,6 @@
               case-insensitive and upper case sensitive.
               Defaults to r (case-insensitive regexp match)
 
-    - attr :: Defines the feed attribute against which matching
-              shall be performed: 't for title & 'u for URL.
-
     - date :: time (in seconds since epoch) when this rule last
               matched
 
@@ -192,11 +183,8 @@
               scoping. E.g. (t . (a b)) means \"apply this rule
               if either of tags a & b are present\". Making the
               first element nil means \"do not apply this rule if
-              any of a and b are present\".
-
-    - hits :: the number of times since upgrading to score file
-              version 5 that this rule has been matched"
-  text value type attr date tags (hits 0))
+              any of a and b are present\"."
+  text value type attr tags)
 
 (cl-defstruct (elfeed-score-feed-explanation
                (:constructor nil)
@@ -240,7 +228,7 @@
                ;; always make sense.
                (:constructor
                 elfeed-score-content-rule--create
-                (&key text value type date tags (hits 0) feeds
+                (&key text value type tags feeds
                       &aux
                       (_
                        (unless (and (stringp text) (> (length text) 0))
@@ -268,9 +256,6 @@
               means case-insensitive and upper case sensitive.
               Defaults to r (case-insensitive regexp match)
 
-    - date :: time (in seconds since epoch) when this rule last
-              matched
-
     - tags :: cons cell of the form (a . b) where A is either t
               or nil and B is a list of symbols. The latter is
               interpreted as a list of tags scoping the rule and
@@ -279,9 +264,6 @@
               if either of tags a & b are present\". Making the
               first element nil means \"do not apply this rule if
               any of a and b are present\".
-
-    - hits :: the number of times since upgrading to score file
-              version 5 that this rule has been matched
 
     - feeds :: cons cell of the form (A . B) where A is either t
                or nil and B is a list of three-tuples. Each
@@ -306,7 +288,7 @@
                https://bar/com/feed\" Making the first element nil
                means \"do not apply this rule if the feed is
                either foo or bar\"."
-  text value type date tags (hits 0) feeds)
+  text value type tags feeds)
 
 (cl-defstruct (elfeed-score-content-explanation
                (:constructor nil)
@@ -353,8 +335,7 @@
                ;; always make sense.
                (:constructor
                 elfeed-score-title-or-content-rule--create
-                (&key text title-value content-value type date tags
-                      (hits 0) feeds
+                (&key text title-value content-value type tags feeds
                       &aux
                       (_
                        (unless (and (stringp text) (> (length text) 0))
@@ -397,8 +378,6 @@ defining a single rule for both.
               case-insensitive and upper case sensitive.
               Defaults to r (case-insensitive regexp match)
 
-    - date :: time (in seconds since epoch) when this rule last matched
-
     - tags :: cons cell of the form (a . b) where A is either t
               or nil and B is a list of symbols. The latter is
               interpreted as a list of tags scoping the rule and
@@ -407,9 +386,6 @@ defining a single rule for both.
               if either of tags a & b are present\". Making the
               first nil element means \"do not apply this rule if
               any of a and b are present\".
-
-    - hits :: the number of times since upgrading to score file version
-              5 that this rule has been matched
 
     - feeds :: cons cell of the form (A . B) where A is either t
                or nil and B is a list of three-tuples. Each
@@ -434,7 +410,7 @@ defining a single rule for both.
                https://bar/com/feed\" Making the first element nil
                means \"do not apply this rule if the feed is
                either foo or bar\"."
-  text title-value content-value type date tags (hits 0) feeds)
+  text title-value content-value type tags feeds)
 
 (cl-defstruct (elfeed-score-title-or-content-explanation
                (:constructor nil)
@@ -487,7 +463,7 @@ defining a single rule for both.
                ;; always make sense.
                (:constructor
                 elfeed-score-authors-rule--create
-                (&key text value type date tags (hits 0) feeds
+                (&key text value type tags feeds
                       &aux
                       (_
                        (unless (and (stringp text) (> (length text) 0))
@@ -517,9 +493,6 @@ defining a single rule for both.
               case-insensitive and upper case sensitive.
               Defaults to r (case-insensitive regexp match)
 
-    - date :: time (in seconds since epoch) when this rule last
-              matched
-
     - tags :: cons cell of the form (a . b) where A is either t
               or nil and B is a list of symbols. The latter is
               interpreted as a list of tags scoping the rule and
@@ -528,9 +501,6 @@ defining a single rule for both.
               if either of tags a & b are present\". Making the
               first nil element means \"do not apply this rule if
               any of a and b are present\".
-
-    - hits :: the number of times since upgrading to score file
-              version 5 that this rule has been matched
 
     - feeds :: cons cell of the form (A . B) where A is either t
                or nil and B is a list of three-tuples. Each
@@ -555,7 +525,7 @@ defining a single rule for both.
                https://bar/com/feed\" Making the first element nil
                means \"do not apply this rule if the feed is
                either foo or bar\"."
-  text value type date tags (hits 0) feeds)
+  text value type tags feeds)
 
 (cl-defstruct (elfeed-score-authors-explanation
                (:constructor nil)
@@ -599,7 +569,7 @@ defining a single rule for both.
                ;; always make sense.
                (:constructor
                 elfeed-score-tag-rule--create
-                (&key tags value date (hits 0)
+                (&key tags value
                       &aux
                       (_
                        (unless (and (listp tags))
@@ -619,14 +589,8 @@ defining a single rule for both.
               if any of a and b are present\".
 
     - value :: integral value (positive or negative) by which to
-               adjust the entry score if this rule matches
-
-    - date :: time (in seconds since epoch) when this rule last
-              matched
-
-    - hits :: the number of times since upgrading to score file
-              version 5 that this rule has been matched"
-  tags value date (hits 0))
+               adjust the entry score if this rule matches"
+  tags value)
 
 (cl-defstruct (elfeed-score-tags-explanation
                (:constructor nil)
@@ -672,7 +636,7 @@ defining a single rule for both.
                ;; always make sense.
                (:constructor
                 elfeed-score-link-rule--create
-                (&key text value type date tags (hits 0) feeds
+                (&key text value type tags feeds
                       &aux
                       (_
                        (unless (and (stringp text) (> (length text) 0))
@@ -700,9 +664,6 @@ defining a single rule for both.
               case-insensitive and upper case sensitive.
               Defaults to r (case-insensitive regexp match)
 
-    - date :: time (in seconds since epoch) when this rule last
-              matched
-
     - tags :: cons cell of the form (A . B) where A is either t
               or nil and B is a list of symbols. The latter is
               interpreted as a list of tags scoping the rule and
@@ -711,9 +672,6 @@ defining a single rule for both.
               if either of tags a & b are present\". Making the
               first element nil means \"do not apply this rule if
               any of a and b are present\".
-
-    - hits :: the number of times since upgrading to score file
-              version 5 that this rule has been matched
 
     - feeds :: cons cell of the form (A . B) where A is either t
                or nil and B is a list of three-tuples. Each
@@ -738,7 +696,7 @@ defining a single rule for both.
                https://bar/com/feed\" Making the first element nil
                means \"do not apply this rule if the feed is
                either foo or bar\"."
-  text value type date tags (hits 0) feeds)
+  text value type tags feeds)
 
 (cl-defstruct (elfeed-score-link-explanation
                (:constructor nil)
@@ -773,7 +731,7 @@ defining a single rule for both.
                ;; always make sense.
                (:constructor
                 elfeed-score-adjust-tags-rule--create
-                (&key threshold tags date (hits 0)
+                (&key threshold tags
                       &aux
                       (_
                        (unless (listp threshold)
@@ -795,14 +753,8 @@ a cons cell"))))))
               is t, and this rule matches, the tags in B will be
               added to the entry. If A is nil & this rule
               matches, the list of tags in B shall be removed
-              from the entry.
-
-    - date :: time (in seconds since epoch) when this rule last
-              matched
-
-    - hits :: the number of times since upgrading to score file
-              version 5 that this rule has been matched"
-  threshold tags date (hits 0))
+              from the entry."
+  threshold tags)
 
 (defun elfeed-score-rules-pp-rule-to-string (rule)
   "Pretty-print RULE; return as a string."

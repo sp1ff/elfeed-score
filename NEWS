@@ -1,5 +1,14 @@
 elfeed-score News -- history of user-visible changes -*- outline -*-
 
+* Changes to elfeed-score 0.7.10
+
+** Bugfixes
+
+*** Rule statistics are now stored separately-- Issue #13
+
+Rule statistics (# hits, last match date) have been moved out of the rule structs and stored separately.  From now on, `elfeed-score' will only *read* the score file. This should eliminate the recurring "Hey where did my rule changes go?" questions.
+
+The stats will still be maintained, but will be written to a separate file ('elfeed.stats' by default).
 * Changes in elfeed-score 0.7.9
 
 ** Bugfixes

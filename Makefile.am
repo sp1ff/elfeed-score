@@ -1,5 +1,6 @@
 dist_lisp_LISP = elfeed-score.el elfeed-score-log.el \
 	elfeed-score-maint.el elfeed-score-rules.el \
+	elfeed-score-rule-stats.el \
 	elfeed-score-scoring.el elfeed-score-serde.el \
 	elfeed-score-pkg.el
 EXTRA_DIST = README.org

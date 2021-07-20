@@ -40,9 +40,10 @@
      (with-elfeed-score-test
       (let* ((elfeed-score-serde-title-rules
               (list (elfeed-score-title-rule--create :text "Bar" :value 1 :type 's)))
-             (score (elfeed-score-scoring-score-entry entry)))
+             (score (elfeed-score-scoring-score-entry entry))
+             (stats (elfeed-score-rule-stats-get (car elfeed-score-serde-title-rules))))
         (should (eq score 1))
-        (should (eq 1 (elfeed-score-title-rule-hits (car elfeed-score-serde-title-rules))))))
+        (should (eq 1 (elfeed-score-rule-stats-hits stats)))))
      ;; case-sensitive
      (with-elfeed-score-test
       (let* ((elfeed-score-serde-title-rules
@@ -145,9 +146,10 @@
        (with-elfeed-score-test
         (let* ((elfeed-score-serde-feed-rules
                 (list (elfeed-score-feed-rule--create :text "feed" :value 1 :type 's :attr 't)))
-               (score (elfeed-score-scoring-score-entry entry)))
+               (score (elfeed-score-scoring-score-entry entry))
+               (stats (elfeed-score-rule-stats-get (car elfeed-score-serde-feed-rules))))
           (should (eq score 1))
-          (should (eq 1 (elfeed-score-feed-rule-hits (car elfeed-score-serde-feed-rules))))))
+          (should (eq 1 (elfeed-score-rule-stats-hits stats)))))
        ;; case-sensitive
        (with-elfeed-score-test
         (let* ((elfeed-score-serde-feed-rules
@@ -243,9 +245,10 @@
         (let* ((elfeed-score-serde-content-rules
                 (list (elfeed-score-content-rule--create :text "lorem"
                                                          :value 1 :type 's)))
-               (score (elfeed-score-scoring-score-entry entry)))
+               (score (elfeed-score-scoring-score-entry entry))
+               (stats (elfeed-score-rule-stats-get (car elfeed-score-serde-content-rules))))
           (should (eq score 1))
-          (should (eq 1 (elfeed-score-content-rule-hits (car elfeed-score-serde-content-rules))))))
+          (should (eq 1 (elfeed-score-rule-stats-hits stats)))))
        ;; case-sensitive
        (with-elfeed-score-test
         (let* ((elfeed-score-serde-content-rules
@@ -293,9 +296,10 @@
                 (list (elfeed-score-title-or-content-rule--create
                        :text "lorem ipsum" :title-value 2 :content-value 1
                        :type 's)))
-               (score (elfeed-score-scoring-score-entry entry)))
+               (score (elfeed-score-scoring-score-entry entry))
+               (stats (elfeed-score-rule-stats-get (car elfeed-score-serde-title-or-content-rules))))
           (should (eq score 3))
-          (should (eq 2 (elfeed-score-title-or-content-rule-hits (car elfeed-score-serde-title-or-content-rules))))))
+          (should (eq 2 (elfeed-score-rule-stats-hits stats)))))
        ;; case-sensitive
        (with-elfeed-score-test
         (let* ((elfeed-score-serde-title-or-content-rules
@@ -333,8 +337,7 @@ tags scoping."
           (should (eq score 2))))))))
 
 (ert-deftest test-scoring-on-authors-1 ()
-  "Test scoring based on authors-- substring matching,
-tags scoping."
+  "Test scoring based on authors-- substring matching, tags scoping."
 
   (let* ((lorem-ipsum "Lorem ipsum dolor sit amet")
          (entry-title "Lorem ipsum"))
@@ -356,9 +359,10 @@ tags scoping."
                       (elfeed-score-authors-rule--create
                        :text "john hancock" :value 1
                        :type 's :tags '(t . (splat)))))
-               (score (elfeed-score-scoring-score-entry entry)))
+               (score (elfeed-score-scoring-score-entry entry))
+               (stats (elfeed-score-rule-stats-get (car elfeed-score-serde-authors-rules))))
           (should
-           (eq 1 (elfeed-score-authors-rule-hits (car elfeed-score-serde-authors-rules))))
+           (eq 1 (elfeed-score-rule-stats-hits stats)))
           (should (eq score 2))))))))
 
 (ert-deftest test-scoring-missed-match-20200217 ()
