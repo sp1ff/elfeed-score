@@ -3,7 +3,7 @@
 ;; Copyright (C) 2019-2021 Michael Herstine <sp1ff@pobox.com>
 
 ;; Author: Michael Herstine <sp1ff@pobox.com>
-;; Version: 0.7.10
+;; Version: 0.8.0
 ;; Package-Requires: ((emacs "26.1") (elfeed "3.3.0"))
 ;; Keywords: news
 ;; URL: https://github.com/sp1ff/elfeed-score
@@ -44,7 +44,7 @@
 (require 'elfeed-score-scoring)
 (require 'elfeed-score-maint)
 
-(defconst elfeed-score-version "0.7.10")
+(defconst elfeed-score-version "0.8.0")
 
 (defgroup elfeed-score nil
   "Gnus-style scoring for Elfeed entries."
@@ -185,8 +185,6 @@ region is not active, only the entry under point will be scored."
         (elfeed-score-rule-stats-dirty-threshold nil))
     (dolist (entry entries)
       (elfeed-score-scoring-score-entry entry))
-    (if elfeed-score-rule-stats-file
-        (elfeed-score-rule-stats-write elfeed-score-rule-stats-file))
     (elfeed-search-update t))
   ;; *Now* flush stats.
   (if elfeed-score-rule-stats-file
@@ -204,8 +202,6 @@ region is not active, only the entry under point will be scored."
   (let ((elfeed-score-rule-stats-dirty-threshold nil))
     (dolist (entry elfeed-search-entries)
       (elfeed-score-scoring-score-entry entry))
-    (if elfeed-score-rule-stats-file
-	      (elfeed-score-rule-stats-write elfeed-score-rule-stats-file))
     (elfeed-search-update t))
   ;; *Now* flush stats.
   (if elfeed-score-rule-stats-file

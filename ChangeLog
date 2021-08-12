@@ -1,10 +1,10 @@
-2021-08-04  Michael Herstine  <sp1ff@pobox.com>
+2021-08-12  Michael Herstine  <sp1ff@pobox.com>
 
-	Minor updates to the new stats management (added some logging, more testing &c).
+	Removed redudant writes of the stats file
 
-2021-08-02  Michael Herstine  <sp1ff@pobox.com>
+2021-08-05  Michael Herstine  <sp1ff@pobox.com>
 
-	Address issue #13-- split stats out into their own structure.
+	Fix issue #13-- split stats out into their own structure.
 	The scoring & reporting mechanics all use the new structure and new
 	unit tests have been written. The `hits` & `date` fields have been
 	removed from the rule structs & the score file version has been
