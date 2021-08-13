@@ -84,6 +84,31 @@
     (let ((s1 (elfeed-score-rule-stats-get r1)))
       (should s1))))
 
+(ert-deftest test-sexp-to-file ()
+  "Test `elfeed-score-rule-stats--sexp-to-file."
+
+  ;; Trivial test
+  (elfeed-score-rule-stats--sexp-to-file '(a b c) "test-sexp")
+  (should (file-exists-p "test-sexp"))
+  (let ((x
+         (car
+          (read-from-string
+           (with-temp-buffer
+             (insert-file-contents "test-sexp")
+             (buffer-string))))))
+    (should (equal x '(a b c))))
+  (add-name-to-file "test-sexp" "test-sexp-2")
+  (elfeed-score-rule-stats--sexp-to-file '(1 2 3) "test-sexp-2" ";; Hello\n")
+  (let ((x
+         (car
+          (read-from-string
+           (with-temp-buffer
+             (insert-file-contents "test-sexp")
+             (buffer-string))))))
+    (should (equal x '(1 2 3))))
+  (delete-file "test-sexp")
+  (delete-file "test-sexp-2"))
+
 (provide 'test-stats)
 
 ;;; test-stats.el ends here.

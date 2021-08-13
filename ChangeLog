@@ -1,3 +1,9 @@
+2021-08-13  Michael Herstine  <sp1ff@pobox.com>
+
+	Introduce `elfeed-score-rule-stats--sexp-to-file` for writing LISP S-expressions to file more safely.
+	Changed `elfeed-score-rule-stats-write` and
+	`elfeed-score-serde-write-score-file` to use it.
+
 2021-08-12  Michael Herstine  <sp1ff@pobox.com>
 
 	Removed redudant writes of the stats file
