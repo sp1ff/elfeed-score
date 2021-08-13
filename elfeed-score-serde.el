@@ -1181,56 +1181,52 @@ format."
    (list
     (read-file-name "score file: " nil elfeed-score-score-file t
                     elfeed-score-score-file)))
-  (write-region
-   (format
-    ";;; Elfeed score file                                     -*- lisp -*-\n%s"
-    (let ((print-level nil)
-          (print-length nil))
-      (pp-to-string
-       (list
-        (list 'version elfeed-score-serde-current-format)
-        (append
-         '("title")
-         (mapcar
-          #'elfeed-score-serde-struct-to-plist
-          elfeed-score-serde-title-rules))
-        (append
-         '("content")
-         (mapcar
-          #'elfeed-score-serde-struct-to-plist
-          elfeed-score-serde-content-rules))
-        (append
-         '("title-or-content")
-         (mapcar
-          #'elfeed-score-serde-struct-to-plist
-          elfeed-score-serde-title-or-content-rules))
-        (append
-         '("tag")
-         (mapcar
-          #'elfeed-score-serde-struct-to-plist
-          elfeed-score-serde-tag-rules))
-        (append
-         '("authors")
-         (mapcar
-          #'elfeed-score-serde-struct-to-plist
-          elfeed-score-serde-authors-rules))
-        (append
-         '("feed")
-         (mapcar
-          #'elfeed-score-serde-struct-to-plist
-          elfeed-score-serde-feed-rules))
-        (append
-         '("link")
-         (mapcar
-          #'elfeed-score-serde-struct-to-plist
-          elfeed-score-serde-link-rules))
-        (list 'mark elfeed-score-serde-score-mark)
-        (append
-         '("adjust-tags")
-         (mapcar
-          #'elfeed-score-serde-struct-to-plist
-          elfeed-score-serde-adjust-tags-rules))))))
-   nil score-file))
+  (elfeed-score-rule-stats--sexp-to-file
+   (list
+    (list 'version elfeed-score-serde-current-format)
+    (append
+     '("title")
+     (mapcar
+      #'elfeed-score-serde-struct-to-plist
+      elfeed-score-serde-title-rules))
+    (append
+     '("content")
+     (mapcar
+      #'elfeed-score-serde-struct-to-plist
+      elfeed-score-serde-content-rules))
+    (append
+     '("title-or-content")
+     (mapcar
+      #'elfeed-score-serde-struct-to-plist
+      elfeed-score-serde-title-or-content-rules))
+    (append
+     '("tag")
+     (mapcar
+      #'elfeed-score-serde-struct-to-plist
+      elfeed-score-serde-tag-rules))
+    (append
+     '("authors")
+     (mapcar
+      #'elfeed-score-serde-struct-to-plist
+      elfeed-score-serde-authors-rules))
+    (append
+     '("feed")
+     (mapcar
+      #'elfeed-score-serde-struct-to-plist
+      elfeed-score-serde-feed-rules))
+    (append
+     '("link")
+     (mapcar
+      #'elfeed-score-serde-struct-to-plist
+      elfeed-score-serde-link-rules))
+    (list 'mark elfeed-score-serde-score-mark)
+    (append
+     '("adjust-tags")
+     (mapcar
+      #'elfeed-score-serde-struct-to-plist
+      elfeed-score-serde-adjust-tags-rules)))
+   score-file
+   ";;; Elfeed score file                                     -*- lisp -*-\n"))
 
 (defun elfeed-score-serde-cleanup-stats ()
   "Remove any stats that are no longer relevant.

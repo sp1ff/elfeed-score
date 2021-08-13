@@ -110,6 +110,66 @@ automatically.")
     (elfeed-score-log 'info "Read stats for %d rules from disk."
                       (hash-table-count elfeed-score-rule-stats--table))))
 
+(defun elfeed-score-rule-stats--sexp-to-file (sexp file-name &optional preamble)
+  "Write SEXP to FILE-NAME with optional PREAMBLE.
+
+This is a utility function for persisting LISP S-expressions to
+file.  If possible, it will write SEXP to a temporary file in the
+same directory as FILE-NAME and then rename the temporary file to
+replace the original.  Since the move operation is usually atomic
+\(so long as both the source & the target are on the same volume)
+any error leaves the original untouched, and there is never any
+instant where the file is nonexistent.
+
+This implementation will first check that the target file is
+writable and signal an error if it is not.  Note that it will not
+attempt to make an existing file writable temporarily.
+
+It will then check that there is only one hard link to it.  If
+FILE-NAME has more than one name, then this implementation falls
+back to writing directly to the target file.
+
+Finally, it will write SEXP to a temporary file in the same
+directory and then rename it to FILENAME.  This implementation is
+heavily derivative of `basic-save-buffer-2'."
+
+  (if (not (file-writable-p file-name))
+	    (let ((dir (file-name-directory file-name)))
+	      (if (not (file-directory-p dir))
+	          (if (file-exists-p dir)
+		            (error "%s is not a directory" dir)
+		          (error "%s: no such directory" dir))
+	        (if (not (file-exists-p file-name))
+		          (error "Directory %s write-protected" dir)
+            (error "Attempt to save to a file that you aren't allowed to write")))))
+  (if (not
+       (and
+        (file-exists-p file-name)
+        (> (file-nlinks file-name) 1)))
+      ;; We're good-- write to temp file & rename
+      (let* ((dir (file-name-directory file-name))
+             (tempname
+              (make-temp-file
+			         (expand-file-name "tmp" dir))))
+        (write-region
+         (format
+          "%s%s"
+          (or preamble "")
+          (let ((print-level nil)
+                (print-length nil))
+            (pp-to-string sexp)))
+         nil tempname nil nil file-name)
+        (rename-file tempname file-name t))
+    ;; We're not good-- fall back to writing directly.
+    (write-region
+         (format
+          "%s%s"
+          (or preamble "")
+          (let ((print-level nil)
+                (print-length nil))
+            (pp-to-string sexp)))
+         nil file-name)))
+
 (defvar elfeed-score-rule-stats--dirty-stats 0
   "Current count of in-memory stats changes.")
 
@@ -119,16 +179,12 @@ automatically.")
    (list
     (read-file-name "stats file: " nil elfeed-score-rule-stats-file t
                     elfeed-score-rule-stats-file)))
-  (write-region
-   (format
-    ";;; Elfeed score rule stats file DO NOT EDIT       -*- lisp -*-\n%s"
-    (let ((print-level nil)
-          (print-length nil))
-      (pp-to-string
-       (list
-        :version elfeed-score-rule-stats-current-format
-        :stats elfeed-score-rule-stats--table))))
-   nil stats-file)
+  (elfeed-score-rule-stats--sexp-to-file
+   (list
+    :version elfeed-score-rule-stats-current-format
+    :stats elfeed-score-rule-stats--table)
+   stats-file
+   ";;; Elfeed score rule stats file DO NOT EDIT       -*- lisp -*-\n")
   (setq elfeed-score-rule-stats--dirty-stats 0)
   (elfeed-score-log 'info "Wrote stats for %d rules to disk."
                     (hash-table-count elfeed-score-rule-stats--table)))
