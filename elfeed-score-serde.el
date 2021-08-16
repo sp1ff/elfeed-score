@@ -1101,6 +1101,13 @@ a backup file will be left in %s."
                    backup-name (cadr data))))))
     (plist-put (elfeed-score-serde--parse-scoring-sexp sexp) :version version)))
 
+(defvar elfeed-score-serde--last-load-time nil
+  "Last score file load time.
+
+The time at which the in-memory rules were most recently loaded
+from score file, expressed as the number of seconds since Unix
+epoch (float).")
+
 (defun elfeed-score-serde-load-score-file (score-file)
   "Load SCORE-FILE into our internal scoring rules.
 
@@ -1164,7 +1171,11 @@ format."
     ;; If this is an upgrade in file format; re-write the score file in the new
     ;; format right away (https://github.com/sp1ff/elfeed-score/issues/12)
     (unless (eq elfeed-score-serde-current-format (plist-get entries :version))
-      (elfeed-score-serde-write-score-file score-file))))
+      (elfeed-score-serde-write-score-file score-file))
+    ;; Note the file modification time
+    (setq
+     elfeed-score-serde--last-load-time
+     (float-time (file-attribute-modification-time (file-attributes score-file))))))
 
 (define-obsolete-function-alias 'elfeed-score/write-score-file
   #'elfeed-score-serde-write-score-file "0.2.0" "Move to standard-compliant naming.")
@@ -1251,6 +1262,66 @@ without bound."
     elfeed-score-serde-tag-rules
     elfeed-score-serde-link-rules
     elfeed-score-serde-adjust-tags-rules)))
+
+(defun elfeed-score-serde-add-rule (rule)
+  "Add RULE to the current set of scoring rules.
+
+Add RULE to the appropriate list of scoring rules.  If
+`elfeed-score-serde-score-file' is non-nil, check that the file
+it names has not been modified since we last read it-- if it has
+been refuse to update the in-memory rule set.  Otherwise, update
+the in-memory rules & re-write the score file."
+
+  ;; If `elfeed-score-serde-score-file' is non-nil, check to see if
+  ;; it's been modified since we last loaded it.
+  (if (and elfeed-score-serde-score-file
+           elfeed-score-serde--last-load-time
+           (> elfeed-score-serde--last-load-time (float-time (current-time))))
+      (error
+       (concat "%s has been modified since last loaded; either re-load it or "
+               "move it out of the way")
+       elfeed-score-serde-score-file))
+  ;; Update the relevant list
+  (cl-typecase rule
+    (elfeed-score-title-rule
+     (setq
+      elfeed-score-serde-title-rules
+      (cons rule elfeed-score-serde-title-rules)))
+    (elfeed-score-feed-rule
+     (setq
+      elfeed-score-feed-rules
+      (cons rule elfeed-score-feed-rules)))
+    (elfeed-score-content-rule
+     (setq
+      elfeed-score-serde-content-rules
+      (cons rule elfeed-score-serde-content-rules)))
+    (elfeed-score-title-or-content-rule
+     (setq
+      elfeed-score-serde-title-or-content-rules
+      (cons rule elfeed-score-serde-title-or-content-rules)))
+    (elfeed-score-authors-rule
+     (setq
+      elfeed-score-serde-authors-rules
+      (cons rule elfeed-score-serde-authors-rules)))
+    (elfeed-score-tag-rule
+     (setq
+      elfeed-score-serde-tag-rules
+      (cons rule elfeed-score-serde-tag-rules)))
+    (elfeed-score-link-rule
+     (setq
+      elfeed-score-serde-link-rules
+      (cons rule elfeed-score-serde-link-rules)))
+    (t
+     (error "Unknown rule type %s" rule)))
+  ;; Now write out the new score file & update
+  ;; `elfeed-score-serde--last-load-time'.
+  (if elfeed-score-serde-score-file
+      (progn
+        (elfeed-score-serde-write-score-file elfeed-score-serde-score-file)
+        (setq
+         elfeed-score-serde--last-load-time
+         (float-time (file-attribute-modification-time
+                      (file-attributes elfeed-score-serde-score-file)))))))
 
 (provide 'elfeed-score-serde)
 ;;; elfeed-score-serde.el ends here

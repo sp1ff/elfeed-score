@@ -1,3 +1,7 @@
+2021-08-15  Michael Herstine  <sp1ff@pobox.com>
+
+	Added `elfeed-score-serde-add-rule`
+
 2021-08-13  Michael Herstine  <sp1ff@pobox.com>
 
 	Introduce `elfeed-score-rule-stats--sexp-to-file` for writing LISP S-expressions to file more safely.
