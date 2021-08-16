@@ -655,5 +655,48 @@ cf. `test-issue-12'."
                            nil))
                          :version 8)))))
 
+(ert-deftest test-add-rule ()
+  "Tests for `elfeed-score-serde-add-rule'."
+  (with-elfeed-score-test
+   (let* ((score-entries
+           '((version 8)
+             ("title"
+              (:text "hoping" :value -1000 :type s))
+             ("link"
+              (:text "foo" :value 100 :type r))))
+          (score-text (pp-to-string score-entries))
+          (score-file (make-temp-file "elfeed-score-test-" nil nil score-text))
+          (elfeed-score-serde-score-file score-file)
+          (last-read-time))
+     (elfeed-score-serde-load-score-file elfeed-score-serde-score-file)
+     (setq last-read-time elfeed-score-serde--last-load-time)
+     (sleep-for 0.25)
+     (elfeed-score-serde-add-rule
+      (elfeed-score-title-rule--create
+       :text "paradise found" :value 150 :type 's))
+     (should (< last-read-time elfeed-score-serde--last-load-time))
+     (should
+      (equal
+       elfeed-score-serde-title-rules
+       (list
+        (elfeed-score-title-rule--create
+         :text "paradise found" :value 150 :type 's)
+        (elfeed-score-title-rule--create
+         :text "hoping" :value -1000 :type 's)))))))
+
+(ert-deftest test-add-rules-no-file ()
+  "Tests for `elfeed-score-serde-add-rule' with no score file."
+  (with-elfeed-score-test
+   (let ((elfeed-score-serde-score-file nil))
+     (elfeed-score-serde-add-rule
+      (elfeed-score-title-rule--create
+       :text "paradise found" :value 150 :type 's))
+     (should
+      (equal
+       elfeed-score-serde-title-rules
+       (list
+        (elfeed-score-title-rule--create
+         :text "paradise found" :value 150 :type 's)))))))
+
 (provide 'test-serde)
 ;;; test-serde.el ends here

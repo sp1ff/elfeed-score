@@ -1,5 +1,10 @@
 elfeed-score News -- history of user-visible changes -*- outline -*-
 
+* Changes to elfeed-score 0.8.2
+
+** New Features
+
+*** Added `elfeed-score-serde-add-rule'
 * Changes to elfeed-score 0.8.1
 
 ** Bugfixes
