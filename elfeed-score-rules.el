@@ -104,7 +104,7 @@
                (:constructor nil)
                (:constructor elfeed-score-make-title-explanation))
   "An explanation of a title rule match."
-  matched-text rule)
+  matched-text rule index)
 
 (define-obsolete-function-alias 'elfeed-score-pp-title-explanation
   #'elfeed-score-rules-pp-title-explanation "0.7.0"
@@ -190,7 +190,7 @@
                (:constructor nil)
                (:constructor elfeed-score-make-feed-explanation))
   "An explanation of a feed rule match"
-  matched-text rule)
+  matched-text rule index)
 
 (define-obsolete-function-alias 'elfeed-score-pp-feed-explanation
   #'elfeed-score-rules-pp-feed-explanation "0.7.0"
@@ -294,7 +294,7 @@
                (:constructor nil)
                (:constructor elfeed-score-make-content-explanation))
   "An explanation of a matched content rule."
-  matched-text rule)
+  matched-text rule index)
 
 (define-obsolete-function-alias 'elfeed-score-content-explanation-contrib
   #'elfeed-score-rules-content-explanation-contrib "0.7.0"
@@ -416,7 +416,7 @@ defining a single rule for both.
                (:constructor nil)
                (:constructor elfeed-score-make-title-or-content-explanation))
   "An explanation of a title-or-content rule match."
-  matched-text rule attr)
+  matched-text rule attr index)
 
 (define-obsolete-function-alias
   'elfeed-score-pp-title-or-content-explanation
@@ -531,7 +531,7 @@ defining a single rule for both.
                (:constructor nil)
                (:constructor elfeed-score-make-authors-explanation))
   "An explanation of an authors rule match"
-  matched-text rule)
+  matched-text rule index)
 
 (define-obsolete-function-alias 'elfeed-score-pp-authors-explanation
   #'elfeed-score-rules-pp-authors-explanation "0.7.0"
@@ -596,7 +596,7 @@ defining a single rule for both.
                (:constructor nil)
                (:constructor elfeed-score-make-tags-explanation))
   "An explanation of a tags rule match."
-  rule)
+  rule index)
 
 (define-obsolete-function-alias
   'elfeed-score-pp-tags-explanation
@@ -702,7 +702,7 @@ defining a single rule for both.
                (:constructor nil)
                (:constructor elfeed-score-make-link-explanation))
   "An explanation of a link rule match."
-  matched-text rule)
+  matched-text rule index)
 
 (defun elfeed-score-rules-pp-link-explanation (match)
   "Pretty-print link explanation MATCH to string."
@@ -778,6 +778,24 @@ a cons cell"))))))
      (format "adjust-tags{%s}" (prin1-to-string
                                 (elfeed-score-adjust-tags-rule-tags rule))))
     (otherwise (error "Don't know how to pretty-print %S" rule))))
+
+(defun elfeed-score-rules-index-for-explanation (exp)
+  "Retrieve the index field for EXP."
+  (cl-typecase exp
+    (elfeed-score-title-explanation
+     (elfeed-score-title-explanation-index exp))
+    (elfeed-score-feed-explanation
+     (elfeed-score-feed-explanation-index exp))
+    (elfeed-score-title-or-content-explanation
+     (elfeed-score-title-or-content-explanation-index exp))
+    (elfeed-score-content-explanation
+     (elfeed-score-content-explanation-index exp))
+    (elfeed-score-authors-explanation
+     (elfeed-score-authors-explanation-index exp))
+    (elfeed-score-tags-explanation
+     (elfeed-score-tags-explanation-index exp))
+    (elfeed-score-link-explanation
+     (elfeed-score-link-explanation-index exp))))
 
 (provide 'elfeed-score-rules)
 ;;; elfeed-score-rules.el ends here
