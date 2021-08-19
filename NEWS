@@ -1,5 +1,13 @@
 elfeed-score News -- history of user-visible changes -*- outline -*-
 
+* Changes to elfeed-score 0.8.3
+
+** New Features
+
+*** Spiff-up the explanations buffer
+
+    1. introduce elfeed-score-scoring-explain-text-face
+    2. make the list of rules clickable; clicking-on or hitting enter when in a rule match will open the score file and move point to that rule
 * Changes to elfeed-score 0.8.2
 
 ** New Features

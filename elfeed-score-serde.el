@@ -1180,6 +1180,40 @@ format."
 (define-obsolete-function-alias 'elfeed-score/write-score-file
   #'elfeed-score-serde-write-score-file "0.2.0" "Move to standard-compliant naming.")
 
+(defun elfeed-score-serde-tag-for-rule (rule)
+  "Return the score file tag corresponding to RULE."
+  (cl-typecase rule
+    (elfeed-score-title-rule            "title")
+    (elfeed-score-feed-rule             "feed")
+    (elfeed-score-content-rule          "content")
+    (elfeed-score-title-or-content-rule "title-or-content")
+    (elfeed-score-authors-rule          "authors")
+    (elfeed-score-tag-rule              "tag")
+    (elfeed-score-link-rule             "link")
+    (t
+     (error "Unknown rule type %s" rule))))
+
+(defun elfeed-score-serde-tag-for-explanation (explanation)
+  "Return the score file tag corresponding to EXPLANATION."
+  (cl-typecase explanation
+    (elfeed-score-title-explanation            "title")
+    (elfeed-score-feed-explanation             "feed")
+    (elfeed-score-content-explanation          "content")
+    (elfeed-score-title-or-content-explanation "title-or-content")
+    (elfeed-score-authors-explanation          "authors")
+    (elfeed-score-tags-explanation             "tag")
+    (elfeed-score-link-explanation             "link")
+    (t
+     (error "Unknown explanation type %s" explanation))))
+
+(defun elfeed-score-serde-score-file-dirty-p ()
+  "Return t if the score file has been modified since last loaded."
+  (and elfeed-score-serde-score-file
+       (> (float-time
+           (file-attribute-modification-time
+            (file-attributes elfeed-score-serde-score-file)))
+          (or elfeed-score-serde--last-load-time 0.0))))
+
 (define-obsolete-function-alias
   'elfeed-score-write-score-file
   #'elfeed-score-serde-write-score-file

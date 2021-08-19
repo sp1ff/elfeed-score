@@ -67,15 +67,18 @@
           (should
            (string=
             text
-            "\"bar\" matches 7 rules for a score of 7:
-title{bar}: \"bar\": 1
-feed{t/foo}: \"foo\": 1
-content{lorem}: \"Lorem\": 1
-title-or-content{t/bar}: \"bar\": 1
-authors{hancock} \"Hancock\": 1
-tags{(b c d)}: 1
-link{foo}: \"foo\": 1
-"))))))))
+            (concat
+             (propertize "bar" 'face 'elfeed-score-scoring-explain-text-face)
+             " matches 7 rules for a score of 7:
+(NB your score file is dirty; these matches correspond to the rules currently in-memory)
+    1. title{bar}: \"bar\": 1
+    2. feed{t/foo}: \"foo\": 1
+    3. content{lorem}: \"Lorem\": 1
+    4. title-or-content{t/bar}: \"bar\": 1
+    5. authors{hancock} \"Hancock\": 1
+    6. tags{(b c d)}: 1
+    7. link{foo}: \"foo\": 1
+")))))))))
 
 (provide 'test-explanations)
 

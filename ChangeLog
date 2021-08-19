@@ -1,3 +1,11 @@
+2021-08-18  Michael Herstine  <sp1ff@pobox.com>
+
+	Spiff-up the explanations buffer.
+	    1. introduce elfeed-score-scoring-explain-text-face
+	    2. make the list of rules clickable; clicking-on or hitting
+	       enter when in a rule match will open the score file and
+	       move point to that rule
+
 2021-08-15  Michael Herstine  <sp1ff@pobox.com>
 
 	Added `elfeed-score-serde-add-rule`
