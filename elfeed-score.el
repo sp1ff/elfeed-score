@@ -3,7 +3,7 @@
 ;; Copyright (C) 2019-2021 Michael Herstine <sp1ff@pobox.com>
 
 ;; Author: Michael Herstine <sp1ff@pobox.com>
-;; Version: 0.8.3
+;; Version: 0.8.4
 ;; Package-Requires: ((emacs "26.1") (elfeed "3.3.0"))
 ;; Keywords: news
 ;; URL: https://github.com/sp1ff/elfeed-score
@@ -44,7 +44,7 @@
 (require 'elfeed-score-scoring)
 (require 'elfeed-score-maint)
 
-(defconst elfeed-score-version "0.8.3")
+(defconst elfeed-score-version "0.8.4")
 
 (defgroup elfeed-score nil
   "Gnus-style scoring for Elfeed entries."
@@ -195,17 +195,8 @@ region is not active, only the entry under point will be scored."
 
 (defun elfeed-score-score-search ()
   "Score the current set of search results."
-
   (interactive)
-
-  ;; Inhibit automatic flushing of rule stats to file...
-  (let ((elfeed-score-rule-stats-dirty-threshold nil))
-    (dolist (entry elfeed-search-entries)
-      (elfeed-score-scoring-score-entry entry))
-    (elfeed-search-update t))
-  ;; *Now* flush stats.
-  (if elfeed-score-rule-stats-file
-      (elfeed-score-rule-stats-write elfeed-score-rule-stats-file)))
+  (elfeed-score-scoring-score-search))
 
 (defvar elfeed-score-map
   (let ((map (make-sparse-keymap)))

@@ -1,3 +1,17 @@
+2021-08-21  Michael Herstine  <sp1ff@pobox.com>
+
+	Add interactive scoring.
+	This commit adds a new command `elfeed-score-serde-add-title-rule`
+	which will add a new "title" scoring rule based on the current
+	Elfeed entry.
+
+	This is the first commit in support of this feature; later commits
+	will add additional commands as well as docs.
+
+2021-08-19  Michael Herstine  <sp1ff@pobox.com>
+
+	adding a workflow for making alpha releases on the 0.8 branch
+
 2021-08-18  Michael Herstine  <sp1ff@pobox.com>
 
 	Spiff-up the explanations buffer.
