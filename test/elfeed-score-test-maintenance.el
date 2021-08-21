@@ -24,6 +24,8 @@
 ;;; Code:
 (require 'elfeed-score-maint)
 
+(require 'elfeed-score-tests)
+
 (ert-deftest elfeed-score-test-getting-date-or-hits ()
   "Test retrieving dates & hit counts."
 
@@ -57,3 +59,4 @@
 (provide 'elfeed-score-test-maintenace)
 
 ;;; elfeed-score-test-maintenance.el ends here
+    

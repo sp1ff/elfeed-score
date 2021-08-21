@@ -1,5 +1,10 @@
 elfeed-score News -- history of user-visible changes -*- outline -*-
 
+* CHanges to elfeed-score 0.8.4
+
+** New Features
+
+*** Add `elfeed-score-serde-add-title-rule`
 * Changes to elfeed-score 0.8.3
 
 ** New Features

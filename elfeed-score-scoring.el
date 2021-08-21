@@ -749,5 +749,17 @@ within the group named by TAG in the score file."
   (forward-sexp (1+ index))
   (back-to-indentation))
 
+(defun elfeed-score-scoring-score-search ()
+  "Score the current set of search results."
+
+  ;; Inhibit automatic flushing of rule stats to file...
+  (let ((elfeed-score-rule-stats-dirty-threshold nil))
+    (dolist (entry elfeed-search-entries)
+      (elfeed-score-scoring-score-entry entry))
+    (elfeed-search-update t))
+  ;; *Now* flush stats.
+  (if elfeed-score-rule-stats-file
+      (elfeed-score-rule-stats-write elfeed-score-rule-stats-file)))
+
 (provide 'elfeed-score-scoring)
 ;;; elfeed-score-scoring.el ends here

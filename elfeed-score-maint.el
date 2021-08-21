@@ -211,5 +211,125 @@ categories will be displayed."
 	         (error "Invalid argument %S" category)))))
     (elfeed-score-maint--display-rules-by-match-hits rules "elfeed-score Rules by Match Hits")))
 
+(defcustom elfeed-score-maint-default-match-type 's
+  "Default match type for interactively added rules.
+
+Must be one of 's, 'S, 'r, 'R, 'w or 'W, for case-insensitive
+substring match, case-sensitive substring, regexp or whole-word
+match, respectively.  Set to nil to always prompt."
+  :group 'elfeed-score
+  :type '(choice (const s) (const S) (const r) (const R) (const w) (const W)))
+
+(defcustom elfeed-score-maint-default-scope-to-feed 'no
+  "Control whether intreractively added rules are scoped to the current feed.
+
+Must  be one of 'yes, 'no, or 'ask."
+  :group 'elfeed-score
+  :type '(choice (const yes) (const no) (const ask)))
+
+(defcustom elfeed-score-maint-default-scope-to-tags 'no
+  "Control whether intreractively added rules are scoped to the current tagset.
+
+Must  be one of 'yes, 'no, or 'ask."
+  :group 'elfeed-score
+  :type '(choice (const yes) (const no) (const ask)))
+
+(defun elfeed-score-maint-add-title-rule (value &optional ignore-defaults _called-interactively)
+  "Add a title rule with VALUE, possibly IGNORE-DEFAULTS.
+
+Interactively add a new title rule based on the current Elfeed
+entry.  This defun can be interactively invoked in a few ways:
+
+    No prefix argument: the match value & text must be supplied
+    interactively.  Other rule attributes will be gathered
+    according to their corresponding \"default\" customization
+    variables (on which more below).
+
+    A numeric prefix argument will be interpreted as the match
+    value; the match text must be supplied interactively.  Other
+    rule attributes will be gathered according to their
+    corresponding \"default\" customization variables (on which
+    more below).
+
+    One or more \\[C-]u prefix arguments; the match value & text
+    must be supplied interactively. All defaults will be ignored
+    & the other rule attributes must be interactively entered.
+
+If called non-interactively, defaults will be respected, except
+that anything set to 'ask will be interpreted as 'no.  The entry
+title will be used as the match text.  Consider calling
+`elfeed-score-serde-add-rule' directly, in that case."
+
+  (interactive
+   (append
+    (cond
+     ;; NB (listp nil) => t, so this conditional has to appear before listp
+     ;; Could still be '-... what to do with that?
+     ((or (not current-prefix-arg) (eq current-prefix-arg '-))
+      (list
+       (read-number "Value: " (prefix-numeric-value current-prefix-arg))
+       nil))
+     ((listp current-prefix-arg)
+      (list
+       (read-number "Value: " (prefix-numeric-value current-prefix-arg))
+       t))
+     ((integerp current-prefix-arg)
+      (list current-prefix-arg nil)))
+    (list (not (or executing-kbd-macro noninteractive)))))
+
+  (if (elfeed-score-serde-score-file-dirty-p)
+      (if (and _called-interactively
+               (yes-or-no-p "The score file has been modified since last"
+                            "loaded; reload now? "))
+          (elfeed-score-serde-load-score-file elfeed-score-serde-score-file)))
+
+  (let ((entry (or elfeed-show-entry (elfeed-search-selected t))))
+    (unless entry
+      (error "No Elfeed entry here?"))
+    (let* ((title (elfeed-entry-title entry))
+           (match-text
+            (if _called-interactively
+                (read-string "Match text: " title)
+              title))
+           (match-type
+            (if (or ignore-defaults (not _called-interactively))
+                elfeed-score-maint-default-match-type
+              (completing-read
+               "Match type: "
+               '(("s" s) ("S" S) ("r" r) ("R" R) ("w" w) ("W" W)) nil t "s")))
+           (scope-to-feed
+            (if (or ignore-defaults (not _called-interactively))
+                (eq elfeed-score-maint-default-scope-to-feed 'yes)
+              (y-or-n-p "Scope this rule to this entry's feed? ")))
+           (scope-to-tags
+            (if (or ignore-defaults (not _called-interactively))
+                (eq elfeed-score-maint-default-scope-to-tags 'yes)
+              (cl-mapcar
+               #'intern
+               (split-string
+                (read-from-minibuffer
+	               "Scope by tags (clear to not scope): "
+	               (string-join
+		              (cl-mapcar
+		               (lambda (x) (pp-to-string x))
+		               (elfeed-entry-tags entry))
+		              " "))))))
+           (rule
+             (elfeed-score-title-rule--create
+              :text match-text
+              :value value
+              :type (intern match-type)
+              :tags
+              (if scope-to-tags
+                  (cons t scope-to-tags))
+              :feeds
+              (if scope-to-feed
+                  (cons
+                   t
+                   (list
+                    (list 'u 'S (elfeed-entry-feed-id entry))))))))
+      (elfeed-score-serde-add-rule rule)))
+  (elfeed-score-scoring-score-search))
+
 (provide 'elfeed-score-maint)
 ;;; elfeed-score-maint.el ends here

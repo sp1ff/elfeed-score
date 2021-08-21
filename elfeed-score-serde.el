@@ -1207,7 +1207,9 @@ format."
      (error "Unknown explanation type %s" explanation))))
 
 (defun elfeed-score-serde-score-file-dirty-p ()
-  "Return t if the score file has been modified since last loaded."
+  "Return t if the score file has been modified since last loaded.
+
+If the score file has never been loaded this function will return t."
   (and elfeed-score-serde-score-file
        (> (float-time
            (file-attribute-modification-time
@@ -1308,12 +1310,11 @@ the in-memory rules & re-write the score file."
 
   ;; If `elfeed-score-serde-score-file' is non-nil, check to see if
   ;; it's been modified since we last loaded it.
-  (if (and elfeed-score-serde-score-file
-           elfeed-score-serde--last-load-time
-           (> elfeed-score-serde--last-load-time (float-time (current-time))))
+  (if (elfeed-score-serde-score-file-dirty-p)
       (error
-       (concat "%s has been modified since last loaded; either re-load it or "
-               "move it out of the way")
+       (concat "%s has been modified since last loaded (or was never loaded "
+               "in the first place); either re-load it or move it out of "
+               "the way")
        elfeed-score-serde-score-file))
   ;; Update the relevant list
   (cl-typecase rule
