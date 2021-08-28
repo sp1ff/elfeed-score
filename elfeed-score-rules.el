@@ -173,8 +173,9 @@
               case-insensitive and upper case sensitive.
               Defaults to r (case-insensitive regexp match)
 
-    - date :: time (in seconds since epoch) when this rule last
-              matched
+    - attr :: feed attribute against which to match text; may be
+              one of 't, 'u or 'a (for title, URL, or author,
+              resp.)
 
     - tags :: cons cell of the form (a . b) where A is either t
               or nil and B is a list of symbols. The latter is

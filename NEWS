@@ -1,6 +1,11 @@
 elfeed-score News -- history of user-visible changes -*- outline -*-
 
-* CHanges to elfeed-score 0.8.4
+* Changes to elfeed-score 0.8.5
+
+** New Features
+
+*** Add a full suite of interactive scoring rules
+* Changes to elfeed-score 0.8.4
 
 ** New Features
 

@@ -1090,6 +1090,7 @@ writing. Working score files tend to grow much larger than this
 @menu
 * Startup in Detail::
 * Asking elfeed-score How It's Scoring an Entry::
+* Adding Rules Interactively::
 * Rule Maintenance::
 @end menu
 
@@ -1150,6 +1151,118 @@ last-matched timestamp); instead, it will provide a human-readable
 description of what would happen if the entry were to be scored,
 presumably for purposes of debugging or understanding of scoring
 rules.
+@end deffn
+
+@code{elfeed-score-scoring-explain-entry} will list the matching rules
+in a new buffer.  Clicking on or hitting Enter on a rule will open up
+the score file & position point on the corresponding rule definition.
+
+@node Adding Rules Interactively
+@section Adding Rules Interactively
+
+Initially, elfeed-score rules were hand-authored by the user in
+@ref{The Score File}; the workflow being:
+
+@enumerate
+
+@item
+Hand edit the score file.
+
+@item
+Re-load the score file via @command{elfeed-score-load-score-file}.
+
+@item
+Re-score the current search via @command{elfeed-score-score-search}.
+
+@end enumerate
+
+The 0.8 releases introduced interactive scoring.  In the Elfeed search
+buffer, or the Elfeed show buffer, one can now add a new rule based on
+the current entry through an Emacs command
+@code{elfeed-score-main-add-*-rule}.
+
+Most rules have a number of attributes, and it would be onerous to
+have to supply them each time one of these commands is invoked.
+Therefore these commands obey a set of customizable variables that
+will, in the general case, supply defaults:
+
+@defvr {User Option} elfeed-score-maint-default-match-type
+The default match type for interactively added rules (one of 's, 'S,
+'r, 'R, 'w or 'W).
+@end defvr
+
+@defvr {User Option} elfeed-score-maint-default-scope-to-feed
+Governs whether the interactively added rule is scoped to the entry's
+feed.  May be one of 'yes, 'no or 'ask.
+@end defvr
+
+@defvr {User Option} elfeed-score-maint-default-scope-to-tags
+Governs whether the interactively added rule is scoped to the entry's
+tags (when applicable).  May be one of 'yes, 'no or 'ask.
+@end defvr
+
+@defvr {User Option} elfeed-score-maint-default-feed-attribute
+Default feed attribute against which an interactively added feed rule
+will be matched.  May be one of 't, 'u, or 'a for title, URL or
+author, respectively.
+@end defvr
+
+These rules can be invoked in a few ways:
+
+@itemize
+
+@item
+With no prefix argument: the match value & text are supplied
+interactively.  Other rule attributes will be gathered according to
+their ``default'' user options.
+
+@item
+With a numeric prefix argument; the prefix argument's value will be
+used as the match value.  The match text must still be entered
+interactively.  Other rule attributes will be gathered according to
+their corresponding ``default'' user options (on which more below).
+
+@item
+One or more universal-arguments: the match values & text must be
+supplied interactively.  All defaults will be ignored and the other
+rule attributes can be entered interactively.
+
+@end itemize
+
+The functions for adding rules interactively:
+
+@deffn Command elfeed-score-maint-add-title-rule value
+Add a title rule based on the current entry.  The default value for
+the match text will be the current entry's title.
+@end deffn
+
+@deffn Command elfeed-score-maint-add-content-rule value
+Add a content rule based on the current entry.  This may only be
+invoked when displaying an Elfeed entry.  If the region is active, the
+default match text will be the selection.  Otherwise, the default
+match text will be the entry's contents.
+@end deffn
+
+@deffn Command elfeed-score-maint-add-feed-rule value
+Add a feed rule based on the current entry.
+@end deffn
+
+@deffn Command elfeed-score-maint-add-authors-rule value
+Add an authors rule based on the current entry.
+@end deffn
+
+@deffn Command elfeed-score-maint-add-tag-rule value
+Add a tag rule based on the current entry.
+@end deffn
+
+@deffn Command elfeed-score-maint-add-link-rule value
+Add a link rule based on the current entry.
+@end deffn
+
+@deffn Command elfeed-score-maint-add-title-or-content-rule title-value content-value
+Add a title-or-content rule based on the current entry.  If displaying
+an entry, and the region is active, the default match text will be the
+selection.  Otherwise, it will be the entry text.
 @end deffn
 
 @node Rule Maintenance
