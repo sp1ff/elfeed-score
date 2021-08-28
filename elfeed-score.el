@@ -3,7 +3,7 @@
 ;; Copyright (C) 2019-2021 Michael Herstine <sp1ff@pobox.com>
 
 ;; Author: Michael Herstine <sp1ff@pobox.com>
-;; Version: 0.8.4
+;; Version: 0.8.5
 ;; Package-Requires: ((emacs "26.1") (elfeed "3.3.0"))
 ;; Keywords: news
 ;; URL: https://github.com/sp1ff/elfeed-score
@@ -44,7 +44,7 @@
 (require 'elfeed-score-scoring)
 (require 'elfeed-score-maint)
 
-(defconst elfeed-score-version "0.8.4")
+(defconst elfeed-score-version "0.8.5")
 
 (defgroup elfeed-score nil
   "Gnus-style scoring for Elfeed entries."
@@ -208,7 +208,14 @@ region is not active, only the entry under point will be scored."
       (define-key map "s" #'elfeed-score-score)
       (define-key map "v" #'elfeed-score-score-search)
       (define-key map "w" #'elfeed-score-serde-write-score-file)
-      (define-key map "x" #'elfeed-score-explain)))
+      (define-key map "x" #'elfeed-score-explain)
+      (define-key map "at" #'elfeed-score-maint-add-title-rule)
+      (define-key map "ac" #'elfeed-score-maint-add-content-rule)
+      (define-key map "af" #'elfeed-score-maint-add-feed-rule)
+      (define-key map "aa" #'elfeed-score-maint-add-authors-rule)
+      (define-key map "aa" #'elfeed-score-maint-add-tag-rule)
+      (define-key map "al" #'elfeed-score-maint-add-link-rule)
+      (define-key map "ao" #'elfeed-score-maint-add-title-or-content-rule)))
   "Keymap for `elfeed-score' commands.")
 
 (defvar elfeed-score--old-sort-function nil

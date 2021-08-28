@@ -1,3 +1,9 @@
+2021-08-27  Michael Herstine  <sp1ff@pobox.com>
+
+	Add full suite of interactive scoring rules.
+	This commit adds commands for adding all scoring rule types based
+	on the current Elfeed entry.
+
 2021-08-21  Michael Herstine  <sp1ff@pobox.com>
 
 	Add interactive scoring.

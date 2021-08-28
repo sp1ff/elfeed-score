@@ -1324,8 +1324,8 @@ the in-memory rules & re-write the score file."
       (cons rule elfeed-score-serde-title-rules)))
     (elfeed-score-feed-rule
      (setq
-      elfeed-score-feed-rules
-      (cons rule elfeed-score-feed-rules)))
+      elfeed-score-serde-feed-rules
+      (cons rule elfeed-score-serde-feed-rules)))
     (elfeed-score-content-rule
      (setq
       elfeed-score-serde-content-rules
