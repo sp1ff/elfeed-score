@@ -21,8 +21,8 @@ jobs:
     name: create-release
     runs-on: ubuntu-latest
     # Un-comment this for testing
-    # env:
-    #   RELEASE_VERSION: 0.7.4
+    env:
+      RELEASE_VERSION: 0.8.5
     steps:
       - name: Create artifacts directory
         run: mkdir artifacts
@@ -87,6 +87,17 @@ jobs:
           sudo apt-get install -y autoconf automake emacs
           git clone https://github.com/skeeto/elfeed.git
 
+    - name: Install a modern version of automake
+      shell: bash
+      run: |
+          set -x
+          cd /tmp
+          curl -L -O https://ftp.gnu.org/gnu/automake/automake-1.16.4.tar.xz
+          tar -xf automake-1.16.4.tar.xz
+          cd automake-1.16.4
+          ./configure && make
+          sudo make install
+
     # Would be nice to do a "make check" here, as well, but
     # `elfeed-score-test-serde' fails, I suspect because I can't write
     # to /tmp on the GitHub Actions host.
@@ -102,6 +113,7 @@ jobs:
         echo "DISTRO_BZ2=elfeed-score-${{ env.RELEASE_VERSION }}.tar.bz2" >> $GITHUB_ENV
         echo "DISTRO_GZ=elfeed-score-${{ env.RELEASE_VERSION }}.tar.gz" >> $GITHUB_ENV
         echo "DISTRO_XZ=elfeed-score-${{ env.RELEASE_VERSION }}.tar.xz" >> $GITHUB_ENV
+        echo "DISTRO_ZSTD=elfeed-score-${{ env.RELEASE_VERSION }}.tar.zst" >> $GITHUB_ENV
         echo "DISTRO_PKG=elfeed-score-${{ env.RELEASE_VERSION }}.tar" >> $GITHUB_ENV
 
     - name: Upload bzip2 tarball
@@ -132,6 +144,16 @@ jobs:
         upload_url: ${{ env.RELEASE_UPLOAD_URL }}
         asset_path: ${{ env.DISTRO_XZ }}
         asset_name: ${{ env.DISTRO_XZ }}
+        asset_content_type: application/octet-stream
+
+    - name: Upload zstd tarball
+      uses: actions/upload-release-asset@v1.0.1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ env.RELEASE_UPLOAD_URL }}
+        asset_path: ${{ env.DISTRO_ZSTD }}
+        asset_name: ${{ env.DISTRO_ZSTD }}
         asset_content_type: application/octet-stream
 
     - name: Upload the Emacs package
