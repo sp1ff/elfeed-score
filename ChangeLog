@@ -1,10 +1,16 @@
-2021-08-27  Michael Herstine  <sp1ff@pobox.com>
+2021-08-31  Michael Herstine  <sp1ff@pobox.com>
+
+	Post-merge commit; bumping to 0.8.6 for release purposes
+
+2021-08-30  Michael Herstine  <sp1ff@pobox.com>
+
+	Repairing the release workflow
 
 	Add full suite of interactive scoring rules.
 	This commit adds commands for adding all scoring rule types based
 	on the current Elfeed entry.
 
-2021-08-21  Michael Herstine  <sp1ff@pobox.com>
+2021-08-30  Michael Herstine  <sp1ff@pobox.com>
 
 	Add interactive scoring.
 	This commit adds a new command `elfeed-score-serde-add-title-rule`
@@ -14,11 +20,9 @@
 	This is the first commit in support of this feature; later commits
 	will add additional commands as well as docs.
 
-2021-08-19  Michael Herstine  <sp1ff@pobox.com>
+2021-08-30  Michael Herstine  <sp1ff@pobox.com>
 
 	adding a workflow for making alpha releases on the 0.8 branch
-
-2021-08-18  Michael Herstine  <sp1ff@pobox.com>
 
 	Spiff-up the explanations buffer.
 	    1. introduce elfeed-score-scoring-explain-text-face
@@ -26,19 +30,17 @@
 	       enter when in a rule match will open the score file and
 	       move point to that rule
 
-2021-08-15  Michael Herstine  <sp1ff@pobox.com>
-
 	Added `elfeed-score-serde-add-rule`
-
-2021-08-13  Michael Herstine  <sp1ff@pobox.com>
 
 	Introduce `elfeed-score-rule-stats--sexp-to-file` for writing LISP S-expressions to file more safely.
 	Changed `elfeed-score-rule-stats-write` and
 	`elfeed-score-serde-write-score-file` to use it.
 
-2021-08-12  Michael Herstine  <sp1ff@pobox.com>
-
 	Removed redudant writes of the stats file
+
+2021-08-18  Michael Herstine  <sp1ff@pobox.com>
+
+	adding a workflow for making alpha releases on the 0.8 branch
 
 2021-08-05  Michael Herstine  <sp1ff@pobox.com>
 
