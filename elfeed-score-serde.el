@@ -147,11 +147,15 @@ optionally, contain the struct type indexed by :_type.
 If the plist contains the type, this implementation will
 deserialize the struct instance with no further information.
 Else, the caller must supply the type name with the keyword
-argument :type."
+argument :type.
+
+If the keyword argument :mandatory is present, it should be a
+list of slot names to be checked.  If any are not present, an
+error will be flagged."
   
-  (let ((ty (plist-get plist :_type))
+  (let ((ty (or (plist-get plist :_type) (plist-get params :type)))
+        (mandatory (plist-get params :mandatory))
         (vals))
-    (unless ty (setq ty (plist-get params :type)))
     (cl-loop
      for i upfrom 0
      for (slot . rest) in
@@ -163,8 +167,16 @@ argument :type."
       ((eq slot 'cl-skip-slot)
        (setq vals (append vals (list (plist-get plist (intern (format ":_%d" i)))))))
       (t
-       (let ((val (plist-get plist (intern (concat ":" (symbol-name slot))))))
-         (setq vals (append vals (list (if val val (eval (car rest))))))))))
+       (let ((val
+              (or
+               (plist-get plist (intern (concat ":" (symbol-name slot))))
+               (eval (car rest)))))
+         (if (and
+              mandatory
+              (not val)
+              (member slot mandatory))
+             (error "Missing mandatory field %s" slot))
+         (setq vals (append vals (list val)))))))
     (let ((seq-ty (cl-struct-sequence-type ty)))
       (cond
        ((eq seq-ty 'list) vals)
@@ -931,7 +943,10 @@ processing in our caller):
            (mapcar
             (lambda (plist)
               (list
-               (elfeed-score-serde-plist-to-struct plist :type 'elfeed-score-title-rule)))
+               (elfeed-score-serde-plist-to-struct
+                plist
+                :type 'elfeed-score-title-rule
+                :mandatory '(text value type))))
             rest)))
          ((string= key "content")
           (setq
@@ -939,7 +954,10 @@ processing in our caller):
            (mapcar
             (lambda (plist)
               (list
-               (elfeed-score-serde-plist-to-struct plist :type 'elfeed-score-content-rule)))
+               (elfeed-score-serde-plist-to-struct
+                plist
+                :type 'elfeed-score-content-rule
+                :mandatory '(text value type))))
             rest)))
          ((string= key "feed")
           (setq
@@ -947,7 +965,10 @@ processing in our caller):
            (mapcar
             (lambda (plist)
               (list
-               (elfeed-score-serde-plist-to-struct plist :type 'elfeed-score-feed-rule)))
+               (elfeed-score-serde-plist-to-struct
+                plist
+                :type 'elfeed-score-feed-rule
+                :mandatory '(text value type attr))))
             rest)))
          ((string= key "title-or-content")
           (setq
@@ -956,7 +977,9 @@ processing in our caller):
             (lambda (plist)
               (list
                (elfeed-score-serde-plist-to-struct
-                plist :type 'elfeed-score-title-or-content-rule)))
+                plist
+                :type 'elfeed-score-title-or-content-rule
+                :mandatory '(text title-value content-value type))))
             rest)))
          ((string= key "authors")
           (setq
@@ -964,7 +987,10 @@ processing in our caller):
            (mapcar
             (lambda (plist)
               (list
-               (elfeed-score-serde-plist-to-struct plist :type 'elfeed-score-authors-rule)))
+               (elfeed-score-serde-plist-to-struct
+                plist
+                :type 'elfeed-score-authors-rule
+                :mandatory '(text value type))))
             rest)))
          ((string= key "tag")
           (setq
@@ -972,7 +998,10 @@ processing in our caller):
            (mapcar
             (lambda (plist)
               (list
-               (elfeed-score-serde-plist-to-struct plist :type 'elfeed-score-tag-rule)))
+               (elfeed-score-serde-plist-to-struct
+                plist
+                :type 'elfeed-score-tag-rule
+                :mandatory '(tags value))))
             rest)))
          ((string= key "link")
           (setq
@@ -980,7 +1009,10 @@ processing in our caller):
            (mapcar
             (lambda (plist)
               (list
-               (elfeed-score-serde-plist-to-struct plist :type 'elfeed-score-link-rule)))
+               (elfeed-score-serde-plist-to-struct
+                plist
+                :type 'elfeed-score-link-rule
+                :mandatory '(text value type))))
             rest)))
          ((string= key "adjust-tags")
           (setq
@@ -988,7 +1020,10 @@ processing in our caller):
            (mapcar
             (lambda (plist)
               (list
-               (elfeed-score-serde-plist-to-struct plist :type 'elfeed-score-adjust-tags-rule)))
+               (elfeed-score-serde-plist-to-struct
+                plist
+                :type 'elfeed-score-adjust-tags-rule
+                :mandatory '(threshold tags))))
             rest)))
          ((eq key 'mark)
           ;; set `mark' to (cdr rest) if (not mark) or (< mark (cdr rest))

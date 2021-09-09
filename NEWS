@@ -1,8 +1,15 @@
 elfeed-score News -- history of user-visible changes -*- outline -*-
 
+* Changes to elfeed-score 0.9.0
+
+** New Features
+
+*** Produce error messages on invalid rule deser
+
+Produce an error message when attempting to deserialize rules form a property list missing mandatory fields.
 * Changes to elfeed-score 0.8.6
 
-No new feautres; just a new tag for release purposes.
+No new features; just a new tag for release purposes.
 * Changes to elfeed-score 0.8.5
 
 ** New Features

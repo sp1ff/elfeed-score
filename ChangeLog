@@ -1,3 +1,10 @@
+2021-09-08  Michael Herstine  <sp1ff@pobox.com>
+
+	First steps towards a 1.0 release.
+	    1. first 0.9 release
+	    2. produce an error message when attempting to deserialize
+	       rules form a property list missing mandatory fields.
+
 2021-08-31  Michael Herstine  <sp1ff@pobox.com>
 
 	Post-merge commit; bumping to 0.8.6 for release purposes
