@@ -1,0 +1,6 @@
+#!/bin/env bash
+EMACS=${EMACS:-emacs}
+${EMACS} --batch -L ${abs_srcdir} -L ${abs_srcdir}/.. \
+         --no-site-file --no-site-lisp --no-splash --no-x-resources \
+         --eval "(setq version \"$PACKAGE_VERSION\")" \
+         --load ${abs_srcdir}/package-test-341.el

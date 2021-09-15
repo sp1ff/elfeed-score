@@ -10,14 +10,9 @@ configure
 .dir-locals.el
 README.md
 env.sh
-smoke-test.el
 .pkg-tmp
 *.tar
 *.tar.bz2
 *.tar.gz
 *.tar.xz
-package-test.el
-upgrade-test.el
-package-test-341.el
-smoke-test-core.el
 interactive-tests.el

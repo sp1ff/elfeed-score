@@ -1,0 +1,3 @@
+#!/bin/bash
+EMACS=${EMACS:-emacs}
+${EMACS} -batch -L . -L ${srcdir}/.. -l ${srcdir}/test-maintenance.el --eval '(let ((ert-batch-backtrace-right-margin 120)) (ert-run-tests-batch-and-exit "^elfeed-score-test"))'

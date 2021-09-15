@@ -1,4 +1,13 @@
-2021-09-08  Michael Herstine  <sp1ff@pobox.com>
+2021-09-15  Michael Herstine  <sp1ff@pobox.com>
+
+	Revising test suite.
+	    1. Added a few tests to the test suite
+	    2. Added a set of tests I had been running manually to the
+	       distcheck-hook, since they depend on the elfeed-score
+	       Emacs package being present, which only happens during
+	       `make dist`
+
+2021-09-09  Michael Herstine  <sp1ff@pobox.com>
 
 	First steps towards a 1.0 release.
 	    1. first 0.9 release

@@ -59,7 +59,6 @@ structs of any kind understood by
   (sort
    rules
    (lambda (lhs rhs)
-     (message "%s|%s" lhs rhs)
      (> (elfeed-score-maint--get-last-match-date lhs)
         (elfeed-score-maint--get-last-match-date rhs)))))
 

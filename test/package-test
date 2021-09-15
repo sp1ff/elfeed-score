@@ -1,0 +1,9 @@
+#!/bin/env bash
+EMACS=${EMACS:-emacs}
+# TODO(sp1ff): DBG
+echo -n "package-test is executing in "
+echo `pwd`
+${EMACS} --batch -L ${abs_srcdir} -L ${abs_srcdir}/.. \
+         --no-site-file --no-site-lisp --no-splash --no-x-resources \
+         --eval "(setq version \"$PACKAGE_VERSION\")" \
+         --load ${abs_srcdir}/package-test.el

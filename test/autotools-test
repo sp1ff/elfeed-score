@@ -1,0 +1,12 @@
+#!/bin/env bash
+set -ex
+EMACS=${EMACS:-emacs}
+cd $HOME/code/projects/elfeed-score
+export version=`awk '/^AC_INIT/ {print substr($2, 2, length($2)-3)}' configure.ac`; echo "Testing Autotools distro version $version."
+pushd /tmp && rm -rf .elfeed-score-autotools && mkdir .elfeed-score-autotools && cd .elfeed-score-autotools
+git clone git@github.com:skeeto/elfeed.git
+cp -v ${abs_top_builddir}/elfeed-score-${version}.tar.gz .
+tar xvf elfeed-score-${version}.tar.gz && cd elfeed-score-${version}
+export EMACS=${EMACS}
+export EMACSLOADPATH=/tmp/.elfeed-score-autotools/elfeed:/tmp/.elfeed-score-autotools/elfeed/tests:${EMACSLOADPATH}
+./configure && make && make check
