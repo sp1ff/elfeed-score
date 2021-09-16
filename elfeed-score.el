@@ -3,7 +3,7 @@
 ;; Copyright (C) 2019-2021 Michael Herstine <sp1ff@pobox.com>
 
 ;; Author: Michael Herstine <sp1ff@pobox.com>
-;; Version: 0.9.2
+;; Version: 1.0.0
 ;; Package-Requires: ((emacs "26.1") (elfeed "3.3.0"))
 ;; Keywords: news
 ;; URL: https://github.com/sp1ff/elfeed-score
@@ -44,7 +44,7 @@
 (require 'elfeed-score-scoring)
 (require 'elfeed-score-maint)
 
-(defconst elfeed-score-version "0.9.2")
+(defconst elfeed-score-version "1.0.0")
 
 (defgroup elfeed-score nil
   "Gnus-style scoring for Elfeed entries."
@@ -75,8 +75,8 @@ for (format width alignment).  Possible alignments are :left and
 (defun elfeed-score-set-score (score &optional ignore-region)
   "Set the score of one or more Elfeed entries to SCORE.
 
-Their scores will be set to `elfeed-score-default-score' by
-default.
+Their scores will be set to `elfeed-score-scoring-default-score'
+by default.
 
 If IGNORE-REGION is nil (as it will be when called
 interactively), then all entries in the current region will have

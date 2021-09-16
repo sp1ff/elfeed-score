@@ -20,10 +20,10 @@
 ;;; Code:
 (require 'cl-lib)
 
-(setq srcdir (getenv "srcdir"))
+(defvar srcdir (getenv "srcdir"))
 (cl-assert srcdir t "Please specify the env var srcdir.")
 
-(setq
+(defvar
  test-dir
  (concat
   (make-temp-name (concat (temporary-file-directory) ".elfeed-smoke-tests")) "/"))

@@ -1245,12 +1245,6 @@ If the score file has never been loaded this function will return t."
             (file-attributes elfeed-score-serde-score-file)))
           (or elfeed-score-serde--last-load-time 0.0))))
 
-(define-obsolete-function-alias
-  'elfeed-score-write-score-file
-  #'elfeed-score-serde-write-score-file
-  "0.7.0"
-  "Re-factoring elfeed-score.el.")
-
 (defun elfeed-score-serde-write-score-file (score-file)
   "Write the current scoring rules to SCORE-FILE."
   (interactive

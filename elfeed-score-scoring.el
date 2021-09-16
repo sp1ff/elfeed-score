@@ -32,16 +32,10 @@
   "Face for showing the match text in the explanation buffer."
   :group 'elfeed-score)
 
-(define-obsolete-variable-alias 'elfeed-score-default-score
-  'elfeed-score-scoring-default-score "0.7.0" "Re-factoring elfeed-score.el.")
-
 (defcustom elfeed-score-scoring-default-score 0
   "Default score for an Elfeed entry."
   :group 'elfeed-score
   :type 'int)
-
-(define-obsolete-variable-alias 'elfeed-score-meta-keyword
-  'elfeed-score-scoring-meta-keyword "0.7.0" "Re-factoring elfeed-score.el.")
 
 (defcustom elfeed-score-scoring-meta-keyword :elfeed-score/score
   "Default keyword for storing scores in Elfeed entry metadata."
@@ -52,10 +46,6 @@
   "Default keyword for marking scores as sticky in Elfeed entry metadata."
   :group 'elfeed-score
   :type 'symbol)
-
-(define-obsolete-variable-alias 'elfeed-score-explanationb-uffer-name
-  'elfeed-score-scoring-explanation-buffer-name "0.7.0"
-  "Re-factoring elfeed-score.el.")
 
 (defcustom elfeed-score-scoring-explanation-buffer-name
   "*elfeed-score-explanations*"
@@ -124,7 +114,7 @@ subsequent \"bulk\" operations like scoring an entire view."
 
 (defun elfeed-score-scoring-get-score-from-entry (entry)
   "Retrieve the score from ENTRY."
-  (elfeed-meta entry elfeed-score-meta-keyword elfeed-score-default-score))
+  (elfeed-meta entry elfeed-score-scoring-meta-keyword elfeed-score-scoring-default-score))
 
 (defun elfeed-score-scoring--match-text (match-text search-text match-type)
   "Test SEARCH-TEXT against MATCH-TEXT according to MATCH-TYPE.
@@ -581,7 +571,7 @@ update the \"last matched\" time of the salient rules.
 
 This function is used in `elfeed-new-entry-hook'."
 
-  (let ((score (+ elfeed-score-default-score
+  (let ((score (+ elfeed-score-scoring-default-score
                   (elfeed-score-scoring--score-on-title            entry)
                   (elfeed-score-scoring--score-on-feed             entry)
                   (elfeed-score-scoring--score-on-content          entry)
@@ -639,12 +629,6 @@ This function is used in `elfeed-new-entry-hook'."
     (t
      (error "Don't know how to evaluate %S" match))))
 
-(define-obsolete-function-alias
-  'elfeed-score-explain-entry
-  #'elfeed-score-scoring-explain-entry
-  "0.7.0"
-  "Re-factoring elfeed-score.el.")
-
 (defun elfeed-score-scoring-explain-entry (entry)
   "Explain an Elfeed ENTRY.
 
@@ -670,7 +654,7 @@ understanding of scoring rules."
            '+
            matches
            :key #'elfeed-score-scoring--get-match-contribution
-           :initial-value elfeed-score-default-score))
+           :initial-value elfeed-score-scoring-default-score))
          (sticky (and elfeed-score-scoring-manual-is-sticky
                       (elfeed-score-scoring-entry-is-sticky entry))))
     (with-current-buffer-window
