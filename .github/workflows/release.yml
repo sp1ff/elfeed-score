@@ -21,8 +21,8 @@ jobs:
     name: create-release
     runs-on: ubuntu-latest
     # Un-comment this for testing
-    # env:
-    #   RELEASE_VERSION: 0.8.5
+    env:
+      RELEASE_VERSION: 0.9.2
     steps:
       - name: Create artifacts directory
         run: mkdir artifacts
@@ -110,21 +110,10 @@ jobs:
         ls /usr/share/emacs
         ./bootstrap && ./configure
         make all dist
-        echo "DISTRO_BZ2=elfeed-score-${{ env.RELEASE_VERSION }}.tar.bz2" >> $GITHUB_ENV
         echo "DISTRO_GZ=elfeed-score-${{ env.RELEASE_VERSION }}.tar.gz" >> $GITHUB_ENV
         echo "DISTRO_XZ=elfeed-score-${{ env.RELEASE_VERSION }}.tar.xz" >> $GITHUB_ENV
         echo "DISTRO_ZSTD=elfeed-score-${{ env.RELEASE_VERSION }}.tar.zst" >> $GITHUB_ENV
         echo "DISTRO_PKG=elfeed-score-${{ env.RELEASE_VERSION }}.tar" >> $GITHUB_ENV
-
-    - name: Upload bzip2 tarball
-      uses: actions/upload-release-asset@v1.0.1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ env.RELEASE_UPLOAD_URL }}
-        asset_path: ${{ env.DISTRO_BZ2 }}
-        asset_name: ${{ env.DISTRO_BZ2 }}
-        asset_content_type: application/octet-stream
 
     - name: Upload gzip tarball
       uses: actions/upload-release-asset@v1.0.1
