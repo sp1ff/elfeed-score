@@ -27,6 +27,7 @@
 (require 'cl-lib)
 (require 'elfeed)
 (require 'elfeed-score)
+(require 'elfeed-score-tests)
 
 ;; NB the tests below depend on the fact that all three of these rules
 ;; will match at least once (which they will, assuming r/Emacs has any
@@ -124,12 +125,6 @@
 
 (cl-assert (hash-table-p tab))
 (cl-assert (eq 3 (hash-table-count tab)))
-
-;; TODO(sp1ff): re-factor (shared with interactive-tests)
-(defun time-as-float (x)
-  (+ (* (nth 0 x) 65536)
-       (nth 1 x)
-       (/ (nth 2 x) 1000000.0)))
 
 ;; Note the mtime for the stats file (for use below)
 (setq

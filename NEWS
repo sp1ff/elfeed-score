@@ -1,5 +1,10 @@
 elfeed-score News -- history of user-visible changes -*- outline -*-
 
+* Changes to elfeed-score 0.9.2
+
+** Deprecations
+
+All symbols obsolete as of 0.2.0 removed.
 * Changes to elfeed-score 0.9.1
 
 No user-visible changes.

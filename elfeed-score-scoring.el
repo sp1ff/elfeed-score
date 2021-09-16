@@ -32,9 +32,6 @@
   "Face for showing the match text in the explanation buffer."
   :group 'elfeed-score)
 
-(define-obsolete-variable-alias 'elfeed-score/default-score
-  'elfeed-score-default-score "0.2.0" "Move to standard-compliant naming.")
-
 (define-obsolete-variable-alias 'elfeed-score-default-score
   'elfeed-score-scoring-default-score "0.7.0" "Re-factoring elfeed-score.el.")
 
@@ -42,9 +39,6 @@
   "Default score for an Elfeed entry."
   :group 'elfeed-score
   :type 'int)
-
-(define-obsolete-variable-alias 'elfeed-score/meta-kw
-  'elfeed-score-meta-keyword "0.2.0" "Move to standard-compliant naming.")
 
 (define-obsolete-variable-alias 'elfeed-score-meta-keyword
   'elfeed-score-scoring-meta-keyword "0.7.0" "Re-factoring elfeed-score.el.")

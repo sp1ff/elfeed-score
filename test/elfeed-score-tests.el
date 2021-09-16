@@ -226,6 +226,11 @@ is convenient for testing scoring)."
          (elfeed-score-serde-score-mark nil))
      (progn ,@body)))
 
+(defun time-as-float (x)
+  (+ (* (nth 0 x) 65536)
+       (nth 1 x)
+       (/ (nth 2 x) 1000000.0)))
+
 (ert-deftest elfeed-score-test-test-sort ()
   "Test `elfeed-score-sort'.
 

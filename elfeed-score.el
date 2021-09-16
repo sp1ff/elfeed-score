@@ -3,7 +3,7 @@
 ;; Copyright (C) 2019-2021 Michael Herstine <sp1ff@pobox.com>
 
 ;; Author: Michael Herstine <sp1ff@pobox.com>
-;; Version: 0.9.1
+;; Version: 0.9.2
 ;; Package-Requires: ((emacs "26.1") (elfeed "3.3.0"))
 ;; Keywords: news
 ;; URL: https://github.com/sp1ff/elfeed-score
@@ -44,7 +44,7 @@
 (require 'elfeed-score-scoring)
 (require 'elfeed-score-maint)
 
-(defconst elfeed-score-version "0.9.1")
+(defconst elfeed-score-version "0.9.2")
 
 (defgroup elfeed-score nil
   "Gnus-style scoring for Elfeed entries."
@@ -59,9 +59,6 @@ for (format width alignment).  Possible alignments are :left and
   :group 'elfeed-score
   :type '(list string integer (choice (const :left) (const :right))))
 
-(define-obsolete-function-alias 'elfeed-score/sort
-  #'elfeed-score-sort "0.2.0" "Move to standard-compliant naming.")
-
 (defun elfeed-score-sort (a b)
   "Return non-nil if A should sort before B.
 
@@ -74,9 +71,6 @@ for (format width alignment).  Possible alignments are :left and
       (let ((a-date (elfeed-entry-date a))
             (b-date (elfeed-entry-date b)))
         (and (eq a-score b-score) (> a-date b-date))))))
-
-(define-obsolete-function-alias 'elfeed-score/set-score
-  #'elfeed-score-set-score "0.2.0" "Move to standard-compliant naming.")
 
 (defun elfeed-score-set-score (score &optional ignore-region)
   "Set the score of one or more Elfeed entries to SCORE.
@@ -105,9 +99,6 @@ region's state."
       (elfeed-score-scoring-set-score-on-entry entry score t)
       ;; & update the entry.
       (elfeed-search-update-entry entry))))
-
-(define-obsolete-function-alias 'elfeed-score/get-score
-  #'elfeed-score-get-score "0.2.0" "Move to standard-compliant naming.")
 
 (defun elfeed-score-get-score ()
   "Return the score of the entry under point.
@@ -156,9 +147,6 @@ entry under point will be explained."
       (elfeed-score-scoring-explain-entry entry))
     (elfeed-search-update t)))
 
-(define-obsolete-function-alias 'elfeed-score/load-score-file
-  #'elfeed-score-load-score-file "0.2.0" "Move to standard-compliant naming.")
-
 (defun elfeed-score-load-score-file (score-file)
   "Load SCORE-FILE into the current scoring rules."
 
@@ -167,9 +155,6 @@ entry under point will be explained."
     (read-file-name "score file: " nil elfeed-score-serde-score-file t
                     elfeed-score-serde-score-file)))
   (elfeed-score-serde-load-score-file score-file))
-
-(define-obsolete-function-alias 'elfeed-score/score
-  #'elfeed-score-score "0.2.0" "Move to standard-compliant naming.")
 
 (defun elfeed-score-score (&optional ignore-region)
   "Score some entries.
@@ -189,9 +174,6 @@ region is not active, only the entry under point will be scored."
   ;; *Now* flush stats.
   (if elfeed-score-rule-stats-file
       (elfeed-score-rule-stats-write elfeed-score-rule-stats-file)))
-
-(define-obsolete-function-alias 'elfeed-score/score-search
-  #'elfeed-score-score-search "0.2.0" "Move to standard-compliant naming.")
 
 (defun elfeed-score-score-search ()
   "Score the current set of search results."

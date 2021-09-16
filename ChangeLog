@@ -1,5 +1,7 @@
 2021-09-15  Michael Herstine  <sp1ff@pobox.com>
 
+	Remove all symbols made obsolete as of release 0.2.0.
+
 	Revising test suite.
 	    1. Added a few tests to the test suite
 	    2. Added a set of tests I had been running manually to the

@@ -25,9 +25,6 @@
 (require 'elfeed-score-rules)
 (require 'elfeed-score-rule-stats)
 
-(define-obsolete-variable-alias 'elfeed-score/score-file
-  'elfeed-score-score-file "0.2.0" "Move to standard-compliant naming.")
-
 (define-obsolete-variable-alias
   'elfeed-score-score-file
   'elfeed-score-serde-score-file
@@ -1211,9 +1208,6 @@ format."
     (setq
      elfeed-score-serde--last-load-time
      (float-time (file-attribute-modification-time (file-attributes score-file))))))
-
-(define-obsolete-function-alias 'elfeed-score/write-score-file
-  #'elfeed-score-serde-write-score-file "0.2.0" "Move to standard-compliant naming.")
 
 (defun elfeed-score-serde-tag-for-rule (rule)
   "Return the score file tag corresponding to RULE."

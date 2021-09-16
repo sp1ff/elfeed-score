@@ -49,9 +49,6 @@
   "Face for showing the `debug' log level in the elfeed score buffer."
   :group 'elfeed-score)
 
-(define-obsolete-variable-alias 'elfeed-score/debug
-  'elfeed-score-log-debug "0.2.0" "Move to standard-compliant naming.")
-
 (define-obsolete-variable-alias 'elfeed-score-debug
   'elfeed-score-log-debug "0.7.0" "Re-factoring elfeed-score.el")
 
