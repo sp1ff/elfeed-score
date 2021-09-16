@@ -2,7 +2,7 @@
 #+DESCRIPTION: Gnus-style scoring for Elfeed
 #+AUTHOR: Michael Herstine
 #+EMAIL: sp1ff@pobox.com
-#+DATE: <2021-09-15 Wed 18:23>
+#+DATE: <2021-09-16 Thu 08:53>
 #+AUTODATE: t
 #+OPTIONS: toc:nil org-md-headline-style:setext *:t ^:nil
 #+STARTUP: overview
@@ -72,7 +72,7 @@ The easiest way to install elfeed-score is [[https://github.com/melpa/melpa][MEL
 If you would prefer to install the package manually, you can also download the Emacs package file on the GitHub releases [[https://github.com/sp1ff/elfeed-score/releases][page]] or from my personal [[https://www.unwoundstack/distros.html][page]]. Then say:
 
 #+BEGIN_SRC elisp
-(package-install-file "elfeed-score-0.9.2.tar")
+(package-install-file "elfeed-score-1.0.0.tar")
 #+END_SRC
 
 ** Autotools Source Distributions
@@ -81,8 +81,8 @@ You can also download Autotools source tarballs (again available either on the G
 
 #+BEGIN_SRC bash
 cd /tmp
-curl -L --output elfeed-score-0.9.2.tar.gz https://github.com/sp1ff/elfeed-score/releases/download/0.9.2/elfeed-score-0.9.2.tar.gz
-tar xvf elfeed-score-0.9.2.tar.gz && cd elfeed-score-0.9.2
+curl -L --output elfeed-score-1.0.0.tar.gz https://github.com/sp1ff/elfeed-score/releases/download/1.0.0/elfeed-score-1.0.0.tar.gz
+tar xvf elfeed-score-1.0.0.tar.gz && cd elfeed-score-1.0.0
 export EMACSLOADPATH=$HOME/.emacs.d/elpa/elfeed-20200209.1942:$EMACSLOADPATH
 ./configure
 make
@@ -97,22 +97,22 @@ The unit tests require some macros defined by the [[https://github.com/skeeto/el
 #+BEGIN_SRC bash
 cd /tmp
 git clone https://github.com/skeeto/elfeed.git
-curl -L --output=elfeed-score-0.9.2.tar.gz https://github.com/sp1ff/elfeed-score/releases/download/0.9.2/elfeed-score-0.9.2.tar.gz
-tar xvf elfeed-score-0.9.2.tar.gz && cd elfeed-score-0.9.2
-export EMACSLOADPATH=/tmp/elfeed-score-0.9.2:/tmp/elfeed:/tmp/elfeed/tests:$EMACSLOADPATH
+curl -L --output=elfeed-score-1.0.0.tar.gz https://github.com/sp1ff/elfeed-score/releases/download/1.0.0/elfeed-score-1.0.0.tar.gz
+tar xvf elfeed-score-1.0.0.tar.gz && cd elfeed-score-1.0.0
+export EMACSLOADPATH=/tmp/elfeed-score-1.0.0:/tmp/elfeed:/tmp/elfeed/tests:$EMACSLOADPATH
 ./configure
 make
 make check
 sudo make install
 #+END_SRC
 
-Again, unless you already use =EMACSLOADPATH=, you'll need to set =EMACSLOADPATH= appropriately to your system, something like =EMACSLOADPATH=/tmp/elfeed-score-0.9.2:/tmp/elfeed:/tmp/elfeed/tests:/usr/share/emacs/25.2/lisp=.
+Again, unless you already use =EMACSLOADPATH=, you'll need to set =EMACSLOADPATH= appropriately to your system, something like =EMACSLOADPATH=/tmp/elfeed-score-1.0.0:/tmp/elfeed:/tmp/elfeed/tests:/usr/share/emacs/25.2/lisp=.
 ** Building From Source
 
 Finally, you can of course just clone this repo & build there. I've started a [[https://github.com/sp1ff/elfeed-score/wiki][wiki]], whose intended audience are people looking to hack on elfeed-score, that includes build instructions.
 * Upgrading Your Score File
 
-The format of the score file is updated fairly regularly to accomodate new features, new rule types, and so forth. elfeed-score maintains backward compatibility in that score files in older format versions are still recognized. The most recent format version will always be used when the score file is written to disk, however. Note than an older elfeed-score will reject a more recent score file (since it will not know how to parse it).
+The format of the score file is updated fairly regularly to accomodate new features, new rule types, and so forth. elfeed-score maintains backward compatibility in that score files in older formats are still recognized. The most recent format version will always be used when the score file is written to disk, however. Note than an older elfeed-score will reject a more recent score file (since it will not know how to parse it).
 
 When elfeed-score loads a score file that uses an archaic format (i.e. a format version less than =elfeed-score-serde-current-format=) it will:
 
@@ -125,8 +125,8 @@ This should all be transparent to the user.
 
 I've been using [[https://github.com/sp1ff/elfeed-score][elfeed-score]] day in & day out for my RSS reading for almost two years now. I wrote a post on how [[https://github.com/sp1ff/elfeed-score][elfeed-score]] works, along with the process of submitting code to MELPA, [[https://www.unwoundstack.com/blog/scoring-elfeed-entries.html][here]]. [[https://github.com/C-J-Cundy][Chris]] wrote a post on how he uses it to [[https://cundy.me/post/elfeed/][manage ArXiv RSS Feeds]]. 
 
-The current version numbers (0.X) were chosen to suggest preliminary releases, but I'm preparing to call this 1.0. The 0.9 releases are hygenic: cleaning-up the test suite, improving validation on deserializing the score file, and removing obsolete functions & variables. Barring any issues, once the last obsolete symbol is removed from the codebase, I'll call it 1.0 & begin complying with semver.
+The version numbers (0.X) over that time were chosen to suggest preliminary releases, but I'm now calling this 1.0. The 0.9 releases were hygenic: cleaning-up the test suite, improving validation on deserializing the score file, and removing obsolete functions & variables. Beginning with 1.0, I'll also comply with semver (e.g. breaking changes will be a major release, new features a minor, and bug fixes a patch).
 
-Post 1.0, I'd like to use elfeed-score to explore some ideas I have about learning the user's habits automatically based on their actions in Elfeed (but without making them feel they're being stalked).
+Going forward, I'd like to use elfeed-score to explore some ideas I have about learning the user's habits automatically based on their actions in Elfeed (but without making them feel they're being stalked).
 
 Bugs, comments, problems, PRs, feature requests &c welcome at [[mailto:sp1ff@pobox.com][sp1ff@pobox.com]] and in the [[https://github.com/sp1ff/elfeed-score/issues][issues]].

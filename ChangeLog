@@ -1,3 +1,10 @@
+2021-09-16  Michael Herstine  <sp1ff@pobox.com>
+
+	elfeed-score 1.0.
+	The last obsolete symbols have been removed, with the exception of
+	`elfeed-score-score-file`, which I suspect would break a lot of
+	configurations.
+
 2021-09-15  Michael Herstine  <sp1ff@pobox.com>
 
 	Remove all symbols made obsolete as of release 0.2.0.

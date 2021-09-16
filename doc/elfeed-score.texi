@@ -1315,10 +1315,10 @@ categories will be displayed.
 @node Roadmap & Contributing
 @chapter Roadmap & Contributing
 
-I've sketched some thoughts on elfeed-score's future in the
-@url{https://github.com/sp1ff/elfeed-score, README}. The focus now is
-getting it to a place where I'd feel comfortable calling it
-``1.0''.
+In September 2021, I felt comfortable releasing elfeed-score ``1.0'',
+implying a certain level of stability (and notably will respect semver
+going forward). I've sketched some thoughts on elfeed-score's future
+in the @url{https://github.com/sp1ff/elfeed-score, README}.
 
 Bugs & feature requests are welcome in the
 @url{https://github.com/sp1ff/elfeed-score/issues, Issues} section of

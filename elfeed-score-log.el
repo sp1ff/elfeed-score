@@ -49,25 +49,11 @@
   "Face for showing the `debug' log level in the elfeed score buffer."
   :group 'elfeed-score)
 
-(define-obsolete-variable-alias 'elfeed-score-debug
-  'elfeed-score-log-debug "0.7.0" "Re-factoring elfeed-score.el")
-
-(defvar elfeed-score-log-debug nil
-  "Control debug output.
-
-Setting this to a non-nil value will produce copious debugging
-information to the \"*Messages*\" buffer.")
-
-(make-obsolete-variable 'elfeed-score-log-debug 'elfeed-score-log-level "0.7.0")
-
 (defvar elfeed-score-log-buffer-name "*elfeed-score*"
   "Name of buffer used for logging `elfeed-score' events.")
 
-(defvar elfeed-score-log-level (if elfeed-score-log-debug 'info 'warn)
+(defvar elfeed-score-log-level 'warn
   "Level at which `elfeed-score' shall log; may be one of 'debug, 'info, 'warn, or 'error.")
-
-(define-obsolete-variable-alias 'elfeed-score-max-log-buffer-size
-  'elfeed-score-log-max-buffer-size "0.7.0" "Re-factoring elfeed-score.el")
 
 (defvar elfeed-score-log-max-buffer-size 750
   "Maximum length (in lines) of the log buffer.  nil means unlimited.")
@@ -121,18 +107,10 @@ information to the \"*Messages*\" buffer.")
           (format-time-string "%Y-%m-%d %H:%M:%S")
           level
           (apply #'format fmt objects)))
-        (if (and elfeed-score-max-log-buffer-size
+        (if (and elfeed-score-log-max-buffer-size
                  (> (line-number-at-pos)
-                    elfeed-score-max-log-buffer-size))
+                    elfeed-score-log-max-buffer-size))
             (elfeed-score-log--truncate-log-buffer))))))
-
-(defun elfeed-score-log--debug (fmt &rest params)
-  "Produce a formatted (FMT) message based on PARAMS at debug level.
-
-Print a formatted message if `elfeed-score-debug' is non-nil."
-  (elfeed-score-log 'debug fmt params))
-
-(make-obsolete 'elfeed-score-log--debug 'elfeed-score-log "0.4")
 
 (provide 'elfeed-score-log)
 ;;; elfeed-score-log.el ends here

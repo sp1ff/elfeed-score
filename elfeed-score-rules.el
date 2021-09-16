@@ -106,10 +106,6 @@
   "An explanation of a title rule match."
   matched-text rule index)
 
-(define-obsolete-function-alias 'elfeed-score-pp-title-explanation
-  #'elfeed-score-rules-pp-title-explanation "0.7.0"
-  "Re-factoring elfeed-score.el.")
-
 (defun elfeed-score-rules-pp-title-explanation (match)
   "Pretty-print MATCH to string."
   (let ((rule (elfeed-score-title-explanation-rule match)))
@@ -117,10 +113,6 @@
             (elfeed-score-title-rule-text rule)
             (elfeed-score-title-explanation-matched-text match)
             (elfeed-score-title-rule-value rule))))
-
-(define-obsolete-function-alias 'elfeed-score-title-explanation-contrib
-  #'elfeed-score-rules-title-explanation-contrib "0.7.0"
-  "Re-factoring elfeed-score.el.")
 
 (defun elfeed-score-rules-title-explanation-contrib (match)
   "Return the score contribution due to MATCH."
@@ -193,10 +185,6 @@
   "An explanation of a feed rule match"
   matched-text rule index)
 
-(define-obsolete-function-alias 'elfeed-score-pp-feed-explanation
-  #'elfeed-score-rules-pp-feed-explanation "0.7.0"
-  "Re-factoring elfeed-score.el.")
-
 (defun elfeed-score-rules-pp-feed-explanation (match)
   "Pretty-print MATCH to string."
   (let ((rule (elfeed-score-feed-explanation-rule match)))
@@ -205,10 +193,6 @@
             (elfeed-score-feed-rule-text rule)
             (elfeed-score-feed-explanation-matched-text match)
             (elfeed-score-feed-rule-value rule))))
-
-(define-obsolete-function-alias 'elfeed-score-feed-explanation-contrib
-  #'elfeed-score-rules-feed-explanation-contrib "0.7.0"
-  "Re-factoring elfeed-score.el.")
 
 (defun elfeed-score-rules-feed-explanation-contrib (match)
   "Return the score contribution due to MATCH."
@@ -297,10 +281,6 @@
   "An explanation of a matched content rule."
   matched-text rule index)
 
-(define-obsolete-function-alias 'elfeed-score-content-explanation-contrib
-  #'elfeed-score-rules-content-explanation-contrib "0.7.0"
-  "Re-factoring elfeed-score.el.")
-
 (defun elfeed-score-rules-pp-content-explanation (match)
   "Pretty-print MATCH to string."
   (let ((rule (elfeed-score-content-explanation-rule match)))
@@ -309,18 +289,10 @@
             (elfeed-score-content-explanation-matched-text match)
             (elfeed-score-content-rule-value rule))))
 
-(define-obsolete-function-alias 'elfeed-score-pp-content-explanation
-  #'elfeed-score-rules-pp-content-explanation "0.7.0"
-  "Re-factoring elfeed-score.el.")
-
 (defun elfeed-score-rules-content-explanation-contrib (match)
   "Return the score contribution due to MATCH."
   (elfeed-score-content-rule-value
    (elfeed-score-content-explanation-rule match)))
-
-(define-obsolete-function-alias 'elfeed-score-feed-explanation-contrib
-  #'elfeed-score-rules-feed-explanation-contrib "0.7.0"
-  "Re-factoring elfeed-score.el.")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;                      title-or-content rules                      ;;
@@ -419,12 +391,6 @@ defining a single rule for both.
   "An explanation of a title-or-content rule match."
   matched-text rule attr index)
 
-(define-obsolete-function-alias
-  'elfeed-score-pp-title-or-content-explanation
-  #'elfeed-score-rules-pp-title-or-content-explanation
-  "0.7.0"
-  "Re-factoring elfeed-score.el.")
-
 (defun elfeed-score-rules-pp-title-or-content-explanation (match)
   "Pretty-print MATCH to string."
   (let ((rule (elfeed-score-title-or-content-explanation-rule match))
@@ -436,12 +402,6 @@ defining a single rule for both.
             (if (eq 't attr)
                 (elfeed-score-title-or-content-rule-title-value rule)
               (elfeed-score-title-or-content-rule-content-value rule)))))
-
-(define-obsolete-function-alias
-  'elfeed-score-title-or-content-explanation-contrib
-  #'elfeed-score-rules-title-or-content-explanation-contrib
-  "0.7.0"
-  "Re-factoring elfeed-score.el.")
 
 (defun elfeed-score-rules-title-or-content-explanation-contrib (match)
   "Return the score contribution due to MATCH."
@@ -534,10 +494,6 @@ defining a single rule for both.
   "An explanation of an authors rule match"
   matched-text rule index)
 
-(define-obsolete-function-alias 'elfeed-score-pp-authors-explanation
-  #'elfeed-score-rules-pp-authors-explanation "0.7.0"
-  "Re-factoring elfeed-score.el.")
-
 (defun elfeed-score-rules-pp-authors-explanation (match)
   "Pretty-print MATCH to string."
   (let ((rule (elfeed-score-authors-explanation-rule match)))
@@ -545,11 +501,6 @@ defining a single rule for both.
             (elfeed-score-authors-rule-text rule)
             (elfeed-score-authors-explanation-matched-text match)
             (elfeed-score-authors-rule-value rule))))
-
-(define-obsolete-function-alias
-  'elfeed-score-authors-explanation-contrib
-  #'elfeed-score-rules-authors-explanation-contrib "0.7.0"
-  "Re-factoring elfeed-score.el.")
 
 (defun elfeed-score-rules-authors-explanation-contrib (match)
   "Return the score contribution due to MATCH."
@@ -599,24 +550,12 @@ defining a single rule for both.
   "An explanation of a tags rule match."
   rule index)
 
-(define-obsolete-function-alias
-  'elfeed-score-pp-tags-explanation
-  #'elfeed-score-rules-pp-tags-explanation
-  "0.7.0"
-  "Re-factoring elfeed-score.el.")
-
 (defun elfeed-score-rules-pp-tags-explanation (match)
   "Pretty-print MATCH to string."
   (let ((rule (elfeed-score-tags-explanation-rule match)))
     (format "tags{%s}: %d"
             (elfeed-score-tag-rule-tags rule)
             (elfeed-score-tag-rule-value rule))))
-
-(define-obsolete-function-alias
-  'elfeed-score-tags-explanation-contrib
-  #'elfeed-score-rules-tags-explanation-contrib
-  "0.7.0"
-  "Re-factoring elfeed-score.el.")
 
 (defun elfeed-score-rules-tags-explanation-contrib (match)
   "Return the score contribution due to MATCH."

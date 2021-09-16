@@ -1,116 +1,130 @@
 elfeed-score News -- history of user-visible changes -*- outline -*-
 
-* Changes to elfeed-score 0.9.2
+* elfeed-score 1.0
 
-** Deprecations
+** Changes to elfeed-score 1.0.0
+
+*** Deprecations
+
+All obsolete symbols have been removed, except for `elfeed-score-score-file', which is likely in use in many configurations.
+* elfeed-score 0.9
+
+** Changes to elfeed-score 0.9.2
+
+*** Deprecations
 
 All symbols obsolete as of 0.2.0 removed.
-* Changes to elfeed-score 0.9.1
+** Changes to elfeed-score 0.9.1
 
 No user-visible changes.
-* Changes to elfeed-score 0.9.0
+** Changes to elfeed-score 0.9.0
 
-** New Features
+*** New Features
 
-*** Produce error messages on invalid rule deser
+**** Produce error messages on invalid rule deser
 
 Produce an error message when attempting to deserialize rules form a property list missing mandatory fields.
-* Changes to elfeed-score 0.8.6
+* elfeed-score 0.8
+
+** Changes to elfeed-score 0.8.6
 
 No new features; just a new tag for release purposes.
-* Changes to elfeed-score 0.8.5
+** Changes to elfeed-score 0.8.5
 
-** New Features
+*** New Features
 
-*** Add a full suite of interactive scoring rules
-* Changes to elfeed-score 0.8.4
+**** Add a full suite of interactive scoring rules
+** Changes to elfeed-score 0.8.4
 
-** New Features
+*** New Features
 
-*** Add `elfeed-score-serde-add-title-rule`
-* Changes to elfeed-score 0.8.3
+**** Add `elfeed-score-serde-add-title-rule`
+** Changes to elfeed-score 0.8.3
 
-** New Features
+*** New Features
 
-*** Spiff-up the explanations buffer
+**** Spiff-up the explanations buffer
 
     1. introduce elfeed-score-scoring-explain-text-face
     2. make the list of rules clickable; clicking-on or hitting enter when in a rule match will open the score file and move point to that rule
-* Changes to elfeed-score 0.8.2
+** Changes to elfeed-score 0.8.2
 
-** New Features
+*** New Features
 
-*** Added `elfeed-score-serde-add-rule'
-* Changes to elfeed-score 0.8.1
+**** Added `elfeed-score-serde-add-rule'
+** Changes to elfeed-score 0.8.1
 
-** Bugfixes
+*** Bugfixes
 
-*** `elfeed-score-score` & `elfeed-score-serarch` no longer write stats too many times
-* Changes to elfeed-score 0.7.10
+**** `elfeed-score-score` & `elfeed-score-serarch` no longer write stats too many times
 
-** Bugfixes
+* elfeed-score 0.7
 
-*** Rule statistics are now stored separately-- Issue #13
+** Changes to elfeed-score 0.7.10
+
+*** Bugfixes
+
+**** Rule statistics are now stored separately-- Issue #13
 
 Rule statistics (# hits, last match date) have been moved out of the rule structs and stored separately.  From now on, `elfeed-score' will only *read* the score file. This should eliminate the recurring "Hey where did my rule changes go?" questions.
 
 The stats will still be maintained, but will be written to a separate file ('elfeed.stats' by default).
-* Changes in elfeed-score 0.7.9
+** Changes in elfeed-score 0.7.9
 
-** Bugfixes
+*** Bugfixes
 
-*** Make `score' mandatory in `elfeed-score-set-score' not optional
-*** Address issue 10
+**** Make `score' mandatory in `elfeed-score-set-score' not optional
+**** Address issue 10
 
 When setting scores "manually" via `elfeed-score-set-score' will "stick": subsequently scoring that entry through the new entry hook or as part of scoring an entire search will not overwrite the manuall-set score.
 
 Since this is a new feature, I've put it behind a configuration option `elfeed-score-scoring-manual-is-sticky' which defaults to true, but if the user dislikes this they can set it to nil to disable the feature.
-* Changes in elfeed-score 0.7.8
+** Changes in elfeed-score 0.7.8
 
-** Bugfixes
+*** Bugfixes
 
-*** Address issue 12
+**** Address issue 12
 
 'link' rules were not being read in correctly--fixed.
-* Changes in elfeed-score 0.7.7
+** Changes in elfeed-score 0.7.7
 
-** New Features
+*** New Features
 
-*** When reading an older score file, immediately re-write in the most recent format
-* Changes in elfeed-score 0.7.6
+**** When reading an older score file, immediately re-write in the most recent format
+** Changes in elfeed-score 0.7.6
 
 No user-visible changes in this build; strictly re-factoring.
-* Changes in elfeed-score 0.7.5
+** Changes in elfeed-score 0.7.5
 
-** Bugfixes
+*** Bugfixes
 
-*** Address issue 12
+**** Address issue 12
 
 Announce the fact when making a backup copy of the score file. If there is an error on copy, say so & continue (i.e. don't error out).
 
-** New Features
+*** New Features
 
-*** New rule type: link
-* Changes in elfeed-score 0.7.4
+**** New rule type: link
+** Changes in elfeed-score 0.7.4
 
-** Other Changes
+*** Other Changes
 
-*** Below changes on the 0.7 branch now available on master
-* Changes in elfeed-score 0.7.3
+**** Below changes on the 0.7 branch now available on master
+** Changes in elfeed-score 0.7.3
 
-** New Features
+*** New Features
 
-*** Write backup file on score file format version change
+**** Write backup file on score file format version change
 
 If elfeed-score detects that the score file it has read is in a format
 prior to the current, it will write a backup file named SCORE-FILE.~N~
 where SCORE-FILE is the original score file name and N is the prior
 version.
-* Changes in elfeed-score 0.7.2
+** Changes in elfeed-score 0.7.2
 
-** New Features
+*** New Features
 
-*** Scoring Rules Now Serialized to Property Lists
+**** Scoring Rules Now Serialized to Property Lists
 
 This build introduces score file format version 6.
 
@@ -118,15 +132,15 @@ elfeed-score will now serialize scoring rules as property lists, rather than fla
 
 Moving to property lists for the rule format, while more prolix, will reduce errors on the part of rule authors & enable better validation & error messages on the part of the package.
 
-** Other Changes
+*** Other Changes
 
-*** elfeed-score now requires Emacs 26.1
-*** Internal changes cleaning-up after the re-factor.
-* Changes in elfeed-score 0.7.1
+**** elfeed-score now requires Emacs 26.1
+**** Internal changes cleaning-up after the re-factor.
+** Changes in elfeed-score 0.7.1
 
-** Toher Changes
+*** Toher Changes
 
-*** elfeed-score documentation re-worked
+**** elfeed-score documentation re-worked
 
 This build re-works the elfeed-score documentation, breaking
 up the README:
@@ -135,11 +149,11 @@ up the README:
     in the README
   - user documentation has been moved to a Texinfo manual
   - developer documentation has been moved to the project Wiki
-* Changes in elfeed-score 0.7.0
+** Changes in elfeed-score 0.7.0
 
-** Other Changes
+*** Other Changes
 
-*** elfeed-score.el re-factored
+**** elfeed-score.el re-factored
 
 Heretofore, `elfeed-score' was a single-file package. As the
 file has grown to over 2K lines, it became increasingly
@@ -148,115 +162,122 @@ series, I've broken it up into several smaller, hopefully
 more manageable files.
 
 Numerous functions & variables were renamed to begin with their new package prefix. In the case of public symbols, aliases were introduced so code using the old names will receive a warning about using anobsolete variable or function. However, private symbols were simply renamed-- if you wrote code accessing private symbols, this change will break your code.
-* Changes in elfeed-score 0.6.5
+* elfeed-score 0.6
 
-** Bug Fixes
+** Changes in elfeed-score 0.6.5
 
-*** "Some typos" fixed-- Issue #6
-*** `elfeed-score-explain' now correctly documented-- Issue #9
+*** Bug Fixes
 
-** New Features
-*** Better validation on read of score file-- Issue #7
-* Changes in elfeed-score 0.6.4
+**** "Some typos" fixed-- Issue #6
+**** `elfeed-score-explain' now correctly documented-- Issue #9
 
-** Bug Fixes
+*** New Features
+**** Better validation on read of score file-- Issue #7
+** Changes in elfeed-score 0.6.4
 
-*** `elfeed-score-explain-entry' is no longer interactive
-* Changes in elfeed-score 0.6.3
+*** Bug Fixes
 
-** New Features
+**** `elfeed-score-explain-entry' is no longer interactive
+** Changes in elfeed-score 0.6.3
 
-*** Updated the README
+*** New Features
+
+**** Updated the README
 
   - new installation instructions
   - mention of 'elfeed-score-explain-entry'.
-* Changes in elfeed-score 0.6.2
+** Changes in elfeed-score 0.6.2
 
-** New Features
+*** New Features
 
-*** Score explanations changed slightly
+**** Score explanations changed slightly
 
 Re-implemented.
-* Changes in elfeed-score 0.6.1
+** Changes in elfeed-score 0.6.1
 
-** Bug Fixes
+*** Bug Fixes
 
-*** 'elfeed-score--pp-rule-match-to-string' wasn't handling tag rules correctly
-* Changes in elfeed-score 0.6.0
+**** 'elfeed-score--pp-rule-match-to-string' wasn't handling tag rules correctly
+** Changes in elfeed-score 0.6.0
 
-** New Features
+*** New Features
 
-*** 'elfeed-score-explain'
+**** 'elfeed-score-explain'
 
 Produce a human-readable explanation of an entry's score.
-* Changes in elfeed-score 0.5.5
+
+* elfeed-score 0.5
+
+** Changes in elfeed-score 0.5.5
 
 Documentation changes to the README prior to the 0.5.5 release.
-* Changes in elfeed-score 0.5.4
+** Changes in elfeed-score 0.5.4
 
-** New Features
+*** New Features
 
-*** Reporting on which rules have matched most frequently
+**** Reporting on which rules have matched most frequently
 
 Adds an interactive function `elfeed-score-display-rules-by-match-hits'.
-* Changes in elfeed-score 0.5.3
+** Changes in elfeed-score 0.5.3
 
-** New Features
+*** New Features
 
-*** Reporting on how recently rules have matched
+**** Reporting on how recently rules have matched
 
 Adds an interactive function `elfeed-score-display-rules-by-last-match'.
-* Changes in elfeed-score 0.5.2
+** Changes in elfeed-score 0.5.2
 
-** New Features
+*** New Features
 
-*** Scoping rules by feed
+**** Scoping rules by feed
 
 You can now scope a rule by feed, analagously to tags.
-*** Rules now record hit counts
+**** Rules now record hit counts
 
 Each rule will keep track of how many times it has matched; good for figuring out which rules are useful.
-** Bug Fixes
+*** Bug Fixes
 
-**** `elfeed-score--parse-authors-rule-sexps' was deserializing incorrectly
+***** `elfeed-score--parse-authors-rule-sexps' was deserializing incorrectly
 
 The date field was not being deserialized-- fixed.
-**** Spelling errors
+***** Spelling errors
 
 Numerous spelling errors corrected thanks to `flyspell'.
-* Changes in elfeed-score 0.5.1
+** Changes in elfeed-score 0.5.1
 
-** Bug Fixes
+*** Bug Fixes
 
-**** Issue 2: `elfeed-score-write-score-file` will elide information when the list gets long enough
+***** Issue 2: `elfeed-score-write-score-file` will elide information when the list gets long enough
 
 Fixed.
-* Changes in elfeed-score 0.5.0
+** Changes in elfeed-score 0.5.0
 
-** New Features
+*** New Features
 
-*** New Rule Type: Authors
+**** New Rule Type: Authors
 
 Adjust an entry's score up or down based on the Author.
 
-* Changes in elfeed-score 0.4.4
+* elfeed-score 0.4
 
-** Bug Fixes
+** Changes in elfeed-score 0.4.4
 
-*** Issue 2: (elfeed-score-enable) must have an argument now, unlike README suggests
+*** Bug Fixes
+
+**** Issue 2: (elfeed-score-enable) must have an argument now, unlike README suggests
 
 Fixed.
-* Changes in elfeed-score 0.4.3
+** Changes in elfeed-score 0.4.3
 
-** New Features
+*** New Features
 
-*** new rule types
+**** new rule types
 
     1. tag: adjust an entry's score up or down based on the presence or absence of one or more tags
 
     2. adjust-tags: after the scoring process is complete, add or remove tags based on the score being above or below given thresholds.
 
-*** much-improved logging
+**** much-improved logging
 
 modeled on that of `elfeed' itself.
 
