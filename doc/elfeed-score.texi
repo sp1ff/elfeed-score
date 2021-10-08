@@ -371,7 +371,8 @@ The score file is plain-text file containing a single Lisp form. Under
 the hood, elfeed-score opens your file, inserts its contents into a
 temporary buffer, and calls @code{read-from-string} (@pxref{Input
 Functions, read-from-string, read-from-string, elisp, Emacs Lisp}) on
-the contents.
+the contents. Note that this means any comments will be discarded; use
+the @code{:comment} field to attach notes to your rules, instead.
 
 The form is a list of lists; each sub-list begins with a symbol or a
 string identifying that sub-list's nature & purpose. The sub-list
@@ -582,6 +583,13 @@ Rules by Feed} for how to do that.
 
 This property is optional.
 
+@item
+@code{:comment}: Rule comment
+
+An optional, free-form note on this rule. Since Lisp comments will be
+lost on read, this provides a way for the score file author to
+annotate rules.
+
 @end enumerate
 
 So, for instance, the following rule:
@@ -627,6 +635,9 @@ represented by seven properties:
 @item
 @code{:feeds} Feed scoping rules
 
+@item
+@code{:comment} Comment
+
 @end enumerate
 
 As @ref{title Rules, above, above}, only the first three elements are
@@ -668,6 +679,9 @@ The value by which an entry's score will be adjusted when the
 
 @item
 @code{:feeds} Feed scoping rules
+
+@item
+@code{:comment} Comment
 
 @end enumerate
 
@@ -719,6 +733,9 @@ which this rule's text will be matched.
 You may wish to apply this rule only to entries that have certain tags
 (or that do @emph{not} have certain tags). See @ref{Scoping Rules by
 Tags, below, below} for how to do that.
+
+@item
+@code{:comment} Comment
 
 @end enumerate
 
@@ -772,6 +789,9 @@ You may wish to apply this rule only to entries that came from certain
 feeds (or did @emph{not} come from certain feeds). See @ref{Scoping
 Rules by Feed, below, below} for how to do that.
 
+@item
+@code{:comment} Comment
+
 @end enumerate
 
 @node tag Rules
@@ -811,6 +831,9 @@ will apply to entries who posses @emph{none} of the tags in
 The amount by which an entry's score shall be adjusted should this
 rule match.
 
+@item
+@code{:comment} Comment
+
 @end enumerate
 
 @node link Rules
@@ -841,6 +864,9 @@ represented by seven properties:
 
 @item
 @code{:feeds} Feed scoping rules
+
+@item
+@code{:comment} Comment
 
 @end enumerate
 
@@ -897,6 +923,9 @@ This is also given by a cons cell
 If @code{switch} is @code{t} & the rule applies, @code{tags} (either a
 single tag or a list of tags) will be added to the entry; if
 @code{switch} is @code{nil}, they will be removed
+
+@item
+@code{:comment} Comment
 
 @end enumerate
 

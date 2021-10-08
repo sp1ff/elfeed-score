@@ -173,9 +173,9 @@
 ;; from 100 => 200
 (with-temp-file
     elfeed-score-score-file
-  (insert "((version 8)
+  (insert "((version 9)
 (\"title\"
-  (:text \".*\" :value 200 :type r))
+  (:text \".*\" :value 200 :type r :comment \"foo!\"))
 (\"content\"
  (:text \".*\" :value 10 :type r))
 (\"feed\"
@@ -208,6 +208,13 @@
 ;; and at least run the "display" functions
 (elfeed-score-maint-display-rules-by-last-match)
 (elfeed-score-maint-display-rules-by-match-hits)
+
+;; Make sure the deser still contains comments:
+(cl-assert
+ (equal
+  (elfeed-score-title-rule-comment
+   (car elfeed-score-serde-title-rules))
+  "foo!"))
 
 ;; OK-- now let's use the interactive rule functions to add some
 ;; rules, non-interactively. In this case, all defaults will be
@@ -357,11 +364,11 @@ the Elfeed entry to be used in the test."
 ;; negative test-- try adding a rule with a dirty score file:
 (with-temp-file
     elfeed-score-score-file
-  (insert "((version 8)
+  (insert "((version 9)
 (\"title\"
   (:text \".*\" :value 200 :type r))
 (\"content\"
- (:text \".*\" :value 10 :type r))
+ (:text \".*\" :value 10 :type r :comment \"content rule!\"))
 (\"feed\"
  (:text \"emacs-reddit\" :value 75 :type s :attr t)))
 "))

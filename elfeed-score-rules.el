@@ -38,7 +38,7 @@
                ;; always make sense.
                (:constructor
                 elfeed-score-title-rule--create
-                (&key text value type tags feeds
+                (&key text value type tags feeds comment
                       &aux
                       (_
                        (unless (and (stringp text) (> (length text) 0))
@@ -97,8 +97,14 @@
                only to feeds entitled foo or from
                https://bar/com/feed\" Making the first element nil
                means \"do not apply this rule if the feed is
-               either foo or bar\"."
-  text value type tags feeds)
+               either foo or bar\".
+
+    - comment :: An optional, free-form note on this rule. Since
+                 Lisp comments will be lost on read, this
+                 provides a way for the score file author to
+                 annotate rules."
+
+  text value type tags feeds comment)
 
 (cl-defstruct (elfeed-score-title-explanation
                (:constructor nil)
@@ -133,7 +139,7 @@
                ;; always make sense.
                (:constructor
                 elfeed-score-feed-rule--create
-                (&key text value type attr tags
+                (&key text value type attr tags comment
                       &aux
                       (_
                        (unless (and (stringp text) (> (length text) 0))
@@ -176,8 +182,13 @@
               scoping. E.g. (t . (a b)) means \"apply this rule
               if either of tags a & b are present\". Making the
               first element nil means \"do not apply this rule if
-              any of a and b are present\"."
-  text value type attr tags)
+              any of a and b are present\".
+
+    - comment :: An optional, free-form note on this rule. Since
+                 Lisp comments will be lost on read, this
+                 provides a way for the score file author to
+                 annotate rules."
+  text value type attr tags comment)
 
 (cl-defstruct (elfeed-score-feed-explanation
                (:constructor nil)
@@ -213,7 +224,7 @@
                ;; always make sense.
                (:constructor
                 elfeed-score-content-rule--create
-                (&key text value type tags feeds
+                (&key text value type tags feeds comment
                       &aux
                       (_
                        (unless (and (stringp text) (> (length text) 0))
@@ -272,8 +283,13 @@
                only to feeds entitled foo or from
                https://bar/com/feed\" Making the first element nil
                means \"do not apply this rule if the feed is
-               either foo or bar\"."
-  text value type tags feeds)
+               either foo or bar\".
+
+    - comment :: An optional, free-form note on this rule. Since
+                 Lisp comments will be lost on read, this
+                 provides a way for the score file author to
+                 annotate rules."
+  text value type tags feeds comment)
 
 (cl-defstruct (elfeed-score-content-explanation
                (:constructor nil)
@@ -308,7 +324,7 @@
                ;; always make sense.
                (:constructor
                 elfeed-score-title-or-content-rule--create
-                (&key text title-value content-value type tags feeds
+                (&key text title-value content-value type tags feeds comment
                       &aux
                       (_
                        (unless (and (stringp text) (> (length text) 0))
@@ -382,8 +398,13 @@ defining a single rule for both.
                only to feeds entitled foo or from
                https://bar/com/feed\" Making the first element nil
                means \"do not apply this rule if the feed is
-               either foo or bar\"."
-  text title-value content-value type tags feeds)
+               either foo or bar\".
+
+    - comment :: An optional, free-form note on this rule. Since
+                 Lisp comments will be lost on read, this
+                 provides a way for the score file author to
+                 annotate rules."
+  text title-value content-value type tags feeds comment)
 
 (cl-defstruct (elfeed-score-title-or-content-explanation
                (:constructor nil)
@@ -424,7 +445,7 @@ defining a single rule for both.
                ;; always make sense.
                (:constructor
                 elfeed-score-authors-rule--create
-                (&key text value type tags feeds
+                (&key text value type tags feeds comment
                       &aux
                       (_
                        (unless (and (stringp text) (> (length text) 0))
@@ -485,8 +506,13 @@ defining a single rule for both.
                only to feeds entitled foo or from
                https://bar/com/feed\" Making the first element nil
                means \"do not apply this rule if the feed is
-               either foo or bar\"."
-  text value type tags feeds)
+               either foo or bar\".
+
+    - comment :: An optional, free-form note on this rule. Since
+                 Lisp comments will be lost on read, this
+                 provides a way for the score file author to
+                 annotate rules."
+  text value type tags feeds comment)
 
 (cl-defstruct (elfeed-score-authors-explanation
                (:constructor nil)
@@ -521,7 +547,7 @@ defining a single rule for both.
                ;; always make sense.
                (:constructor
                 elfeed-score-tag-rule--create
-                (&key tags value
+                (&key tags value comment
                       &aux
                       (_
                        (unless (and (listp tags))
@@ -541,8 +567,13 @@ defining a single rule for both.
               if any of a and b are present\".
 
     - value :: integral value (positive or negative) by which to
-               adjust the entry score if this rule matches"
-  tags value)
+               adjust the entry score if this rule matches
+
+    - comment :: An optional, free-form note on this rule. Since
+                 Lisp comments will be lost on read, this
+                 provides a way for the score file author to
+                 annotate rules."
+  tags value  comment)
 
 (cl-defstruct (elfeed-score-tags-explanation
                (:constructor nil)
@@ -576,7 +607,7 @@ defining a single rule for both.
                ;; always make sense.
                (:constructor
                 elfeed-score-link-rule--create
-                (&key text value type tags feeds
+                (&key text value type tags feeds comment
                       &aux
                       (_
                        (unless (and (stringp text) (> (length text) 0))
@@ -635,8 +666,13 @@ defining a single rule for both.
                only to feeds entitled foo or from
                https://bar/com/feed\" Making the first element nil
                means \"do not apply this rule if the feed is
-               either foo or bar\"."
-  text value type tags feeds)
+               either foo or bar\".
+
+    - comment :: An optional, free-form note on this rule. Since
+                 Lisp comments will be lost on read, this
+                 provides a way for the score file author to
+                 annotate rules."
+  text value type tags feeds comment)
 
 (cl-defstruct (elfeed-score-link-explanation
                (:constructor nil)
@@ -671,7 +707,7 @@ defining a single rule for both.
                ;; always make sense.
                (:constructor
                 elfeed-score-adjust-tags-rule--create
-                (&key threshold tags
+                (&key threshold tags comment
                       &aux
                       (_
                        (unless (listp threshold)
@@ -693,8 +729,13 @@ a cons cell"))))))
               is t, and this rule matches, the tags in B will be
               added to the entry. If A is nil & this rule
               matches, the list of tags in B shall be removed
-              from the entry."
-  threshold tags)
+              from the entry.
+
+    - comment :: An optional, free-form note on this rule. Since
+                 Lisp comments will be lost on read, this
+                 provides a way for the score file author to
+                 annotate rules."
+  threshold tags comment)
 
 (defun elfeed-score-rules-pp-rule-to-string (rule)
   "Pretty-print RULE; return as a string."

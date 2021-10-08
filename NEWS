@@ -1,5 +1,14 @@
 elfeed-score News -- history of user-visible changes -*- outline -*-
 
+* elfeed-score 1.1
+
+** Changes in elfeed-score 1.1.0
+
+*** New Features
+
+**** address issue 18
+
+Add a :comment field to all rule types.
 * elfeed-score 1.0
 
 ** Changes to elfeed-score 1.0.0
@@ -281,7 +290,7 @@ Fixed.
 
 modeled on that of `elfeed' itself.
 
-* Changes in elfeed-score 0.3.0
+* elfeed-score 0.3
 
 ** New Features
 
@@ -301,7 +310,7 @@ A new type of scoring rule is introduced: `title-or-content'. Such a rule perfor
 
 `elfeed-score' now provides an `elfeed-search-print-entry-function' compliant function that will display each entry's score in the first column of the search view. The score format can be controlled by the customization variable `elfeed-score-score-format'.  See the README for instructions.
 
-* Changes in elfeed-score 0.2.0
+* elfeed-score 0.2
 
 ** New Features
 
@@ -313,10 +322,6 @@ Loading the package no longer affects Elfeed; the package must be enabled via a 
 
 The naming scheme for public symbols changed from "elfeed-score/" to "elfeed-score-" (in accordance with the Emacs Lisp Coding Conventions. Aliases are defined for all 0.1 symbols.
 
-* elfeed-score 0.1.0
+* elfeed-score 0.1
 
 Initial release of the `elfeed-score' package.
-
-Local Variables:
-eval: (visual-line-mode)
-End:

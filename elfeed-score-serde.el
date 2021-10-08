@@ -40,7 +40,7 @@ deserialization of scoring rules."
   :group 'elfeed-score
   :type 'file)
 
-(defconst elfeed-score-serde-current-format 8
+(defconst elfeed-score-serde-current-format 9
   "The most recent score file format version.")
 
 (defvar elfeed-score-serde-title-rules nil
@@ -892,12 +892,12 @@ with the following keys:
      :link links)))
 
 (defun elfeed-score-serde--parse-scoring-sexp-8 (sexp)
-  "Interpret the S-expression SEXP as scoring rules version 8.
+  "Interpret the S-expression SEXP as scoring rules version 8 or 9.
 
-Parse version 8 of the scoring S-expression.  With version 8 of
-the score file format, the rule stats are stored separately, so
-this file won't load them.  However, it will still return lists
-of cons cells (with the cdr set to nil) to allow uniform
+Parse versions 8 & 9 of the scoring S-expression.  With version 8
+of the score file format, the rule stats are stored separately,
+so this file won't load them.  However, it will still return
+lists of cons cells (with the cdr set to nil) to allow uniform
 processing in our caller):
 
     - :title : list of cons cells each of whose car is an
@@ -932,7 +932,7 @@ processing in our caller):
             (rest (cdr raw-item)))
         (cond
          ((string= key "version")
-          (unless (eq 8 (car rest))
+          (unless (or (eq 9 (car rest)) (eq 8 (car rest)))
             (error "Unsupported score file version %s" (car rest))))
          ((string= key "title")
           (setq
@@ -1090,6 +1090,12 @@ processing in our caller):
       (elfeed-score-serde--parse-scoring-sexp-6 sexps))
      ((eq version 7)
       (elfeed-score-serde--parse-scoring-sexp-7 sexps))
+     ((eq version 8)
+      (elfeed-score-serde--parse-scoring-sexp-8 sexps))
+     ;; Again not a typo-- version 9 adds a new optional field
+     ;; (:comment) to the end of each struct type; so old versions of
+     ;; elfeed-score will silently ignore, which I don't think we
+     ;; want.
      ((eq version elfeed-score-serde-current-format)
       (elfeed-score-serde--parse-scoring-sexp-8 sexps))
      (t

@@ -655,6 +655,37 @@ cf. `test-issue-12'."
                            nil))
                          :version 8)))))
 
+(ert-deftest test-format-version-9 ()
+  "Smoke tests for format version 9.
+
+Version 9 added support for the :comment field."
+  (let* ((score-entries
+          '((version 9)
+            ("title"
+             (:text "hoping" :value -1000 :type s :comment "foo!"))
+            ("link"
+             (:text "foo" :value 100 :type r :comment "bar!"))))
+         (score-text (pp-to-string score-entries))
+         (score-file (make-temp-file "elfeed-score-test-" nil nil score-text))
+         (score-entries-read (elfeed-score-serde--parse-score-file score-file)))
+    (should (equal score-entries-read
+                   (list :mark nil :adjust-tags nil :feeds nil
+                         :titles
+                         (list
+                          (cons
+                           (elfeed-score-title-rule--create
+                            :text "hoping" :value -1000 :type 's :comment "foo!")
+                           nil))
+                         :content nil :title-or-content nil
+                         :authors nil :tag nil
+                         :link
+                         (list
+                          (cons
+                           (elfeed-score-link-rule--create
+                            :text "foo" :value 100 :type 'r :comment "bar!")
+                           nil))
+                         :version 9)))))
+
 (ert-deftest test-add-rule ()
   "Tests for `elfeed-score-serde-add-rule'."
   (with-elfeed-score-test
