@@ -2,7 +2,7 @@
 #+DESCRIPTION: Gnus-style scoring for Elfeed
 #+AUTHOR: Michael Herstine
 #+EMAIL: sp1ff@pobox.com
-#+DATE: <2021-10-08 Fri 15:56>
+#+DATE: <2021-10-14 Thu 10:45>
 #+AUTODATE: t
 #+OPTIONS: toc:nil org-md-headline-style:setext *:t ^:nil
 #+STARTUP: overview
@@ -124,7 +124,7 @@ When elfeed-score loads a score file that uses an archaic format (i.e. a format 
 This should all be transparent to the user.
 * Status and Roadmap
 
-I've been using [[https://github.com/sp1ff/elfeed-score][elfeed-score]] day in & day out for my RSS reading for almost two years now. I wrote a post on how [[https://github.com/sp1ff/elfeed-score][elfeed-score]] works, along with the process of submitting code to MELPA, [[https://www.unwoundstack.com/blog/scoring-elfeed-entries.html][here]]. [[https://github.com/C-J-Cundy][Chris]] wrote a post on how he uses it to [[https://cundy.me/post/elfeed/][manage ArXiv RSS Feeds]]. 
+I've been using [[https://github.com/sp1ff/elfeed-score][elfeed-score]] day in & day out for my RSS reading for almost two years now. I wrote a post on how [[https://github.com/sp1ff/elfeed-score][elfeed-score]] works, along with the process of submitting code to MELPA, [[https://www.unwoundstack.com/blog/scoring-elfeed-entries.html][here]]. [[https://github.com/C-J-Cundy][Chris]] wrote a post on how he uses it to [[https://cundy.me/post/elfeed/][manage ArXiv RSS Feeds]]. [[https://kitchingroup.cheme.cmu.edu/][John Kitchin]] talks about [[https://github.com/skeeto/elfeed][Elfeed]] & [[https://github.com/sp1ff/elfeed-score][elfeed-score]] [[https://www.youtube.com/watch?v=rvWbUGx9U5E][here]].
 
 The version numbers (0.X) over that time were chosen to suggest preliminary releases, but I'm now calling this 1.0. The 0.9 releases were hygenic: cleaning-up the test suite, improving validation on deserializing the score file, and removing obsolete functions & variables. Beginning with 1.0, I'll also comply with semver (e.g. breaking changes will be a major release, new features a minor, and bug fixes a patch).
 
