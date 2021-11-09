@@ -1,5 +1,5 @@
 AC_PREREQ([2.69])
-AC_INIT([elfeed-score], [1.1.0], [sp1ff@pobox.com], [elfeed-score], [https://github.com/sp1ff/elfeed-score])
+AC_INIT([elfeed-score], [1.2.0], [sp1ff@pobox.com], [elfeed-score], [https://github.com/sp1ff/elfeed-score])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_SRCDIR([./elfeed-score.el])
 AC_PROG_MAKE_SET

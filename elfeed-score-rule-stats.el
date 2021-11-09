@@ -79,6 +79,13 @@ operation that will update many statistics with a let form."
   (hits 0 :type 'integer)
   (date nil :type 'float))
 
+(cl-defstruct (elfeed-score-rule-udf-stats
+               (:include elfeed-score-rule-stats)
+               (:constructor nil)
+               (:constructor elfeed-score-rule-udf-stats--create (&key hits date errors)))
+  "UDF rule-specific stats."
+  (errors 0 :type integer))
+
 (defun elfeed-score-rule-stats--make-table ()
   "Create an empty hash table mapping rules to statistics."
   (make-hash-table :test 'equal :weakness nil))
@@ -189,6 +196,17 @@ heavily derivative of `basic-save-buffer-2'."
   (elfeed-score-log 'info "Wrote stats for %d rules to disk."
                     (hash-table-count elfeed-score-rule-stats--table)))
 
+(defun elfeed-score-rule-stats--incr-dirty ()
+  "Increment the dirty count & maybe flush."
+  (setq elfeed-score-rule-stats--dirty-stats (1+ elfeed-score-rule-stats--dirty-stats))
+  ;; Time to flush in-memory stats to disk?
+  (if (and elfeed-score-rule-stats-dirty-threshold
+           (>= elfeed-score-rule-stats--dirty-stats
+               elfeed-score-rule-stats-dirty-threshold)
+           elfeed-score-rule-stats-file)
+      (progn
+        (elfeed-score-rule-stats-write elfeed-score-rule-stats-file))))
+
 (defun elfeed-score-rule-stats-on-match (rule &optional time)
   "Record the fact that RULE has matched at time TIME."
 
@@ -198,14 +216,16 @@ heavily derivative of `basic-save-buffer-2'."
     (setf (elfeed-score-rule-stats-hits entry) (1+ (elfeed-score-rule-stats-hits entry)))
     (setf (elfeed-score-rule-stats-date entry) time)
     (puthash rule entry elfeed-score-rule-stats--table)
-    (setq elfeed-score-rule-stats--dirty-stats (1+ elfeed-score-rule-stats--dirty-stats))
-    ;; Time to flush in-memory stats to disk?
-    (if (and elfeed-score-rule-stats-dirty-threshold
-             (>= elfeed-score-rule-stats--dirty-stats
-                 elfeed-score-rule-stats-dirty-threshold)
-             elfeed-score-rule-stats-file)
-        (progn
-          (elfeed-score-rule-stats-write elfeed-score-rule-stats-file)))))
+    (elfeed-score-rule-stats--incr-dirty)))
+
+(defun elfeed-score-rule-stats-on-udf-error (rule)
+  "Record the fact that UDF RULE has errored."
+  (let ((entry (or (gethash rule elfeed-score-rule-stats--table)
+                   (elfeed-score-rule-udf-stats--create))))
+    (setf (elfeed-score-rule-udf-stats-errors entry)
+          (1+ (elfeed-score-rule-udf-stats-errors entry)))
+    (puthash rule entry elfeed-score-rule-stats--table)
+    (elfeed-score-rule-stats--incr-dirty)))
 
 ;; I go back & forth on the contract for this method-- if `rule' isn't
 ;; a key in the hash table, should I return nil, or return a

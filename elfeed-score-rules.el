@@ -432,6 +432,114 @@ defining a single rule for both.
       (elfeed-score-title-or-content-rule-content-value rule))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;                            UDF rules                             ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun elfeed-score-rules--fn-display-name (fn)
+  "Construct a display name for FN."
+  (if (symbolp fn)
+      (symbol-name fn)
+    (let* ((doc (documentation fn))
+           (pos (cl-position ?\n doc)))
+      (cond
+       ((and pos (not (eq pos 0))) (substring doc 0 pos))
+       ((and (not pos) (not (eq 0 (length doc)))) doc)
+       ((byte-code-function-p fn) "<anonymous byte-compiled function>")
+       ((and (listp fn) (eq 'lambda (car fn))) "<anonymous lambda>")
+       ((and (listp fn) (eq 'closure (car fn))) "<anonymous closure>")
+       (t "<anonymous function>")))))
+
+(cl-defstruct (elfeed-score-udf-rule
+               ;; Disable the default ctor (the name violates Emacs
+               ;; package naming conventions)
+               (:constructor nil)
+               (:constructor
+                elfeed-score-udf-rule--create
+                (&key function display-name tags feeds comment
+                      &aux
+                      (_
+                       (unless (functionp function)
+                         (error "UDF rule function must be a function")))
+                      (display-name
+                       (or display-name
+                           (elfeed-score-rules--fn-display-name function))))))
+  "A rule scoring on the basis of an arbitrary, user-defined function
+
+    - function :: the function to be invoked for scoring purposes;
+                  the function will receive a single parameter: the
+                  elfeed-entry to be scored.  It may return nil to
+                  indicate that the rule does not apply, or an integer
+                  to contribute to the score (a return value of
+                  zero indicates that the rule does apply, but that
+                  it's contribution for this entry is zero)
+
+    - display-name :: elfeed-score will attempt to derive a name
+                      from the function slot, but if a string is
+                      provided for this slot, that string will be
+                      used for pretty-printing, logging and so forth
+
+    - tags :: cons cell of the form (a . b) where A is either t
+              or nil and B is a list of symbols. The latter is
+              interpreted as a list of tags scoping the rule and
+              the former as a boolean switch possibly negating the
+              scoping. E.g. (t . (a b)) means \"apply this rule
+              if either of tags a & b are present\". Making the
+              first nil element means \"do not apply this rule if
+              any of a and b are present\".
+
+    - feeds :: cons cell of the form (A . B) where A is either t
+               or nil and B is a list of three-tuples. Each
+               three-tuple will be matched against an entry's
+               feed:
+
+                 1. attribute: one of 't, 'u, or 'a for title,
+                 URL, or author, resp.
+                 2. match type: one of 's, 'S, 'r, 'R, 'w, or
+                 'W (the usual match types)
+                 3. match text
+
+               So, e.g. '(t s \"foo\") means do a
+               case-insensitive substring match for \"foo\"
+               against the feed title.
+
+               The first element of the cons cell is interpreted as a boolean
+               switch possibly negating the scoping. For
+               instance, (t . '((t s \"foo\") (u s
+               \"https://bar.com/feed\"))) means \"apply this rule
+               only to feeds entitled foo or from
+               https://bar/com/feed\" Making the first element nil
+               means \"do not apply this rule if the feed is
+               either foo or bar\".
+
+    - comment :: An optional, free-form note on this rule. Since
+                 Lisp comments will be lost on read, this
+                 provides a way for the score file author to
+                 annotate rules."
+  function display-name tags feeds comment)
+
+(cl-defstruct (elfeed-score-udf-explanation
+               (:constructor nil)
+               (:constructor elfeed-score-make-udf-explanation))
+  "An explanation of a UDF rule match."
+  entry-title rule value index)
+
+(defun elfeed-score-rules-pp-udf-explanation (match)
+  "Pretty-print MATCH to string."
+  (let ((rule (elfeed-score-udf-explanation-rule match)))
+    (format "udf{%s}: \"%s\": %d"
+            (elfeed-score-udf-rule-display-name rule)
+            (elfeed-score-udf-explanation-entry-title match)
+            (elfeed-score-udf-explanation-value match))))
+
+(defun elfeed-score-rules-udf-explanation-contrib (match)
+  "Return the score contribution due to MATCH.
+
+UDF explanations record the result of invoking their function, so
+this could simply be accessed by field, but this defun is
+provided for consistency's sake."
+  (elfeed-score-udf-explanation-value match))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;                          authors rules                           ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -573,7 +681,7 @@ defining a single rule for both.
                  Lisp comments will be lost on read, this
                  provides a way for the score file author to
                  annotate rules."
-  tags value  comment)
+  tags value comment)
 
 (cl-defstruct (elfeed-score-tags-explanation
                (:constructor nil)
@@ -749,6 +857,8 @@ a cons cell"))))))
     (elfeed-score-title-or-content-rule
      (format "title-or-content{%s}"
              (elfeed-score-title-or-content-rule-text rule)))
+    (elfeed-score-udf-rule
+     (format "udf{%s}" (elfeed-score-udf-rule-display-name rule)))
     (elfeed-score-authors-rule
      (format "authors{%s}" (elfeed-score-authors-rule-text rule)))
     (elfeed-score-tag-rule
@@ -776,7 +886,9 @@ a cons cell"))))))
     (elfeed-score-tags-explanation
      (elfeed-score-tags-explanation-index exp))
     (elfeed-score-link-explanation
-     (elfeed-score-link-explanation-index exp))))
+     (elfeed-score-link-explanation-index exp))
+    (elfeed-score-udf-explanation
+     (elfeed-score-udf-explanation-index exp))))
 
 (provide 'elfeed-score-rules)
 ;;; elfeed-score-rules.el ends here
