@@ -367,12 +367,13 @@ Load the score file into the current session.
 @node Score File Format
 @section Score File Format
 
-The score file is plain-text file containing a single Lisp form. Under
-the hood, elfeed-score opens your file, inserts its contents into a
-temporary buffer, and calls @code{read-from-string} (@pxref{Input
-Functions, read-from-string, read-from-string, elisp, Emacs Lisp}) on
-the contents. Note that this means any comments will be discarded; use
-the @code{:comment} field to attach notes to your rules, instead.
+The score file is a plain-text file containing a single Lisp
+form. Under the hood, elfeed-score opens your file, inserts its
+contents into a temporary buffer, and calls @code{read-from-string}
+(@pxref{Input Functions, read-from-string, read-from-string, elisp,
+Emacs Lisp}) on the contents. Note that this means any comments will
+be discarded; use the @code{:comment} field to attach notes to your
+rules, instead.
 
 The form is a list of lists; each sub-list begins with a symbol or a
 string identifying that sub-list's nature & purpose. The sub-list
@@ -437,9 +438,13 @@ This sublist contains rules that match against entries' tags;
 see @ref{tag Rules} below for more details.
 
 @item
-@cindex score file
 ``feed''
 This sublist contains rules that match against entries' feed;
+see @ref{feed Rules} below for more details.
+
+@item
+``link
+This sublist contains rules that match against entries' link;
 see @ref{feed Rules} below for more details.
 
 @item
@@ -517,6 +522,7 @@ better error messages on reading score files.
 * authors Rules::
 * tag Rules::
 * link Rules::
+* UDF Rules::
 * adjust-tags Rules::
 * mark Rule::
 @end menu
@@ -533,7 +539,7 @@ specify the amount to be added to an entry's score on successful
 match.
 
 In the score file (@pxref{The Score File}), title rules are
-represented by a property list of up to seven attributes:
+represented by a property list of up to six attributes:
 
 @enumerate
 @item
@@ -617,7 +623,7 @@ reason, this section will be very brief-- refer to @ref{title Rules}
 for the details of each element.
 
 In the score file (@pxref{The Score File}), content rules are
-represented by seven properties:
+represented by six properties:
 
 @enumerate
 @item
@@ -652,7 +658,7 @@ When searching for text in entries on which to score, it can be
 convenient to check both title @emph{and} content. Rather than
 repeating each rule in both the ``title'' and ``content'' elements of
 the score file, you can use ``title-or-content'' rules. These rules
-consist of eight elements, not seven:
+consist of seven elements, not six:
 
 @enumerate
 @item
@@ -705,7 +711,7 @@ would add 150 to any element who's title contains the string
 
 You can adjust an entry's score on the basis of the feed that produced
 it with a ``feed'' rule. For instance I use this to prioritize certain
-sources.  A feed rule is defined by the following seven elements:
+sources.  A feed rule is defined by the following six elements:
 
 @enumerate
 
@@ -846,7 +852,7 @@ attribute. They are similar to @ref{title Rules} excepting the entry
 attribute to be matched. For that reason, this section will be brief--
 refer to @ref{title Rules} for the details of each element.
 
-In the score file (@pxref{The Score File}), content rules are
+In the score file (@pxref{The Score File}), link rules are
 represented by seven properties:
 
 @enumerate
@@ -872,6 +878,41 @@ represented by seven properties:
 
 As @ref{title Rules, above, above}, only the first three elements are
 required.
+
+@node UDF Rules
+@subsection UDF Rules
+
+@cindex UDF rules
+
+If none of the other rule types will do, you can define your own
+scoring function. ``UDF`` stands for user-defined function: such a
+function shall take a single parameter of type @code{elfeed-entry} and
+return either nil (to indicate no interest in this entry) or an
+integer (representing this rule's contribution to this entry's score).
+
+In the score file (@pxref{The Score File}), link rules are represented
+by five properties:
+
+@enumerate
+@item
+@code{:function} The user-defined function; typically this will be a
+@code{lambda} form or a symbol
+
+@item
+@code{:display-name} elfeed-score will attempt to deduce a name for
+the function; if this value is specified, the given string will be
+used for logging, pretty-print & so forth
+
+@item
+@code{:tags} Tag scoping rules
+
+@item
+@code{:feeds} Feed scoping rules
+
+@item
+@code{:comment} Comment
+
+@end enumerate
 
 @node adjust-tags Rules
 @subsection adjust-tags Rules
@@ -1087,7 +1128,7 @@ writing. Working score files tend to grow much larger than this
 
 @lisp
 ;;; Elfeed score file                                     -*- lisp -*-
-((version 8)
+((version 10)
  ("title"
   (:text "rust.*who.s hiring" :value 1500 :type r)
   (:text "Microsoft Security Response Center" :value 1500 :type s))

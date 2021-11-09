@@ -59,7 +59,9 @@
              (elfeed-score-serde-link-rules
               (list (elfeed-score-link-rule--create :text "foo" :value 1 :type 's)))
              (elfeed-score-serde-tag-rules
-              (list (elfeed-score-tag-rule--create :tags '(b c d) :value 1))))
+              (list (elfeed-score-tag-rule--create :tags '(b c d) :value 1)))
+             (elfeed-score-serde-udf-rules
+              (list (elfeed-score-udf-rule--create :function (lambda (_) 1)))))
         (elfeed-score-scoring-explain-entry entry)
         (let ((text
                (with-current-buffer "*explanation-smoke-tests*"
@@ -69,7 +71,7 @@
             text
             (concat
              (propertize "bar" 'face 'elfeed-score-scoring-explain-text-face)
-             " matches 7 rules for a score of 7:
+             " matches 8 rules for a score of 8:
 (NB your score file is dirty; these matches correspond to the rules currently in-memory)
     1. title{bar}: \"bar\": 1
     2. feed{t/foo}: \"foo\": 1
@@ -78,6 +80,7 @@
     5. authors{hancock} \"Hancock\": 1
     6. tags{(b c d)}: 1
     7. link{foo}: \"foo\": 1
+    8. udf{<anonymous closure>}: \"bar\": 1
 ")))))))))
 
 (provide 'test-explanations)

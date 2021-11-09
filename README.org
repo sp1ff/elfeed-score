@@ -2,7 +2,7 @@
 #+DESCRIPTION: Gnus-style scoring for Elfeed
 #+AUTHOR: Michael Herstine
 #+EMAIL: sp1ff@pobox.com
-#+DATE: <2021-10-14 Thu 10:45>
+#+DATE: <2021-11-16 Tue 18:23>
 #+AUTODATE: t
 #+OPTIONS: toc:nil org-md-headline-style:setext *:t ^:nil
 #+STARTUP: overview
@@ -18,7 +18,7 @@
 
 [[https://github.com/skeeto/elfeed][Elfeed]] is an extensible web feed reader for Emacs. By default, it will display entries in reverse chronological order. This package defines a bit of metadata for each of your feed entries: a "score". A score is an integer (negative or positive), and higher scores denote entries of greater interest to you. This package also (optionally) installs a new sort function, so that Elfeed will display entries with higher scores before entries with lower scores (entries with the same scores will still be sorted in reverse chronological order). It also provides an entry display function for the elfeed search buffer that displays each entry's score, should you choose to install it.
 
-While you can manually assign a score to an entry, you will likely find it more convenient to create rules for scoring that will be automatically applied to each new entry every time you update Elfeed. You can score against title, feed, content, authors & entry link by defining strings that will be matched against those attributes by substring, regexp or whole-word match. You can score against the feed (on the basis of title, URL, or feed author). You can also score against the presence or absence of tags. Rules can be scoped by Elfeed entry tags or by their feed, so that a rule will only be applied to a subset of your entries. Each rule defines an integral value, and the rules are applied in order of definition. The new entry's score begins at =elfeed-score-scoring-default-score=, and is adjusted by the value defined by each matching scoring rule.
+While you can manually assign a score to an entry, you will likely find it more convenient to create rules for scoring that will be automatically applied to each new entry every time you update Elfeed. You can score against title, feed, content, authors & entry link by defining strings that will be matched against those attributes by substring, regexp or whole-word match. You can score against the feed (on the basis of title, URL, or feed author). You can also score against the presence or absence of tags. If none of these do what you want, you can author your own functions & score based on them. Rules can be scoped by Elfeed entry tags or by their feed, so that a rule will only be applied to a subset of your entries. Each rule defines an integral value, and the rules are applied in order of definition. The new entry's score begins at =elfeed-score-scoring-default-score=, and is adjusted by the value defined by each matching scoring rule.
 
 For instance, here's a subset of my scoring file at the moment:
 
@@ -73,7 +73,7 @@ The easiest way to install elfeed-score is [[https://github.com/melpa/melpa][MEL
 If you would prefer to install the package manually, you can also download the Emacs package file on the GitHub releases [[https://github.com/sp1ff/elfeed-score/releases][page]] or from my personal [[https://www.unwoundstack/distros.html][page]]. Then say:
 
 #+BEGIN_SRC elisp
-(package-install-file "elfeed-score-1.1.0.tar")
+(package-install-file "elfeed-score-1.2.0.tar")
 #+END_SRC
 
 ** Autotools Source Distributions
@@ -82,8 +82,8 @@ You can also download Autotools source tarballs (again available either on the G
 
 #+BEGIN_SRC bash
 cd /tmp
-curl -L --output elfeed-score-1.1.0.tar.gz https://github.com/sp1ff/elfeed-score/releases/download/1.1.0/elfeed-score-1.1.0.tar.gz
-tar xvf elfeed-score-1.1.0.tar.gz && cd elfeed-score-1.1.0
+curl -L --output elfeed-score-1.2.0.tar.gz https://github.com/sp1ff/elfeed-score/releases/download/1.2.0/elfeed-score-1.2.0.tar.gz
+tar xvf elfeed-score-1.2.0.tar.gz && cd elfeed-score-1.2.0
 export EMACSLOADPATH=$HOME/.emacs.d/elpa/elfeed-20200209.1942:$EMACSLOADPATH
 ./configure
 make
@@ -98,16 +98,16 @@ The unit tests require some macros defined by the [[https://github.com/skeeto/el
 #+BEGIN_SRC bash
 cd /tmp
 git clone https://github.com/skeeto/elfeed.git
-curl -L --output=elfeed-score-1.1.0.tar.gz https://github.com/sp1ff/elfeed-score/releases/download/1.1.0/elfeed-score-1.1.0.tar.gz
-tar xvf elfeed-score-1.1.0.tar.gz && cd elfeed-score-1.1.0
-export EMACSLOADPATH=/tmp/elfeed-score-1.1.0:/tmp/elfeed:/tmp/elfeed/tests:$EMACSLOADPATH
+curl -L --output=elfeed-score-1.2.0.tar.gz https://github.com/sp1ff/elfeed-score/releases/download/1.2.0/elfeed-score-1.2.0.tar.gz
+tar xvf elfeed-score-1.2.0.tar.gz && cd elfeed-score-1.2.0
+export EMACSLOADPATH=/tmp/elfeed-score-1.2.0:/tmp/elfeed:/tmp/elfeed/tests:$EMACSLOADPATH
 ./configure
 make
 make check
 sudo make install
 #+END_SRC
 
-Again, unless you already use =EMACSLOADPATH=, you'll need to set =EMACSLOADPATH= appropriately to your system, something like =EMACSLOADPATH=/tmp/elfeed-score-1.1.0:/tmp/elfeed:/tmp/elfeed/tests:/usr/share/emacs/25.2/lisp=.
+Again, unless you already use =EMACSLOADPATH=, you'll need to set =EMACSLOADPATH= appropriately to your system, something like =EMACSLOADPATH=/tmp/elfeed-score-1.2.0:/tmp/elfeed:/tmp/elfeed/tests:/usr/share/emacs/25.2/lisp=.
 ** Building From Source
 
 Finally, you can of course just clone this repo & build there. I've started a [[https://github.com/sp1ff/elfeed-score/wiki][wiki]], whose intended audience are people looking to hack on elfeed-score, that includes build instructions.

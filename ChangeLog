@@ -1,3 +1,13 @@
+2021-11-16  Michael Herstine  <sp1ff@pobox.com>
+
+	Address issue #19.
+	This commit adds a new rule type `elfeed-score-udf-rule`. `udf'
+	for User-Defined function.
+
+2021-10-14  Michael Herstine  <sp1ff@pobox.com>
+
+	Added a reference to John Kitchin's video to the README
+
 2021-10-08  Michael Herstine  <sp1ff@pobox.com>
 
 	Address Issue-18.

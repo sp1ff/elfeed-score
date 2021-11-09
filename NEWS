@@ -1,10 +1,15 @@
 elfeed-score News -- history of user-visible changes -*- outline -*-
 
+* elfeed-score 1.2
+
+** changes in elfeed-score 1.2.0
+
+**** address issue 19
+
+Add user-defined scoring functions.
 * elfeed-score 1.1
 
 ** Changes in elfeed-score 1.1.0
-
-*** New Features
 
 **** address issue 18
 

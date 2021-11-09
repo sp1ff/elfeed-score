@@ -481,5 +481,41 @@ parameter."
        (elfeed-score-scoring-set-score-on-entry entry2 200)
        (should (eq (elfeed-score-scoring-get-score-from-entry entry1) 200))))))
 
+(ert-deftest test-broken-udf ()
+  "Check that we handle an error-ing UDF."
+  (let* ((lorem-ipsum "Lorem ipsum dolor sit amet")
+         (entry-title "foo bar splat"))
+    (with-elfeed-test
+     (let* ((feed (elfeed-test-generate-feed))
+            (entry (elfeed-score-test-generate-entry
+                    feed entry-title lorem-ipsum
+                    :tags '(foo splat))))
+       (elfeed-db-add entry)
+       (with-elfeed-score-test
+        (let* ((elfeed-score-serde-title-rules
+                (list (elfeed-score-title-rule--create :text "Splat" :value 1 :type 's)))
+               (elfeed-score-serde-udf-rules
+                (list
+                 (elfeed-score-udf-rule--create :function (lambda (_) (error "My bad")))
+                 (elfeed-score-udf-rule--create :function (lambda (_) nil))
+                 (elfeed-score-udf-rule--create :function (lambda (_) 2))))
+               (score (elfeed-score-scoring-score-entry entry))
+               (stats1 (elfeed-score-rule-stats-get (car elfeed-score-serde-title-rules)))
+               (stats2 (elfeed-score-rule-stats-get (nth 0 elfeed-score-serde-udf-rules)))
+               (stats3 (elfeed-score-rule-stats-get (nth 1 elfeed-score-serde-udf-rules)))
+               (stats4 (elfeed-score-rule-stats-get (nth 2 elfeed-score-serde-udf-rules))))
+          (message "CP1")
+          (should (eq score 3))
+          (message "CP2")
+          (should (eq 1 (elfeed-score-rule-stats-hits stats1)))
+          (message "CP3: %s" stats2)
+          (should (eq 0 (elfeed-score-rule-stats-hits stats2)))
+          (message "CP4")
+          (should (eq 1 (elfeed-score-rule-udf-stats-errors stats2)))
+          (message "CP5")
+          (should (eq nil stats3)) ;; never matches, no errors => no stats
+          (message "CP6")
+          (should (eq 1 (elfeed-score-rule-stats-hits stats4)))))))))
+
 (provide 'test-scoring)
 ;;; test-scoring.el ends here

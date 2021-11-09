@@ -227,6 +227,7 @@ Format version defaulted; tag-scoping rules."
        :authors nil
        :tag nil
        :link nil
+       :udf nil
        :version elfeed-score-serde-current-format)))))
 
 (ert-deftest test-score-files-4 ()
@@ -303,6 +304,7 @@ Format version defaulted, includes adjust-tags rules."
           :tags '(nil . z) :value -1)
          nil))
        :link nil
+       :udf nil
        :version elfeed-score-serde-current-format)))))
 
 (ert-deftest test-score-files-5 ()
@@ -728,6 +730,75 @@ Version 9 added support for the :comment field."
        (list
         (elfeed-score-title-rule--create
          :text "paradise found" :value 150 :type 's)))))))
+
+(ert-deftest test-format-version-10 ()
+  "Smoke tests for format version 10.
+
+Version 10 added support for user-defined functions."
+
+  (defun udf (_) 2)
+
+  (let* ((score-entries
+          '((version 10)
+            ("title"
+             (:text "hoping" :value -1000 :type s :comment "foo!"))
+            ("udf"
+             (:function (lambda (_) 1) :comment "foo")
+             (:function udf :display-name "udf" :comment "bar"))))
+         (score-text (pp-to-string score-entries))
+         (score-file (make-temp-file "elfeed-score-test-" nil nil score-text))
+         (score-entries-read (elfeed-score-serde--parse-score-file score-file)))
+    (should (equal score-entries-read
+                   (list :mark nil :adjust-tags nil :feeds nil
+                         :titles
+                         (list
+                          (cons
+                           (elfeed-score-title-rule--create
+                            :text "hoping" :value -1000 :type 's :comment "foo!")
+                           nil))
+                         :content nil :title-or-content nil
+                         :authors nil :tag nil
+                         :link nil
+                         :udf
+                         (list
+                          (cons
+                           (elfeed-score-udf-rule--create
+                            :function '(lambda (_) 1) :comment "foo")
+                           nil)
+                          (cons
+                           (elfeed-score-udf-rule--create
+                            :function 'udf :display-name "udf" :comment "bar")
+                           nil))
+                         :version 10)))))
+
+(ert-deftest test-upgrade-from-9 ()
+  "Test upgrading version version 9 of the score file.
+
+When elfeed-score reads a score file in an archaic format, it
+should immediately re-write the file in the new format (as well
+as make a backup copy of the file in the old format.  For some
+reason this evening, I'm paranoid about my score file upgrade,
+so I'm writing another unit test."
+
+  (let* ((score-entries
+          '((version 9)
+            ("title"
+             (:text "hoping" :value -1000 :type s :tags (t . (foo bar)) :feeds (t . ((t . "foo")))))
+            ("feed"
+             (:text "foo.com" :value +100 :type s :attr u))
+            (mark -2500)))
+         (score-text (pp-to-string score-entries))
+         (score-file (make-temp-file "elfeed-score-test-" nil nil score-text))
+         (backup-name (format "%s.~9~" score-file)))
+    (elfeed-score-serde-load-score-file score-file)
+    ;; This should leave us with:
+    ;; 1. a copy of the score file in `backup-name'
+    (should (file-exists-p backup-name))
+    ;; 2. `score-file' updated to `elfeed-score-serde-current-format'
+    (should
+     (eq elfeed-score-serde-current-format
+         (plist-get (elfeed-score-serde--parse-score-file score-file) :version)))))
+
 
 (provide 'test-serde)
 ;;; test-serde.el ends here

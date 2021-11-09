@@ -384,7 +384,7 @@ will be the rule that matched & the second the matched text."
   (let ((score 0))
     (elfeed-score-scoring--apply-feed-rules
      entry
-     (lambda (rule match-text index)
+     (lambda (rule match-text _index)
        (let ((value (elfeed-score-feed-rule-value rule)))
          (elfeed-score-log
           'debug
@@ -414,14 +414,14 @@ match (t) or a content match (nil)."
     (cl-loop for rule being the elements of elfeed-score-serde-title-or-content-rules
              using (index idx)
              do
-             (let* ((match-text      (elfeed-score-title-or-content-rule-text  rule))
-		                (match-type      (elfeed-score-title-or-content-rule-type  rule))
-                    (tag-rule        (elfeed-score-title-or-content-rule-tags  rule))
-                    (feed-rule       (elfeed-score-title-or-content-rule-feeds rule))
-                    (matched-tags    (elfeed-score-scoring--match-tags
-                                      (elfeed-entry-tags entry) tag-rule))
-                    (matched-feeds   (elfeed-score-scoring--match-feeds
-                                      (elfeed-entry-feed entry) feed-rule))
+             (let* ((match-text    (elfeed-score-title-or-content-rule-text  rule))
+		                (match-type    (elfeed-score-title-or-content-rule-type  rule))
+                    (tag-rule      (elfeed-score-title-or-content-rule-tags  rule))
+                    (feed-rule     (elfeed-score-title-or-content-rule-feeds rule))
+                    (matched-tags  (elfeed-score-scoring--match-tags
+                                    (elfeed-entry-tags entry) tag-rule))
+                    (matched-feeds (elfeed-score-scoring--match-feeds
+                                    (elfeed-entry-feed entry) feed-rule))
                     (matched-title
                      (and
                       matched-tags
@@ -459,7 +459,7 @@ for a title match & nil for a content match."
 
 (defun elfeed-score-scoring--score-on-title-or-content (entry)
   "Run all title-or-content rules against ENTRY; return the summed values."
-  (let ((score 0))
+  (let ((score elfeed-score-scoring-default-score))
     (elfeed-score-scoring--apply-title-or-content-rules
      entry
      (lambda (rule match-text title-match _index)
@@ -479,6 +479,79 @@ for a title match & nil for a content match."
                              value)
 		       (setq score (+ score value))
            (elfeed-score-rule-stats-on-match rule)))))
+    score))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;                            UDF rules                             ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun elfeed-score-scoring--call-udf (rule entry)
+  "Invoke RULE on ENTRY."
+
+  (condition-case err
+      (funcall (elfeed-score-udf-rule-function rule) entry)
+    ((error)
+     (let ((display-name (elfeed-score-udf-rule-display-name rule)))
+       (elfeed-score-rule-stats-on-udf-error rule)
+       (elfeed-score-log 'error "Error '%s' in UDF '%s': %s"
+                         (car err) display-name (cdr err))
+       (message "%s: %s (see the elfeed-score log for details)."
+                display-name (car err))
+       nil))))
+
+(defun elfeed-score-scoring--apply-udf-rules (entry on-match)
+  "Apply the udf rules to ENTRY; invoke ON-MATCH for each match.
+
+UDF rules are slightly different than other rules in that the
+rule itself decides whether it \"applies\".  While the rule
+itself cna be scoped by tags and/or feed, the user-defined
+function can return nil to indicate that it does not apply."
+
+  (cl-loop for rule being the elements of elfeed-score-serde-udf-rules
+           using (index idx)
+           do
+           (let* ((tag-rule      (elfeed-score-udf-rule-tags  rule))
+                  (feed-rule     (elfeed-score-udf-rule-feeds rule))
+                  (matched-tags  (elfeed-score-scoring--match-tags
+                                  (elfeed-entry-tags entry) tag-rule))
+                  (matched-feeds (elfeed-score-scoring--match-feeds
+                                  (elfeed-entry-feed entry) feed-rule))
+                  (result
+                   (and
+                    matched-tags
+                    matched-feeds
+                    (elfeed-score-scoring--call-udf rule entry))))
+             (unless (eq result nil)
+               (funcall on-match rule result idx)))))
+
+(defun elfeed-score-scoring--explain-udf (entry)
+  "Apply the UDF rules to ENTRY; return an explanation."
+  (let (hits)
+    (elfeed-score-scoring--apply-udf-rules
+     entry
+     (lambda (rule result index)
+       (setq
+        hits
+        (cons
+         (elfeed-score-make-udf-explanation
+          :entry-title (elfeed-entry-title entry)
+          :rule rule :value result :index index)
+         hits))))
+    hits))
+
+(defun elfeed-score-scoring--score-on-udf (entry)
+  "Run all UDF rules against ENTRY; return the summed values."
+  (let ((score elfeed-score-scoring-default-score))
+    (elfeed-score-scoring--apply-udf-rules
+     entry
+     (lambda (rule result _index)
+       (elfeed-score-log
+        'debug
+        "udf-rule '%s' matched entry '%s'; adding %d to its score"
+        (elfeed-score-rules-pp-rule-to-string rule)
+        (elfeed-entry-title entry) result)
+       (setq score (+ score result))
+       (elfeed-score-rule-stats-on-match rule)))
     score))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -578,7 +651,8 @@ This function is used in `elfeed-new-entry-hook'."
                   (elfeed-score-scoring--score-on-title-or-content entry)
                   (elfeed-score-scoring--score-on-authors          entry)
                   (elfeed-score-scoring--score-on-tags             entry)
-                  (elfeed-score-scoring--score-on-link             entry))))
+                  (elfeed-score-scoring--score-on-link             entry)
+                  (elfeed-score-scoring--score-on-udf              entry))))
     ;; Take care to not pass t for the `sticky' parameter!
     (elfeed-score-scoring-set-score-on-entry entry score)
     (elfeed-score-scoring--adjust-tags entry score)
@@ -605,6 +679,8 @@ This function is used in `elfeed-new-entry-hook'."
      (elfeed-score-rules-pp-tags-explanation match))
     (elfeed-score-link-explanation
      (elfeed-score-rules-pp-link-explanation match))
+    (elfeed-score-udf-explanation
+     (elfeed-score-rules-pp-udf-explanation match))
     (t
      (error "Don't know how to pretty-print %S" match))))
 
@@ -626,6 +702,8 @@ This function is used in `elfeed-new-entry-hook'."
      (elfeed-score-rules-tags-explanation-contrib match))
     (elfeed-score-link-explanation
      (elfeed-score-rules-link-explanation-contrib match))
+    (elfeed-score-udf-explanation
+     (elfeed-score-rules-udf-explanation-contrib match))
     (t
      (error "Don't know how to evaluate %S" match))))
 
@@ -648,7 +726,8 @@ understanding of scoring rules."
            (elfeed-score-scoring--explain-title-or-content entry)
            (elfeed-score-scoring--explain-authors          entry)
            (elfeed-score-scoring--explain-tags             entry)
-           (elfeed-score-scoring--explain-link             entry)))
+           (elfeed-score-scoring--explain-link             entry)
+           (elfeed-score-scoring--explain-udf              entry)))
          (candidate-score
           (cl-reduce
            '+
@@ -717,9 +796,10 @@ to the rules currently in-memory)\n")
   "Visit rule TAG, INDEX in the score file.
 
 TAG (a string) shall be one of \"title\", \"content\",
-\"title-or-content\", \"feed\", \"authors\", \"tag\" or \"link\".
-INDEX shall be the (zero-based) index of the rule of interest
-within the group named by TAG in the score file."
+\"title-or-content\", \"feed\", \"authors\", \"tag\",
+\"link\", or \"udf\".  INDEX shall be the (zero-based) index of
+the rule of interest within the group named by TAG in the score
+file."
 
   (find-file elfeed-score-serde-score-file)
   (goto-char (point-min))

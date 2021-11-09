@@ -170,7 +170,7 @@
 ;; OK-- let's make sure old rules age out of the stats
 ;; datastructure. Maintain the property that all these rules will
 ;; match at least once. This updates the :value for the "title" rule
-;; from 100 => 200
+;; from 100 => 200 & adds a udf rule.
 (with-temp-file
     elfeed-score-score-file
   (insert "((version 9)
@@ -381,5 +381,19 @@ the Elfeed entry to be used in the test."
      (setq errored-out t)))
   (cl-assert errored-out))
 
+(with-temp-file
+    elfeed-score-score-file
+  (insert "((version 10)
+(\"title\"
+  (:text \".*\" :value 200 :type r :comment \"foo!\"))
+(\"content\"
+ (:text \".*\" :value 10 :type r))
+(\"feed\"
+ (:text \"emacs-reddit\" :value 75 :type s :attr t))
+(\"udf\"
+ (:function (lambda (x) (unless (cl-typep x 'elfeed-entry) (error \"bad type!\")) 1))))
+"))
+
 ;; Re-load just to get back to a known-good state.
 (elfeed-score-load-score-file elfeed-score-score-file)
+(elfeed-score-score-search)
