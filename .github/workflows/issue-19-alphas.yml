@@ -129,6 +129,7 @@ jobs:
           ls /usr/share/emacs
           ./bootstrap && ./configure
           make all dist
+          ls -Alh
           echo "DISTRO_BZ2=elfeed-score-${{ env.RELEASE_VERSION }}.tar.bz2" >> $GITHUB_ENV
           echo "DISTRO_GZ=elfeed-score-${{ env.RELEASE_VERSION }}.tar.gz" >> $GITHUB_ENV
           echo "DISTRO_XZ=elfeed-score-${{ env.RELEASE_VERSION }}.tar.xz" >> $GITHUB_ENV
