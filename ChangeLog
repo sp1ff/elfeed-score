@@ -1,8 +1,22 @@
-2021-11-16  Michael Herstine  <sp1ff@pobox.com>
+2021-11-23  Michael Herstine  <sp1ff@pobox.com>
+
+	Updating the version post-merge because I accidentally tagged the alpha release.
+
+2021-11-22  Michael Herstine  <sp1ff@pobox.com>
+
+	Fix doc typo
+
+	Trying to get release GHA to work
+
+	Trying to get release GHA to work
 
 	Address issue #19.
 	This commit adds a new rule type `elfeed-score-udf-rule`. `udf'
 	for User-Defined function.
+
+2021-11-17  Michael Herstine  <sp1ff@pobox.com>
+
+	adding workflow for creating alphas on the issue-19 branch
 
 2021-10-14  Michael Herstine  <sp1ff@pobox.com>
 

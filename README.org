@@ -2,7 +2,7 @@
 #+DESCRIPTION: Gnus-style scoring for Elfeed
 #+AUTHOR: Michael Herstine
 #+EMAIL: sp1ff@pobox.com
-#+DATE: <2021-11-16 Tue 18:23>
+#+DATE: <2021-11-23 Tue 06:57>
 #+AUTODATE: t
 #+OPTIONS: toc:nil org-md-headline-style:setext *:t ^:nil
 #+STARTUP: overview
@@ -73,7 +73,7 @@ The easiest way to install elfeed-score is [[https://github.com/melpa/melpa][MEL
 If you would prefer to install the package manually, you can also download the Emacs package file on the GitHub releases [[https://github.com/sp1ff/elfeed-score/releases][page]] or from my personal [[https://www.unwoundstack/distros.html][page]]. Then say:
 
 #+BEGIN_SRC elisp
-(package-install-file "elfeed-score-1.2.0.tar")
+(package-install-file "elfeed-score-1.2.1.tar")
 #+END_SRC
 
 ** Autotools Source Distributions
@@ -82,8 +82,8 @@ You can also download Autotools source tarballs (again available either on the G
 
 #+BEGIN_SRC bash
 cd /tmp
-curl -L --output elfeed-score-1.2.0.tar.gz https://github.com/sp1ff/elfeed-score/releases/download/1.2.0/elfeed-score-1.2.0.tar.gz
-tar xvf elfeed-score-1.2.0.tar.gz && cd elfeed-score-1.2.0
+curl -L --output elfeed-score-1.2.1.tar.gz https://github.com/sp1ff/elfeed-score/releases/download/1.2.1/elfeed-score-1.2.1.tar.gz
+tar xvf elfeed-score-1.2.1.tar.gz && cd elfeed-score-1.2.1
 export EMACSLOADPATH=$HOME/.emacs.d/elpa/elfeed-20200209.1942:$EMACSLOADPATH
 ./configure
 make
@@ -98,16 +98,16 @@ The unit tests require some macros defined by the [[https://github.com/skeeto/el
 #+BEGIN_SRC bash
 cd /tmp
 git clone https://github.com/skeeto/elfeed.git
-curl -L --output=elfeed-score-1.2.0.tar.gz https://github.com/sp1ff/elfeed-score/releases/download/1.2.0/elfeed-score-1.2.0.tar.gz
-tar xvf elfeed-score-1.2.0.tar.gz && cd elfeed-score-1.2.0
-export EMACSLOADPATH=/tmp/elfeed-score-1.2.0:/tmp/elfeed:/tmp/elfeed/tests:$EMACSLOADPATH
+curl -L --output=elfeed-score-1.2.1.tar.gz https://github.com/sp1ff/elfeed-score/releases/download/1.2.1/elfeed-score-1.2.1.tar.gz
+tar xvf elfeed-score-1.2.1.tar.gz && cd elfeed-score-1.2.1
+export EMACSLOADPATH=/tmp/elfeed-score-1.2.1:/tmp/elfeed:/tmp/elfeed/tests:$EMACSLOADPATH
 ./configure
 make
 make check
 sudo make install
 #+END_SRC
 
-Again, unless you already use =EMACSLOADPATH=, you'll need to set =EMACSLOADPATH= appropriately to your system, something like =EMACSLOADPATH=/tmp/elfeed-score-1.2.0:/tmp/elfeed:/tmp/elfeed/tests:/usr/share/emacs/25.2/lisp=.
+Again, unless you already use =EMACSLOADPATH=, you'll need to set =EMACSLOADPATH= appropriately to your system, something like =EMACSLOADPATH=/tmp/elfeed-score-1.2.1:/tmp/elfeed:/tmp/elfeed/tests:/usr/share/emacs/25.2/lisp=.
 ** Building From Source
 
 Finally, you can of course just clone this repo & build there. I've started a [[https://github.com/sp1ff/elfeed-score/wiki][wiki]], whose intended audience are people looking to hack on elfeed-score, that includes build instructions.
