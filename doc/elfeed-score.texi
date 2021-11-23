@@ -890,7 +890,7 @@ function shall take a single parameter of type @code{elfeed-entry} and
 return either nil (to indicate no interest in this entry) or an
 integer (representing this rule's contribution to this entry's score).
 
-In the score file (@pxref{The Score File}), link rules are represented
+In the score file (@pxref{The Score File}), UDF rules are represented
 by five properties:
 
 @enumerate
