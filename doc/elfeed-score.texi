@@ -1195,7 +1195,7 @@ By default it will be @code{'warn}, which will produce very little
 output. To trouble-shoot a balky rule, type
 
 @lisp
-(setq elfeed-score-log-log-level 'debug)
+(setq elfeed-score-log-level 'debug)
 @end lisp
 
 re-score your current view (@kbd{= s}), and switch to buffer
