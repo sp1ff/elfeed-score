@@ -1,6 +1,6 @@
 ;;; test-explanations.el -- ERT tests for the score explanation logic -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2020-2021 Michael Herstine <sp1ff@pobox.com>
+;; Copyright (C) 2020-2022 Michael Herstine <sp1ff@pobox.com>
 
 ;; Author: Michael Herstine <sp1ff@pobox.com>
 

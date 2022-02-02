@@ -1,3 +1,18 @@
+2022-02-01  Michael Herstine  <sp1ff@pobox.com>
+
+	Fix issue #21.
+	Qingshui Zheng <https://github.com/qingshuizheng> both noted a
+	duplicate keybinding ("aa" :=> 'elfeed-score-maint-add-authors-rule
+	and 'elfeed-score-maint-add-tag-rule) *and* suggested a better
+	scheme (via private e-mail). This commits incorporates both.
+
+	Since I'm changing an old keybinding, this is a breaking change.
+	That said, I can't justify a major version bump (or even a patch
+	number bump) for this-- just a new build number.
+
+	This commit *also* fixes a few lints and updates the copyright
+	years throughout.
+
 2021-11-23  Michael Herstine  <sp1ff@pobox.com>
 
 	Updating the version post-merge because I accidentally tagged the alpha release.

@@ -2,6 +2,17 @@ elfeed-score News -- history of user-visible changes -*- outline -*-
 
 * elfeed-score 1.2
 
+
+** changes in elfeed-score 1.2.2
+
+*** update copyright statements
+*** address issue 21
+
+Change default keybindings for a few commands:
+
+  - "aa" remaints bound to 'elfeed-score-maint-add-authors-rule
+  - "at" is now bound to 'elfeed-score-maint-add-tag-rule
+  - "aT" is now bound to 'elfeed-score-maint-add-title-rule
 ** changes in elfeed-score 1.2.1
 
 No code changes-- just updating the tag when merging to `master` since I mistakenly tagged the alpha release `1.2.0`.

@@ -1,6 +1,6 @@
 ;;; elfeed-score-scoring.el --- Logic for scoring (and explaining) `elfeed' entries  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2021 Michael Herstine <sp1ff@pobox.com>
+;; Copyright (C) 2021-2022 Michael Herstine <sp1ff@pobox.com>
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -521,7 +521,7 @@ function can return nil to indicate that it does not apply."
                     matched-tags
                     matched-feeds
                     (elfeed-score-scoring--call-udf rule entry))))
-             (unless (eq result nil)
+             (when result
                (funcall on-match rule result idx)))))
 
 (defun elfeed-score-scoring--explain-udf (entry)

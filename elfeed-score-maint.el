@@ -1,6 +1,6 @@
 ;;; elfeed-score-maint.el --- Helpers for maintaining `elfeed-score' rules  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2021 Michael Herstine <sp1ff@pobox.com>
+;; Copyright (C) 2021-2022 Michael Herstine <sp1ff@pobox.com>
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -23,6 +23,7 @@
 ;;; Code:
 
 (require 'elfeed-score-rules)
+(require 'elfeed-score-scoring)
 (require 'elfeed-score-serde)
 (require 'elfeed-score-rule-stats)
 
@@ -312,7 +313,7 @@ loaded; reload now? "))
        (elfeed-score-scoring-score-search))))
 
 (defun elfeed-score-maint--initial-text (entry)
-  "Retrieve an initial guess at the match text."
+  "Retrieve an initial guess at the match text from ENTRY."
   (if (and elfeed-show-entry
            (mark)
            (or mark-active mark-even-if-inactive))
