@@ -504,18 +504,43 @@ parameter."
                (stats2 (elfeed-score-rule-stats-get (nth 0 elfeed-score-serde-udf-rules)))
                (stats3 (elfeed-score-rule-stats-get (nth 1 elfeed-score-serde-udf-rules)))
                (stats4 (elfeed-score-rule-stats-get (nth 2 elfeed-score-serde-udf-rules))))
-          (message "CP1")
           (should (eq score 3))
-          (message "CP2")
           (should (eq 1 (elfeed-score-rule-stats-hits stats1)))
-          (message "CP3: %s" stats2)
           (should (eq 0 (elfeed-score-rule-stats-hits stats2)))
-          (message "CP4")
           (should (eq 1 (elfeed-score-rule-udf-stats-errors stats2)))
-          (message "CP5")
           (should (eq nil stats3)) ;; never matches, no errors => no stats
-          (message "CP6")
           (should (eq 1 (elfeed-score-rule-stats-hits stats4)))))))))
+
+(ert-deftest test-issue-22 ()
+  "Regression test for Github issue #22."
+
+  (let* ((lorem-ipsum "Lorem ipsum dolor sit amet")
+         (entry-title "foo bar splat"))
+    (with-elfeed-test
+     (let* ((feed (elfeed-test-generate-feed))
+            (entry (elfeed-score-test-generate-entry
+                    feed entry-title lorem-ipsum)))
+       (elfeed-db-add entry)
+       ;; case-insensitive
+     (with-elfeed-score-test
+      (let* ((elfeed-score-serde-title-rules
+              ;; This was a bug where tags meant to be set above a certain score were applied to ALL entries.
+              ;; So, setup a list with a matching title rule that will give the entry a score of 10. Then
+              ;; setup two adjust-tags rules: one that should match & one that should not.
+              (list (elfeed-score-title-rule--create :text "Bar" :value 10 :type 's)))
+             (elfeed-score-serde-adjust-tags-rules
+              (list
+               (elfeed-score-adjust-tags-rule--create :threshold '(t . 10) :tags '(t . (a)))
+               (elfeed-score-adjust-tags-rule--create :threshold '(t . 11) :tags '(t . (b)))))
+             (score (elfeed-score-scoring-score-entry entry))
+             (tags-stats (elfeed-score-rule-stats-get (car elfeed-score-serde-adjust-tags-rules))))
+        ;; Ho-kay. The entry score should be 10...
+        (should (eq score 10))
+        ;; we should have ONE adjust-tags rule hit...
+        (should (eq 1 (elfeed-score-rule-stats-hits tags-stats)))
+        (let ((tags (elfeed-entry-tags entry)))
+          (should (memq 'a tags))
+          (should (not (memq 'b tags))))))))))
 
 (provide 'test-scoring)
 ;;; test-scoring.el ends here

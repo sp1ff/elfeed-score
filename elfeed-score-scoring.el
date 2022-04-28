@@ -606,7 +606,7 @@ On match, ON-MATCH will be called with the matching rule."
     (let* ((thresh           (elfeed-score-adjust-tags-rule-threshold adj-tags))
            (threshold-switch (car thresh))
            (threshold-value  (cdr thresh)))
-      (if (or (and threshold-switch )
+      (if (or (and threshold-switch (>= score threshold-value))
               (and (not threshold-switch) (<= score threshold-value)))
           (let* ((rule-tags   (elfeed-score-adjust-tags-rule-tags adj-tags))
                  (rule-switch (car rule-tags))

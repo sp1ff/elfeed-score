@@ -2,7 +2,11 @@ elfeed-score News -- history of user-visible changes -*- outline -*-
 
 * elfeed-score 1.2
 
+** changes in elfeed-score 1.2.3
 
+*** address issue 22
+
+'adjust-tags' rules just didn't work due to an embarassing omission on my part.
 ** changes in elfeed-score 1.2.2
 
 *** update copyright statements

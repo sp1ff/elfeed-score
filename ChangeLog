@@ -1,3 +1,11 @@
+2022-04-27  Michael Herstine  <michael@lithic>
+
+	Resolve issue #22.
+
+2022-02-01  Michael Herstine  <sp1ff@pobox.com>
+
+	Merge branch 'master' of github.com:sp1ff/elfeed-score
+
 2022-02-01  Michael Herstine  <sp1ff@pobox.com>
 
 	Fix issue #21.
@@ -12,6 +20,16 @@
 
 	This commit *also* fixes a few lints and updates the copyright
 	years throughout.
+
+2021-12-30  Michael  <sp1ff@pobox.com>
+
+	Merge pull request #20 from fclaude/patch-1
+	Fix example for setting debug mode
+
+2021-12-29  Francisco Claude  <fclaude@recoded.cl>
+
+	Fix example for setting debug mode
+	The example in the documentation contains a duplicated `-log` in the variable name.
 
 2021-11-23  Michael Herstine  <sp1ff@pobox.com>
 
