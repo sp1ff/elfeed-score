@@ -68,7 +68,7 @@ deserialization of scoring rules."
   "List of structs each defining a scoring rule based on a user-defined function.")
 
 (defvar elfeed-score-serde-score-mark nil
-  "Score at or below which entries shall be marked as read.")
+  "Score below which entries shall be marked as read.")
 
 (defvar elfeed-score-serde-adjust-tags-rules nil
   "List of rules to be run after scoring to adjust tags based on score.")
