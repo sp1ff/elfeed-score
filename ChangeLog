@@ -1,3 +1,52 @@
+2022-07-02  Michael Herstine  <sp1ff@pobox.com>
+
+	Merge branch 'master' of github.com:sp1ff/elfeed-score
+
+2022-07-02  Michael  <sp1ff@pobox.com>
+
+	Merge pull request #26 from danielfleischer/patch-1
+	Update README
+
+2022-07-02  Daniel Fleischer  <danflscr@gmail.com>
+
+	Update README
+	Having a working example with property lists, similar to #24.
+	I missed the README, sorry.
+
+2022-07-02  Michael Herstine  <sp1ff@pobox.com>
+
+	Housekeeping commit.
+	This commit does a few things:
+
+	    1. addresses issue #25 ("Typo(?) in the readme")
+	    2. commits a unit test for issue #22 that was carelessly left
+	       laying around after fixing it
+	    3. bumps the version after merging pr #24
+
+2022-07-02  Michael  <sp1ff@pobox.com>
+
+	Merge pull request #24 from danielf-amobee/patch-1
+	Update elfeed-score.texi
+
+2022-06-15  Daniel Fleischer  <93716777+danielf-amobee@users.noreply.github.com>
+
+	Update elfeed-score.texi
+	Having a working example with property lists.
+
+2022-05-28  Michael  <sp1ff@pobox.com>
+
+	Merge pull request #23 from PaulPorfiroff/patch-1
+	Fix misleading `elfeed-score-serde-score-mark` docstring
+
+2022-05-12  Paul Porfiroff  <PaulPorfiroff@gmail.com>
+
+	Fix misleading `elfeed-score-serde-score-mark` docstring
+	`<=` -> `<`
+	
+	https://github.com/sp1ff/elfeed-score/blob/419de17d681d75789271b8457509fa3f942eab54/elfeed-score-scoring.el#L659-L661
+	
+	https://github.com/sp1ff/elfeed-score/blob/419de17d681d75789271b8457509fa3f942eab54/doc/elfeed-score.texi#L991-L994
+
 2022-04-27  Michael Herstine  <michael@lithic>
 
 	Resolve issue #22.

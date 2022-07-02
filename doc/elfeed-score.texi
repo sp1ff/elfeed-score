@@ -1399,7 +1399,7 @@ If you'd like to hack on elfeed-score, I've started a
 always happy to discuss PRs.
 
 Finally, you can just reach out directly at @email{sp1ff@@pobox.com}, or
-in my public @url{https://lists.sr.ht/~sp1ff/public-inbox, inbox}.
+shoot a webmention to me at my @url{https://www.unwoundstack.com,web site}.
 
 @node Index
 @unnumbered Index

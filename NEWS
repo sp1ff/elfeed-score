@@ -2,15 +2,20 @@ elfeed-score News -- history of user-visible changes -*- outline -*-
 
 * elfeed-score 1.2
 
+** changes in elfeed-score 1.2.4
+
+*** address issue #25 Typo(?) in the readme
+*** accept PR #24 Update elfeed-score.texi
+*** accept PR #26 Update README
 ** changes in elfeed-score 1.2.3
 
-*** address issue 22
+*** address issue #22
 
 'adjust-tags' rules just didn't work due to an embarassing omission on my part.
 ** changes in elfeed-score 1.2.2
 
 *** update copyright statements
-*** address issue 21
+*** address issue #21
 
 Change default keybindings for a few commands:
 
@@ -22,14 +27,14 @@ Change default keybindings for a few commands:
 No code changes-- just updating the tag when merging to `master` since I mistakenly tagged the alpha release `1.2.0`.
 ** changes in elfeed-score 1.2.0
 
-**** address issue 19
+**** address issue #19
 
 Add user-defined scoring functions.
 * elfeed-score 1.1
 
 ** Changes in elfeed-score 1.1.0
 
-**** address issue 18
+**** address issue #18
 
 Add a :comment field to all rule types.
 * elfeed-score 1.0
@@ -106,7 +111,7 @@ The stats will still be maintained, but will be written to a separate file ('elf
 *** Bugfixes
 
 **** Make `score' mandatory in `elfeed-score-set-score' not optional
-**** Address issue 10
+**** Address issue #10
 
 When setting scores "manually" via `elfeed-score-set-score' will "stick": subsequently scoring that entry through the new entry hook or as part of scoring an entire search will not overwrite the manuall-set score.
 
@@ -115,7 +120,7 @@ Since this is a new feature, I've put it behind a configuration option `elfeed-s
 
 *** Bugfixes
 
-**** Address issue 12
+**** Address issue #12
 
 'link' rules were not being read in correctly--fixed.
 ** Changes in elfeed-score 0.7.7
@@ -130,7 +135,7 @@ No user-visible changes in this build; strictly re-factoring.
 
 *** Bugfixes
 
-**** Address issue 12
+**** Address issue #12
 
 Announce the fact when making a backup copy of the score file. If there is an error on copy, say so & continue (i.e. don't error out).
 
@@ -279,7 +284,7 @@ Numerous spelling errors corrected thanks to `flyspell'.
 
 *** Bug Fixes
 
-***** Issue 2: `elfeed-score-write-score-file` will elide information when the list gets long enough
+***** issue #2: `elfeed-score-write-score-file` will elide information when the list gets long enough
 
 Fixed.
 ** Changes in elfeed-score 0.5.0
@@ -296,7 +301,7 @@ Adjust an entry's score up or down based on the Author.
 
 *** Bug Fixes
 
-**** Issue 2: (elfeed-score-enable) must have an argument now, unlike README suggests
+**** issue #2: (elfeed-score-enable) must have an argument now, unlike README suggests
 
 Fixed.
 ** Changes in elfeed-score 0.4.3
