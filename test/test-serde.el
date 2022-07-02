@@ -799,6 +799,16 @@ so I'm writing another unit test."
      (eq elfeed-score-serde-current-format
          (plist-get (elfeed-score-serde--parse-score-file score-file) :version)))))
 
+(ert-deftest test-adj-tags-comments ()
+  "Test u/nonreligous' claim."
+  (let* ((score-text
+          "((version 10)
+            (\"adjust-tags\"
+              (:threshold (t . 100) :tags (t . (starred)) :comment \"READ\")
+              (:threshold (nil . -100) :tags (t . (terrible)) :comment \"DON'T READ\")))")
+         (score-file (make-temp-file "elfeed-score-test-" nil nil score-text)))
+    (elfeed-score-serde-load-score-file score-file)
+    (should (eq 2 (length elfeed-score-serde-adjust-tags-rules)))))
 
 (provide 'test-serde)
 ;;; test-serde.el ends here
