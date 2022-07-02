@@ -154,13 +154,13 @@ For instance, here's a subset of my scoring file at the moment:
 ;;; Elfeed score file                                     -*- lisp -*-
   (("title"
     (:text "OPEN THREAD" :value -1000 :type S)
-    (:text "raymond c\\(hen\\)?" :value 250 :type r)
-    :tags (t .(@@dev)))
+    (:text "raymond c\\(hen\\)?" :value 250 :type r 
+     :tags (t .(@@dev)))
    ("content"
     (:text "type erasure" :value 500 :type s))
    ("title-or-content"
-    (:text "california" 150 100 :type s)
-    (:text "china" 150 100 :type w))
+    (:text "california" :title-value 150 :content-value 100 :type s)
+    (:text "china" :title-value 150 :content-value 100 :type w))
    ("feed"
     (:text "Essays in Idleness" :value 250 :type S :attr t)
     (:text "Irreal" :value 250 :type S :attr t)
