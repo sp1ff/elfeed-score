@@ -143,8 +143,10 @@ point will be explained.  If the region is not active, only the
 entry under point will be explained."
   (interactive)
   (let ((entries (elfeed-search-selected ignore-region)))
-    (dolist (entry entries)
-      (elfeed-score-scoring-explain-entry entry))
+    (with-help-window elfeed-score-scoring-explanation-buffer-name
+      (with-current-buffer elfeed-score-scoring-explanation-buffer-name
+        (dolist (entry entries)
+          (elfeed-score-scoring-explain-entry entry (current-buffer)))))
     (elfeed-search-update t)))
 
 (defun elfeed-score-load-score-file (score-file)
