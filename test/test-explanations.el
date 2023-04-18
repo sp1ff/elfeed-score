@@ -62,7 +62,7 @@
               (list (elfeed-score-tag-rule--create :tags '(b c d) :value 1)))
              (elfeed-score-serde-udf-rules
               (list (elfeed-score-udf-rule--create :function (lambda (_) 1)))))
-        (elfeed-score-scoring-explain-entry entry)
+        (elfeed-score-scoring-explain-entry entry elfeed-score-scoring-explanation-buffer-name)
         (let ((text
                (with-current-buffer "*explanation-smoke-tests*"
                  (buffer-string))))
