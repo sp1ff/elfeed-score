@@ -1,6 +1,6 @@
 ;;; elfeed-score-maint.el --- Helpers for maintaining `elfeed-score' rules  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2021-2022 Michael Herstine <sp1ff@pobox.com>
+;; Copyright (C) 2021-2023 Michael Herstine <sp1ff@pobox.com>
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -592,6 +592,7 @@ loaded; reload now? "))
                                                      ignore-defaults
                                                      called-interactively)
   "Add title & content rule (TITLE-VALUE, CONTENT-VALUE), poss IGNORE-DEFAULTS.
+CALLED-INTERACTIVELY is as per usual.
 
 Interactively add a new `elfeed-score-title-or-content-rule'
 based on the current Elfeed entry.  This command can be invoked

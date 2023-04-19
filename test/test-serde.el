@@ -1,6 +1,6 @@
 ;;; test-serde.el --- ERT tests for elfeed-score SERDE  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2020-2022 Michael Herstine <sp1ff@pobox.com>
+;; Copyright (C) 2020-2023 Michael Herstine <sp1ff@pobox.com>
 
 ;; Author: Michael Herstine <sp1ff@pobox.com>
 

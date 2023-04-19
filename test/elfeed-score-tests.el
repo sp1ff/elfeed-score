@@ -1,6 +1,6 @@
 ;;; elfeed-score-tests.el --- ERT tests for elfeed-score  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2019-2022 Michael Herstine <sp1ff@pobox.com>
+;; Copyright (C) 2019-2023 Michael Herstine <sp1ff@pobox.com>
 
 ;; Author: Michael Herstine <sp1ff@pobox.com>
 
@@ -191,8 +191,9 @@ URL (which is convenient for testing scoring)."
                                                  tags (authors '((:name "spaceman sp1ff")))
                                                  link)
   "Generate a random entry with feed FEED, title TITLE & content CONTENT.
-Use WITHIN to scope the date.  TAGS specifies tags to be applied in addition
-to 'unread.
+Use WITHIN to scope the date.  TAGS specifies tags to be applied
+in addition to \'unread.  AUTHORS defines entry author(s).  LINK
+specifies the URL for the content.
 
 Warning: run this in `with-elfeed-test'.
 

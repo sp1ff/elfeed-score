@@ -1,6 +1,6 @@
 ;;; elfeed-score-log.el --- Logging facility for `elfeed-score'  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2021-2022 Michael Herstine <sp1ff@pobox.com>
+;; Copyright (C) 2021-2023 Michael Herstine <sp1ff@pobox.com>
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
