@@ -1,9 +1,9 @@
 ;;; elfeed-score.el --- Gnus-style scoring for Elfeed  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2019-2022 Michael Herstine <sp1ff@pobox.com>
+;; Copyright (C) 2019-2023 Michael Herstine <sp1ff@pobox.com>
 
 ;; Author: Michael Herstine <sp1ff@pobox.com>
-;; Version: 1.2.4
+;; Version: 1.2.5
 ;; Package-Requires: ((emacs "26.1") (elfeed "3.3.0"))
 ;; Keywords: news
 ;; URL: https://github.com/sp1ff/elfeed-score
@@ -44,7 +44,7 @@
 (require 'elfeed-score-scoring)
 (require 'elfeed-score-maint)
 
-(defconst elfeed-score-version "1.2.4")
+(defconst elfeed-score-version "1.2.5")
 
 (defgroup elfeed-score nil
   "Gnus-style scoring for Elfeed entries."

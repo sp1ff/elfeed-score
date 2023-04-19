@@ -4,14 +4,15 @@ Contributors:
   - Chris Cundy <http://cundy.me/>
   - Francisco Claude <fclaude@recoded.ci>
   - Paul Porfiroff
-  - Daniel Fleischer
+  - Daniel Fleischer <https://github.com/danielfleischer>
+  - Samuel W. Flint <https://samuelwflint.com>
 
-Thanks to Qingshui Zheng <https://github.com/qingshuizheng> for his suggestions on cleaning-up the default keybindings for "add rule" commands.
+Thanks to:
 
-Thanks to John Kitchin <https://github.com/jkitchin> for his feature requests & kind words for elfeed-score on his YouTube channel.
-
-Thanks to Firmin Martin <https://github.com/firmart> for noting numerous bugs as well as multiple feature requests.
-
-Thanks to Chris Cundy <http://cundy.me/> for his contributions & suggestions.
-
-Thanks to Christopher Wellons <https://github.com/skeeto> for Elfeed (https://github.com/skeeto/elfeed).
+  - Samuel W. Flint for placing the explanation buffers into help mode
+  - Daniel Fleischer for improving the Texinfo manual & the README
+  - Qingshui Zheng <https://github.com/qingshuizheng> for his suggestions on cleaning-up the default keybindings for "add rule" commands
+  - John Kitchin <https://github.com/jkitchin> for his feature requests & kind words for elfeed-score on his YouTube channel
+  - Firmin Martin <https://github.com/firmart> for noting numerous bugs as well as multiple feature requests
+  - Chris Cundy <http://cundy.me/> for his contributions & suggestions
+  - Christopher Wellons <https://github.com/skeeto> for Elfeed (https://github.com/skeeto/elfeed)

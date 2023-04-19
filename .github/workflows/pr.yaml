@@ -1,0 +1,48 @@
+name: elfeed-score Pull Request
+# Per
+# <https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#pull_request>:
+# "if no activity types are specified, the workflow runs when a pull
+# request is opened or reopened or when the head branch of the pull
+# request is updated." That said, I've had difficulty getting workflows to trigger on PRs.
+on:
+  push:
+  pull_request:
+    types: [opened, edited, reopened] # don't say `synchronize`-- that is taken care of by `push`
+
+jobs:
+  lint_and_test:
+    name: Lint & Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v2
+      - name: Install tooling
+        shell: bash
+        run: |
+          pwd
+          set -x
+          sudo apt-get install -y autoconf automake emacs
+          git clone https://github.com/skeeto/elfeed.git
+      - name: Install a modern version of automake
+        shell: bash
+        run: |
+          pwd
+          set -x
+          cd /tmp
+          curl -L -O https://ftp.gnu.org/gnu/automake/automake-1.16.4.tar.xz
+          tar -xf automake-1.16.4.tar.xz
+          cd automake-1.16.4
+          ./configure && make
+          sudo make install
+      - name: Run unit tests
+        shell: bash
+        run: |
+          pwd
+          ls /usr/share/emacs
+          set -x
+          export EMACSLOADPATH=$(pwd):$(pwd)/elfeed:$(pwd)/elfeed/tests:$(ls -d /usr/share/emacs/2*)/lisp
+          ./bootstrap
+          ./configure
+          make
+          make check
+          make dist

@@ -1,6 +1,6 @@
 ;;; test-explanations.el -- ERT tests for the score explanation logic -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2020-2022 Michael Herstine <sp1ff@pobox.com>
+;; Copyright (C) 2020-2023 Michael Herstine <sp1ff@pobox.com>
 
 ;; Author: Michael Herstine <sp1ff@pobox.com>
 
@@ -32,6 +32,7 @@
   (with-elfeed-test
    (let* ((feed (elfeed-score-test-generate-feed "foo"))
           (elfeed-score-scoring-explanation-buffer-name "*explanation-smoke-tests*")
+          (buf (get-buffer-create elfeed-score-scoring-explanation-buffer-name))
           (entry (elfeed-score-test-generate-entry
                   feed "bar" "Lorem ipsum"
                   :authors '((:name "John Hancock"))
@@ -62,9 +63,9 @@
               (list (elfeed-score-tag-rule--create :tags '(b c d) :value 1)))
              (elfeed-score-serde-udf-rules
               (list (elfeed-score-udf-rule--create :function (lambda (_) 1)))))
-        (elfeed-score-scoring-explain-entry entry elfeed-score-scoring-explanation-buffer-name)
+        (elfeed-score-scoring-explain-entry entry buf)
         (let ((text
-               (with-current-buffer "*explanation-smoke-tests*"
+               (with-current-buffer elfeed-score-scoring-explanation-buffer-name
                  (buffer-string))))
           (should
            (string=

@@ -6,6 +6,7 @@ dist_lisp_LISP = elfeed-score.el elfeed-score-log.el \
 EXTRA_DIST = README.org
 CLEANFILES = .pkg-tmp/ elfeed-score-$(PACKAGE_VERSION).tar
 SUBDIRS = doc test
+AM_ELCFLAGS = --eval '(require (quote bytecomp))'
 
 package: elfeed-score-$(PACKAGE_VERSION).tar $(srcdir)/README.org
 

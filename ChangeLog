@@ -1,3 +1,24 @@
+2023-04-18  Michael Herstine  <sp1ff@pobox.com>
+
+	Maintenance commit. This commit:
+	    - fixes the unit tests
+	    - updates copyrights
+	    - adds a new workflow for PRs
+	    - changes the logic for the "melpazoid" workflow
+
+	Merge branch 'master' of github.com:sp1ff/elfeed-score
+
+	Updating the Python version in the Melpazoid checks.
+
+2023-04-18  Michael  <sp1ff@pobox.com>
+
+	Merge pull request #28 from swflint/master
+	Use with-help-window to make the explanation buffer easily quittable
+
+2023-03-09  Samuel W. Flint  <swflint@flintfam.org>
+
+	Use with-help-window to make the explanation buffer easily quittable
+
 2022-07-02  Michael Herstine  <sp1ff@pobox.com>
 
 	Merge branch 'master' of github.com:sp1ff/elfeed-score

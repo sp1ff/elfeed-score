@@ -1,4 +1,4 @@
-AM_ELCFLAGS = -L ${srcdir}/..
+AM_ELCFLAGS = --eval '(require (quote bytecomp))' -L ${srcdir}/..
 
 TESTS = elfeed-score-tests \
 	test-feed-rules    \

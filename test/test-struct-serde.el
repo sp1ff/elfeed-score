@@ -1,6 +1,6 @@
 ;;; test-struct-serde.el -- ERT tests for CL struct serde  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2021-2022 Michael Herstine <sp1ff@pobox.com>
+;; Copyright (C) 2021-2023 Michael Herstine <sp1ff@pobox.com>
 
 ;; Author: Michael Herstine <sp1ff@pobox.com>
 

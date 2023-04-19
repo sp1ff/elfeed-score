@@ -2,6 +2,10 @@ elfeed-score News -- history of user-visible changes -*- outline -*-
 
 * elfeed-score 1.2
 
+** changes in elfeed-score 1.2.5
+
+*** use `help-mode' for explanation buffers
+*** add a workflow for pull requests
 ** changes in elfeed-score 1.2.4
 
 *** address issue #25 Typo(?) in the readme
