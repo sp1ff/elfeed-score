@@ -1,2 +1,3 @@
 Michael Herstine <sp1ff@pobox.com>   Initial versions of all files.
 Chris Cundy                          Additions to elfeed-score.el in support of scoring by author(s).
+Samuel W. Flint			     Updated elfeed-score-enable to control the depth at which the scoring hook will be run.

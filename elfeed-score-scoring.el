@@ -707,8 +707,8 @@ This function is used in `elfeed-new-entry-hook'."
     (t
      (error "Don't know how to evaluate %S" match))))
 
-(defun elfeed-score-scoring-explain-entry (entry buffer)
-  "Explain an Elfeed ENTRY in BUFFER.
+(defun elfeed-score-scoring-explain-entry (entry buffer-or-name)
+  "Explain an Elfeed ENTRY in BUFFER-OR-NAME.
 
 This function will apply all scoring rules to an entry, but will
 not change anything (e.g.  update ENTRY's meta-data, or the
@@ -736,7 +736,7 @@ understanding of scoring rules."
            :initial-value elfeed-score-scoring-default-score))
          (sticky (and elfeed-score-scoring-manual-is-sticky
                       (elfeed-score-scoring-entry-is-sticky entry))))
-    (with-current-buffer buffer
+    (with-current-buffer (get-buffer-create buffer-or-name)
       (goto-char (point-max))
       (insert
        (if sticky

@@ -13,7 +13,7 @@
 @copying
 This manual corresponds to elfeed-score version @value{VERSION}.
 
-Copyright @copyright{} 2021-2022 Michael Herstine <sp1ff@@pobox.com>
+Copyright @copyright{} 2021-2023 Michael Herstine <sp1ff@@pobox.com>
 
 @quotation
 Permission is granted to copy, distribute and/or modify this document
@@ -279,6 +279,14 @@ prefix argument: if present, it will install the new entry hook &
 commence scoring, but will @emph{not} install the new sort
 function. Such users may refer to @code{elfeed-score-sort} if they
 would like to incorporate scoring into their sort functions.
+
+Because of how @code{add-hook} operates, if @code{elfeed-score} is
+enabled after all other @code{elfeed} configuration is completed
+(including addition of taggers via @code{elfeed-make-tagger}) it will
+be the first thing run on a new entry. Therefore
+@code{elfeed-score-enable} takes a second argument: the depth at which
+the scoring function shall be placed in in
+@code{elfeed-new-entry-hook}.
 
 @deffn Utility elfeed-score-sort
 @code{elfeed-search-sort-function}-compliant function that will
