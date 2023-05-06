@@ -2,6 +2,10 @@ elfeed-score News -- history of user-visible changes -*- outline -*-
 
 * elfeed-score 1.2
 
+** changes in elfeed-score 1.2.6
+
+*** make the depth at which the scoring function runs configurable in the new entry hook
+*** fix the explanations unit test (broken in 1.2.5)
 ** changes in elfeed-score 1.2.5
 
 *** use `help-mode' for explanation buffers
