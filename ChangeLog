@@ -1,3 +1,13 @@
+2023-05-06  Michael Herstine  <sp1ff@pobox.com>
+
+        - Updated the elfeed-score manual to reflect this
+	- Fixed a unit test that was broken by the previous merge
+	- Added swflint to AUTHORS
+
+2023-05-02  Samuel W. Flint  <swflint@flintfam.org>
+
+	Add configurability to elfeed-score-scoring-score-entry depth
+
 2023-04-18  Michael Herstine  <sp1ff@pobox.com>
 
 	Maintenance commit. This commit:
@@ -14,6 +24,7 @@
 
 	Merge pull request #28 from swflint/master
 	Use with-help-window to make the explanation buffer easily quittable
+
 
 2023-03-09  Samuel W. Flint  <swflint@flintfam.org>
 

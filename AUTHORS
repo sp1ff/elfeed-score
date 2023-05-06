@@ -1,4 +1,5 @@
-Samuel W. Flint                      Updated elfeed-score-{,scoring}.el to place the explanation buffer in `help-mode'
+Samuel W. Flint                      Updated elfeed-score{,-scoring}.el to place the explanation buffer in `help-mode',
+       	  			     make the depth at which the scoring function is executed configurable.
 Paul Porfiroff                       Improved docstrings in elfeed-score-scoring.el and the Texinfo manual
 Chris Cundy                          Additions to elfeed-score.el in support of scoring by author(s).
 Michael Herstine <sp1ff@pobox.com>   Initial versions of all files.

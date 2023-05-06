@@ -241,13 +241,15 @@ This implementation is derived from `elfeed-search-print-entry--default'."
       (insert "(" tags-str ")"))))
 
 ;;;###autoload
-(defun elfeed-score-enable (&optional arg)
-  "Enable `elfeed-score'.  With prefix ARG do not install a custom sort function."
+(defun elfeed-score-enable (&optional arg depth)
+  "Enable `elfeed-score'.  With prefix ARG do not install a custom sort function.
+
+Add the score function at DEPTH (default 0)."
 
   (interactive "P")
 
   ;; Begin scoring on every new entry...
-  (add-hook 'elfeed-new-entry-hook #'elfeed-score-scoring-score-entry)
+  (add-hook 'elfeed-new-entry-hook #'elfeed-score-scoring-score-entry (or depth 0))
   ;; sort based on score...
   (unless arg
     (setq elfeed-score--old-sort-function        elfeed-search-sort-function
