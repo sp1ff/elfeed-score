@@ -43,8 +43,7 @@ AM_TESTS_ENVIRONMENT = \
 distcheck-hook:
 	${srcdir}/package-test &&     \
 	${srcdir}/package-test-341 && \
-	${srcdir}/upgrade-test &&     \
-	${srcdir}/autotools-test
+	${srcdir}/upgrade-test
 
 DISTCLEANFILES = package-test.log package-test.trs package-test-341.log package-test-341.trs \
 	upgrade-test.log upgrade-test.trs autotools-test.log autotools-test.trs
