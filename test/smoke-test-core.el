@@ -40,7 +40,7 @@
 (\"content\"
  (\".*\" 10 r))
 (\"feed\"
- (\"emacs-reddit\" 75 s t)))
+ (\"emacs-news\" 75 s t)))
 "))
 
 (elfeed-score-enable)
