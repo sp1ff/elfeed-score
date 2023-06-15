@@ -56,7 +56,7 @@
 
 (setq
  elfeed-feeds
- '("https://www.reddit.com/r/emacs.rss"
+ '("https://sachachua.com/blog/category/emacs-news/feed/"
    ("http://rayhosler.wordpress.com/feed/" cycling))
  elfeed-db-directory test-dir
  elfeed-score-score-file (concat test-dir "elfeed.score")
