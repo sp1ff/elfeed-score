@@ -2,9 +2,12 @@
 name: melpazoid
 
 on:
+  workflow_dispatch:
   push:
   pull_request:
     types: [opened, reopened, edited] # don't say `synchronize`-- that is taken care of by `push`
+  schedule:
+    - cron: '38 01 * * *'
 
 jobs:
   build:
@@ -13,7 +16,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: Set up Python 3.10
       uses: actions/setup-python@v1
-      with: { python-version: 3.10.11 }
+      with: { python-version: 3.11.4 }
     - name: Install
       run: |
         python -m pip install --upgrade pip
