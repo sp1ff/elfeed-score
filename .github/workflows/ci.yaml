@@ -30,7 +30,7 @@ jobs:
         shell: bash
         run: |
           set -ex
-          sudo apt-get upgrade
+          sudo apt-get update
           sudo apt-get install -y autoconf automake emacs texlive
           git clone https://github.com/skeeto/elfeed.git
       - name: Install a modern version of automake
