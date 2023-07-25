@@ -109,6 +109,43 @@
   (delete-file "test-sexp")
   (delete-file "test-sexp-2"))
 
+;; `file-name-concat' was only introduced in Emacs 28.1, and we want to support
+;; 26.1. Write a replacement in Emacs Lisp.
+(defun file-name-concat-1 (&rest components)
+  "Concatenate file name COMPONENTS into a single path."
+  (let ((result ""))
+    (dolist (component components)
+      (setq result (expand-file-name component result)))
+    result))
+
+(ert-deftest test-issue-32 ()
+  "Regression test against elfeed-score issue #32
+\"Parent dirs in elfeed-score-rule-stats-file are not created
+automatically\"
+
+If `elfeed-score-rule-stats-write' is invoked with an argument
+for which some parent directories don't exist, and the caller has
+permissions, they should be created automatically."
+
+  ;; Whip-up a few rules...
+  (let ((r1 (elfeed-score-title-rule--create
+             :text "Bar" :value 1 :type 's))
+        (r2 (elfeed-score-feed-rule--create
+             :text "feed" :value 1 :type 's :attr 't)))
+    ;; & generate some stats for 'em.
+    (elfeed-score-rule-stats-on-match r1)
+    (elfeed-score-rule-stats-on-match r2)
+    (should (eq 2 (hash-table-count elfeed-score-rule-stats--table)))
+    ;; and send 'em to a target file whose parent directories don't exist (yet)
+    (let ((stats-file
+           (file-name-concat-1 (make-temp-file "iss-32-" t)
+                               "a"
+                               "b"
+                               "test-stats-file")))
+      (elfeed-score-rule-stats-write stats-file)
+      (should (file-exists-p stats-file)))
+    (elfeed-score-serde-cleanup-stats)))
+
 (provide 'test-stats)
 
 ;;; test-stats.el ends here.

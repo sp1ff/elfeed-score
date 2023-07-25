@@ -1,20 +1,70 @@
+2023-07-28  Michael Herstine  <sp1ff@pobox.com>
+
+	Fix issue #32 Parent dirs in elfeed-score-rule-stats-file are not
+	Setting `elfeed-score-rule-stats-file` to a path with intermediate
+	directories that don't exist will error-out. This fix will at
+	least attempt to create them.
+
+	Also, update the CI workflow & generally prep for the merge
+	(new versions in docs &c)
+
+	As an aside, the regression test was originally written using
+	`file-name-concat' which was only introduced in Emacs 28.1
+	(we support 26.1). It now uses a purpose-build Emacs Lisp
+	replacement.
+
+2023-07-27  Michael Herstine  <sp1ff@pobox.com>
+
+	Fix the Continuous Integration job.
+	I neglected to do `sudo apt-get update` before doing an `apt-get
+	install`. This commit remedies that.
+
+2023-07-12  Michael Herstine  <sp1ff@pobox.com>
+
+	Fix the Continuous Integration job.
+	I neglected to do `sudo apt-get update` before doing an `apt-get
+	install`. This commit remedies that.
+
+2023-06-17  Michael Herstine  <sp1ff@pobox.com>
+
+	Allow the melpazoid check to run on-demand as well as nightly
+
+2023-06-14  Michael Herstine  <sp1ff@pobox.com>
+
+	Fix make distcheck
+
+2023-06-13  Michael Herstine  <sp1ff@pobox.com>
+
+	Fix CI
+
 2023-05-06  Michael Herstine  <sp1ff@pobox.com>
 
-        - Updated the elfeed-score manual to reflect this
-	- Fixed a unit test that was broken by the previous merge
-	- Added swflint to AUTHORS
+	Updating project workflows.
+
+	Make release 1.2.6.
+
+	Merge branch 'elfeed-enable-configurably'
+
+	    - Updated the elfeed-score manual to reflect this     - Fixed a unit test that was broken by the previous merge     - Added swflint to AUTHORS
 
 2023-05-02  Samuel W. Flint  <swflint@flintfam.org>
 
 	Add configurability to elfeed-score-scoring-score-entry depth
 
-2023-04-18  Michael Herstine  <sp1ff@pobox.com>
+2023-04-19  Michael  <sp1ff@pobox.com>
+
+	Merge pull request #29 from sp1ff/pr-process
+	Maintenance commit. This commit:
+
+2023-04-19  Michael Herstine  <sp1ff@pobox.com>
 
 	Maintenance commit. This commit:
 	    - fixes the unit tests
 	    - updates copyrights
 	    - adds a new workflow for PRs
 	    - changes the logic for the "melpazoid" workflow
+
+2023-04-18  Michael Herstine  <sp1ff@pobox.com>
 
 	Merge branch 'master' of github.com:sp1ff/elfeed-score
 
@@ -24,7 +74,6 @@
 
 	Merge pull request #28 from swflint/master
 	Use with-help-window to make the explanation buffer easily quittable
-
 
 2023-03-09  Samuel W. Flint  <swflint@flintfam.org>
 

@@ -1,5 +1,5 @@
 # melpazoid <https://github.com/riscy/melpazoid> build checks.
-name: melpazoid
+name: Run melpazoid
 
 on:
   workflow_dispatch:

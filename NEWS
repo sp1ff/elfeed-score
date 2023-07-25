@@ -2,6 +2,11 @@ elfeed-score News -- history of user-visible changes -*- outline -*-
 
 * elfeed-score 1.2
 
+** changes in elfeed-score 1.2.7
+
+*** address issue #32 Parent dirs in elfeed-score-rule-stats-file are not created automatically
+
+If you set `elfeed-score-rule-stats-file` to a path in which some intermediate directories don't exist, elfeed-score will error on saving stats.
 ** changes in elfeed-score 1.2.6
 
 *** make the depth at which the scoring function runs configurable in the new entry hook

@@ -1,4 +1,4 @@
-# Simple workflow to build the package & execute unit tests. Runs:
+# Simple workflow to build the package, execute unit tests & test the tarball. Runs:
 #
 # - on demand
 # - on push
@@ -19,38 +19,98 @@ on:
     - cron: '35 01 * * *'
 
 jobs:
+
   # These all seem to run in `/home/runner/work/elfeed-score/elfeed-score`
   lint_and_test:
     name: Lint & Test
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-20.04, ubuntu-22.04]
+    runs-on: ${{ matrix.os }}
     steps:
+
       - name: Checkout repo
         uses: actions/checkout@v2
+
       - name: Install tooling
         shell: bash
         run: |
           set -ex
+          pwd
           sudo apt-get update
           sudo apt-get upgrade
-          sudo apt-get install -y autoconf automake emacs texlive
+          sudo apt-get install -y autoconf automake texlive emacs
+          echo "EMACSLOADPATH=$(pwd):$(pwd)/elfeed:$(pwd)/elfeed/tests:$(ls -d /usr/share/emacs/2*)/lisp" >> $GITHUB_ENV
+          echo "Will now use the emacs at $(type -p emacs): $(emacs --version|head -n1)"
           git clone https://github.com/skeeto/elfeed.git
+
+      - name: Install least version of Emacs supported by elfeed-score
+        if: matrix.os == 'ubuntu-20.04'
+        shell: bash
+        run: |
+          set -ex
+          pwd
+          pushd /tmp
+          curl -LO http://mirrors.ocf.berkeley.edu/gnu/emacs/emacs-26.1.tar.gz
+          tar xf emacs-26.1.tar.gz && cd emacs-26.1
+          ./configure --prefix=/usr/local --with-x-toolkit=no --with-xpm=no --with-gif=no -with-gnutls=no
+          make
+          sudo make install
+          popd
+          hash -r
+          ls /usr/local/share
+          echo "EMACSLOADPATH=$(pwd):$(pwd)/elfeed:$(pwd)/elfeed/tests:$(ls -d /usr/local/share/emacs/26.1)/lisp" >> $GITHUB_ENV
+          echo "Will now use the emacs at $(type -p emacs): $(emacs --version|head -n1)"
+
       - name: Install a modern version of automake
         shell: bash
         run: |
-          set -x
+          set -ex
           cd /tmp
           curl -L -O https://ftp.gnu.org/gnu/automake/automake-1.16.4.tar.xz
           tar -xf automake-1.16.4.tar.xz
           cd automake-1.16.4
           ./configure && make
           sudo make install
-      - name: Run unit tests
+          hash -r
+          echo "Will now use the automake at $(type -p automake): $(automake --version|head -n1)"
+
+      - name: Get the current version number from configure.ac
+        run: |
+          set -ex
+          export version=`awk '/^AC_INIT/ {print substr($2, 2, length($2)-3)}' configure.ac`
+          echo "ELFEED_SCORE_VERSION=${version}" >> $GITHUB_ENV
+          echo "version is ${{ env.ELFEED_SCORE_VERSION }}"
+
+      - name: Configure & make
         shell: bash
         run: |
-          set -x
-          export EMACSLOADPATH=$(pwd):$(pwd)/elfeed:$(pwd)/elfeed/tests:$(ls -d /usr/share/emacs/2*)/lisp
+          set -ex
+          export EMACSLOADPATH=${{ env.EMACSLOADPATH }}
           ./bootstrap
           ./configure
           make
-          make check
-          make distcheck
+
+      - name: Run the unit tests
+        shell: bash
+        run: |
+          set -x
+          export EMACSLOADPATH=${{ env.EMACSLOADPATH }}
+          make check || cat test/test-suite.log
+
+      - name: Check the Autotools distribution
+        shell: bash
+        run: |
+          set -x
+          pwd
+          export EMACSLOADPATH=${{ env.EMACSLOADPATH }}
+          if ! make distcheck; then
+              cand_build="elfeed-score-${{ env.ELFEED_SCORE_VERSION }}/_build/sub/test/test-suite.log"
+              cand_inst="elfeed-score-${{ env.ELFEED_SCORE_VERSION }}/_inst/sub/test/test-suite.log"
+              if -f ${cand_build}; then
+                  cat ${cand_build}
+              elif -f ${cand_inst}; then
+                  cat {$cand_inst}
+              fi
+          fi
+

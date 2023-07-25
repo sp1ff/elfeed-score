@@ -1,4 +1,4 @@
 @set UPDATED 6 May 2023
 @set UPDATED-MONTH May 2023
-@set EDITION 1.2.6
-@set VERSION 1.2.6
+@set EDITION 1.2.7
+@set VERSION 1.2.7
