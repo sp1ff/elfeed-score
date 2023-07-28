@@ -1,7 +1,7 @@
 # Setting up a release workflow for `elfeed-score'. Much thanks to
 # BurntShushi from whom I shamelessly copied a lot of this
 # <https://github.com/BurntSushi/ripgrep/blob/master/.github/workflows/release.yml>
-name: release
+name: Cut a release
 on:
   # allow this workflow to be triggered manually, which is what this
   # event allegedly does

@@ -124,9 +124,9 @@ This is a utility function for persisting LISP S-expressions to
 file.  If possible, it will write SEXP to a temporary file in the
 same directory as FILE-NAME and then rename the temporary file to
 replace the original.  Since the move operation is usually atomic
-\(so long as both the source & the target are on the same volume)
-any error leaves the original untouched, and there is never any
-instant where the file is nonexistent.
+\(so long as both the source & the target are on the same
+filesystem) any error leaves the original untouched, and there is
+never any instant where the file is nonexistent.
 
 This implementation will first check that the target file is
 writable and signal an error if it is not.  Note that it will not
@@ -145,7 +145,7 @@ heavily derivative of `basic-save-buffer-2'."
 	      (if (not (file-directory-p dir))
 	          (if (file-exists-p dir)
 		            (error "%s is not a directory" dir)
-		          (error "%s: no such directory" dir))
+              (make-directory dir t))
 	        (if (not (file-exists-p file-name))
 		          (error "Directory %s write-protected" dir)
             (error "Attempt to save to a file that you aren't allowed to write")))))
@@ -181,7 +181,11 @@ heavily derivative of `basic-save-buffer-2'."
   "Current count of in-memory stats changes.")
 
 (defun elfeed-score-rule-stats-write (stats-file)
-  "Write the in-memory stats to STATS-FILE."
+  "Write the in-memory stats to STATS-FILE.
+
+If STATS-FILE doesn't exist, it will be created.  If any parent
+directories in its path don't exist, and the caller has
+permission to create them, they will be created."
   (interactive
    (list
     (read-file-name "stats file: " nil elfeed-score-rule-stats-file t
@@ -254,6 +258,7 @@ Returns a default-constructed stats object if RULE isn't in the table."
 ;; `elfeed-update-init-hooks' & restore it here, but I'm uncomfortable
 ;; with the risk that the update may be interrupted somehow, leaving
 ;; `elfeed-score-rule-stats-dirty-threshold' "stuck" from then on.
+
 (defun elfeed-score-rule-stats-update-hook (_url)
   "Write stats when an elfeed update is complete."
   (when (and (eq (elfeed-queue-count-total) 0)
