@@ -14,4 +14,6 @@ env.sh
 *.tar.bz2
 *.tar.gz
 *.tar.xz
+*.tar.zst
 interactive-tests.el
+elfeed

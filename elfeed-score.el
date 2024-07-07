@@ -1,6 +1,6 @@
 ;;; elfeed-score.el --- Gnus-style scoring for Elfeed  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2019-2023 Michael Herstine <sp1ff@pobox.com>
+;; Copyright (C) 2019-2024 Michael Herstine <sp1ff@pobox.com>
 
 ;; Author: Michael Herstine <sp1ff@pobox.com>
 ;; Version: 1.2.7

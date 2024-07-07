@@ -1,0 +1,45 @@
+#!/bin/env bash
+
+# Run a few linters. This script is designed to be run either locally by the
+# developer, or as part of a Github action.
+
+EMACS=${EMACS:=emacs}
+PKGS="package-lint"
+LISP="elfeed-score.el elfeed-score-log.el elfeed-score-maint.el"
+LISP="$LISP elfeed-score-rules.el elfeed-score-rule-stats.el"
+LISP="$LISP elfeed-score-scoring.el elfeed-score-serde.el"
+
+set -x
+
+# Shamelessly stolen from https://github.com/purcell/package-lint/blob/master/run-tests.sh:
+INIT_PACKAGE_EL="(progn \
+  (require 'package) \
+  (push '(\"melpa\" . \"https://melpa.org/packages/\") package-archives) \
+  (setq package-check-signature nil) \
+  (package-initialize) \
+  (package-refresh-contents) \
+  (dolist (pkg '(${PKGS})) \
+    (unless (package-installed-p pkg) \
+      (package-install pkg))))"
+
+"$EMACS" -Q -batch --eval "$INIT_PACKAGE_EL"
+# Check that there are no TODOs left laying around in the code
+find . -iname '*.el' -print0|xargs -0 -e grep -E 'TODO|TOOD|LATER|DEBUG|IN-PROGRESS' && exit 1
+
+set -e
+
+# This is a bit lame, since it will abort on the first error found for each
+# file, but checkdoc is not easy to run in batch mode.
+COLLECT_EL="(setq \
+    checkdoc-create-error-function \
+    (lambda (text start _end &optional _unfixable) \
+      (checkdoc-error start text) \
+      (kill-emacs 1)))"
+
+# run checkdoc
+for x in $LISP; do
+    ${EMACS} -Q -batch --eval "$INIT_PACKAGE_EL" --eval "$COLLECT_EL" --eval "(checkdoc-file \"$x\")"
+done
+
+# package-lint clean
+${EMACS} -Q -batch --eval "$INIT_PACKAGE_EL" --eval "(package-lint-batch-and-exit)"

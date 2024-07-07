@@ -1,6 +1,6 @@
 ;;; smoke-test.el --- "smoke" tests for `elfeed-score'   -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2019-2023 Michael Herstine <sp1ff@pobox.com>
+;; Copyright (C) 2019-2024 Michael Herstine <sp1ff@pobox.com>
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by

@@ -1,0 +1,31 @@
+#!/bin/bash
+
+# Check for a clean repo; `make distclean`; go from bootstrap to `make
+# distcheck`
+
+set -x
+
+if [ test -d elfeed ]; then
+    set -e
+    cd elfeed
+    git pull
+    git checkout master
+    cd ..
+    set +e
+else
+    git clone https://github.com/skeeto/elfeed.git
+fi
+
+# Configure the source tree, build it, test it, and test the distribution tarballs
+make distclean
+
+export EMACSLOADPATH=$(pwd):$(pwd)/elfeed:$(pwd)/elfeed/tests:$(ls -d /usr/share/emacs/2*)/lisp
+
+./bootstrap || exit 1
+./configure || exit 1
+make all || exit 1
+if ! make check; then
+    test -f test/test-suite.log && cat test/test-suite.log
+    exit 1
+fi
+make distcheck

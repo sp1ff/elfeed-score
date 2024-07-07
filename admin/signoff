@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+
+# Validate that this source tree is ready to push. This script is designed to
+# be run exclusively locally.
+
+# Shamelessly stolen from: <https://gist.github.com/dhh/c5051aae633ff91bc4ce30528e4f0b60>
+set -e
+
+SECONDS=0
+SHA=$(git rev-parse HEAD)
+
+GREEN=32; RED=31; BLUE=34
+announce() { echo -e "\033[0;$2m$1\033[0m"; }
+run() {
+  local SPLIT=$SECONDS
+  announce "\nRun $1" $BLUE
+  eval "$1"
+  local INTERVAL=$((SECONDS-SPLIT))
+  announce "Completed $1 in $INTERVAL seconds" $GREEN
+}
+
+if [ -n "$(git status --porcelain)" ]; then
+    echo "Can't sign-off on a dirty repository:" >&2
+    git status
+    exit 1
+fi
+
+announce "Attempting sign-off on ob-coq $SHA." $GREEN
+
+run "admin/run-linters"
+run "admin/configure-to-distcheck"
+
+announce "Signed off on ob-coq $SHA in $SECONDS seconds 🍻" $GREEN

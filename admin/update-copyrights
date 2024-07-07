@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+FILES="elfeed-score.el elfeed-score-log.el elfeed-score-rules.el"
+FILES="$FILES doc/elfeed-score.texi"
+FILES="$FILES elfeed-score-maint.el elfeed-score-rule-stats.el"
+FILES="$FILES elfeed-score-scoring.el elfeed-score-serde.el"
+FILES="$FILES test/package-test-341.el test/test-udf-rules.el"
+FILES="$FILES test/smoke-test-core.el test/test-serde.el"
+FILES="$FILES test/smoke-test.el test/test-explanations.el"
+FILES="$FILES test/elfeed-score-tests.el test/test-stats.el"
+FILES="$FILES test/package-test.el test/upgrade-test.el"
+FILES="$FILES test/test-feed-rules.el test/test-tag-rules.el"
+FILES="$FILES test/test-struct-serde.el test/test-maintenance.el"
+FILES="$FILES test/test-scoring.el test/test-logs.el"
+
+YEAR=$(date +%Y)
+
+for f in $FILES; do
+    sed -ie "s/Copyright (C) \\([0-9]\\{4\\}-\\)\\?[0-9]\\{4\\}/Copyright (C) \\1${YEAR}/" $f
+done

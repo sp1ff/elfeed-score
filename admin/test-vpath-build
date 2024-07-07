@@ -1,0 +1,55 @@
+#!/bin/bash
+
+# Similar to `configure-to-distcheck`, but do a VPATH build and test
+# against elfeed 3.3.0 (rather than master/HEAD).
+# 
+# Check for a clean repo; `make distclean`; go from bootstrap to `make
+# distcheck`, but do so from `/tmp`.
+
+set -x
+
+if [ test -d elfeed ]; then
+    set -e
+    cd elfeed
+    git pull
+    git checkout /tags/3.3.0
+    cd ..
+    set +e
+else
+    git clone https://github.com/skeeto/elfeed.git
+fi
+
+version=`awk '/^AC_INIT/ {print substr($2, 2, length($2)-3)}' configure.ac`
+here=$(pwd)
+
+echo "Building elfeed-score version $version in $here."
+make distclean # Could fail
+
+set -e
+./bootstrap
+cd /tmp
+
+# clean-out `/tmp` altogether...
+if test -d elfeed-score/elfeed-score-${version}; then
+    chmod -R a+w elfeed-score/elfeed-score-${version}
+fi
+for d in `ls -d elfeed-score-*`; do
+    rm -rf $d
+done
+rm -f elfeed-score-*.tar*
+rm -rf .elfeed-score-pkg-test elpa .elfeed
+rm -rf elfeed-score
+mkdir elfeed-score
+cd elfeed-score
+
+# test the VPATH build, test building & testing the Autotools distro...
+export EMACSLOADPATH=${here}:${here}/elfeed:${here}/elfeed/tests:$(ls -d /usr/share/emacs/2*)/lisp
+$here/configure
+make all check distcheck
+
+# and leave behind:
+#
+# 1) /tmp/elfeed-score :: builddir, incl. Autotols tarballs & Emacs package
+# 2) /tmp/elfeed-score-${version}.tar.* :: tarballs
+# 3) /tmp/elfeed-score-${version}.tar :: Emacs package
+cp -v elfeed-score-${version}.tar elfeed-score-${version}.tar.* ..
