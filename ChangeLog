@@ -1,3 +1,20 @@
+2024-07-10  Michael Herstine  <sp1ff@pobox.com>
+
+	Cut release 1.2.8.
+
+2024-07-10  Michael Herstine  <sp1ff@pobox.com>
+
+	Update the copyright statements throughout.
+	This is a hygienic commit. This patchset:
+
+	    - updates the copyright statements throughout
+	    - update the Python version for CI
+	    - adds a "signoff" script to the project
+
+2023-07-28  Michael Herstine  <sp1ff@pobox.com>
+
+	Merge branch 'issue-32'
+
 2023-07-28  Michael Herstine  <sp1ff@pobox.com>
 
 	Fix issue #32 Parent dirs in elfeed-score-rule-stats-file are not
@@ -20,6 +37,18 @@
 	install`. This commit remedies that.
 
 2023-07-12  Michael Herstine  <sp1ff@pobox.com>
+
+	Merge branch 'ci-2023-07-12'
+
+	Fix the Continuous Integration job.
+	I neglected to do `sudo apt-get update` before doing an `apt-get
+	install`. This commit remedies that.
+
+	Merge branch 'ci-2023-07-12'
+
+	Fix the Continuous Integration job.
+	I neglected to do `sudo apt-get update` before doing an `apt-get
+	install`. This commit remedies that.
 
 	Fix the Continuous Integration job.
 	I neglected to do `sudo apt-get update` before doing an `apt-get
