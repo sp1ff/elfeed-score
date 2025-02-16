@@ -31,9 +31,11 @@
 
 (ert-deftest elfeed-score-test-udf-rules-smoke ()
   "Smoke tests for UDF rules."
-
-  (let ((r1 (elfeed-score-udf-rule--create :function (lambda (_) 1))))
-    (should (equal (elfeed-score-udf-rule-display-name r1) "<anonymous closure>")))
+  
+    (let ((r1 (elfeed-score-udf-rule--create :function (lambda (_) 1)))
+          ;; Not sure when this changed... after Emacs 29.4, for sure.
+          (golden (if (= ?3 (aref emacs-version 0)) "<anonymous function>" "<anonymous closure>")))
+    (should (equal (elfeed-score-udf-rule-display-name r1) golden)))
 
   (defun test-fn (_) 1)
   (let ((r2 (elfeed-score-udf-rule--create :function 'test-fn)))

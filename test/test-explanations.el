@@ -66,13 +66,15 @@
         (elfeed-score-scoring-explain-entry entry buf)
         (let ((text
                (with-current-buffer elfeed-score-scoring-explanation-buffer-name
-                 (buffer-string))))
+                 (buffer-string)))
+              ;; Not sure when this changed... after Emacs 29.4, for sure.
+              (golden (if (= ?3 (aref emacs-version 0)) "<anonymous function>" "<anonymous closure>")))
           (should
            (string=
             text
             (concat
              (propertize "bar" 'face 'elfeed-score-scoring-explain-text-face)
-             " matches 8 rules for a score of 8:
+             (format " matches 8 rules for a score of 8:
 (NB your score file is dirty; these matches correspond to the rules currently in-memory)
     1. title{bar}: \"bar\": 1
     2. feed{t/foo}: \"foo\": 1
@@ -81,8 +83,8 @@
     5. authors{hancock} \"Hancock\": 1
     6. tags{(b c d)}: 1
     7. link{foo}: \"foo\": 1
-    8. udf{<anonymous closure>}: \"bar\": 1
-")))))))))
+    8. udf{%s}: \"bar\": 1
+" golden))))))))))
 
 (provide 'test-explanations)
 
