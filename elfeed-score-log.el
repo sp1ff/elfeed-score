@@ -104,7 +104,7 @@
           (concat "[" (propertize "%s" 'face 'elfeed-score-date-face) "] "
                   "[" (propertize "%s" 'face log-level-face) "]: "
                   "%s\n")
-          (format-time-string "%Y-%m-%d %H:%M:%S")
+          (format-time-string "%F %T")
           level
           (apply #'format fmt objects)))
         (if (and elfeed-score-log-max-buffer-size

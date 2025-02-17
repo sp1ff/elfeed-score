@@ -1,3 +1,4 @@
+;; SPDX-License-Identifier: GPL-3.0-or-later
 (define-package
   "elfeed-score"
   "1.2.8"
