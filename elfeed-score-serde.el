@@ -1,6 +1,6 @@
 ;;; elfeed-score-serde.el --- SERDE `elfeed-score'  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2021-2024 Michael Herstine <sp1ff@pobox.com>
+;; Copyright (C) 2021-2025 Michael Herstine <sp1ff@pobox.com>
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by

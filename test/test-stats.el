@@ -1,6 +1,6 @@
 ;;; test-stats.el --- ERT tests for elfeed-score-rule-stats  -*- lexical-binding: t -*-
 
-;; Copyright (C) 2021-2024 Michael Herstine <sp1ff@pobox.com>
+;; Copyright (C) 2021-2025 Michael Herstine <sp1ff@pobox.com>
 
 ;; Author: Michael Herstine <sp1ff@pobox.com>
 
