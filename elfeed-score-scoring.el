@@ -144,9 +144,10 @@ Return nil on failure, the matched text on match."
 (defun elfeed-score-scoring--match-tags (entry-tags tag-rule)
   "Test a ENTRY-TAGS against TAG-RULE.
 
-ENTRY-TAGS shall be a list of symbols, presumably the tags applied to the Elfeed
-entry being scored.  TAG-RULE shall be a list of the form (boolean . (symbol...))
-or nil, and is presumably a tag scoping for a scoring rule."
+ENTRY-TAGS shall be a list of symbols, presumably the tags applied to
+the Elfeed entry being scored.  TAG-RULE shall be a list of the
+form (boolean . (symbol...)) or nil, and is presumably a tag scoping for
+a scoring rule."
 
   (if tag-rule
       (let ((flag (car tag-rule))
@@ -226,7 +227,7 @@ is presumably the feed scoping for a scoring rule."
 (defmacro elfeed-score-scoring--defuns (name &rest args)
   "Define scoring functions for rules named NAME; keyword ARGS defined below.
 
-Define the 'score', 'explain' & 'apply' functions for a rule named NAME."
+Define the `score', `explain' & `apply' functions for a rule named NAME."
 
   (declare (indent defun))
   (let ((apply-fn (intern (format "elfeed-score-scoring--apply-%s-rules" name)))
@@ -741,17 +742,15 @@ understanding of scoring rules."
       (insert
        (if sticky
            (format
-            (concat
-             (propertize "%s" 'face 'elfeed-score-scoring-explain-text-string)
-             " has a sticky score of %d\nIt *would* match %d rule")
-            (elfeed-entry-title entry)
+            "%s has a sticky score of %d\nIt *would* match %d rule"
+            (propertize (format "%s" (elfeed-entry-title entry)) 'face
+                        'elfeed-score-scoring-explain-text-face)
             (elfeed-score-scoring-get-score-from-entry entry)
             (length matches))
          (format
-          (concat
-           (propertize "%s" 'face 'elfeed-score-scoring-explain-text-face)
-           " matches %d rule")
-          (elfeed-entry-title entry)
+          "%s matches %d rule"
+          (propertize (format "%s" (elfeed-entry-title entry)) 'face
+                      'elfeed-score-scoring-explain-text-face)
           (length matches))))
       (let ((no-matches))
         (cond

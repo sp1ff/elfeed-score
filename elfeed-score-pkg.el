@@ -1,4 +1,5 @@
-;; SPDX-License-Identifier: GPL-3.0-or-later
+;;; elfeed-score-pkg -- elfeed-score package definition file   -*- lexical-binding: t; -*-
+;;; SPDX-License-Identifier: GPL-3.0-or-later
 (define-package
   "elfeed-score"
   "1.2.8"

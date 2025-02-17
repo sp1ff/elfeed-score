@@ -94,7 +94,7 @@ operation that will update many statistics with a let form."
   (elfeed-score-rule-stats--make-table)
   "Hash table mapping `elfeed-score' rules to stat instances.
 
-The hash table's :weakness is set to 'key, meaning that when
+The hash table\='s :weakness is set to \='key, meaning that when
 rules disappear their hash table entries will be reaped
 automatically.")
 

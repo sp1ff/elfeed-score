@@ -53,7 +53,9 @@
   "Name of buffer used for logging `elfeed-score' events.")
 
 (defvar elfeed-score-log-level 'warn
-  "Level at which `elfeed-score' shall log; may be one of 'debug, 'info, 'warn, or 'error.")
+  "Level at which `elfeed-score' shall log.
+
+May be one of \='debug, \='info,\='warn, or \='error.")
 
 (defvar elfeed-score-log-max-buffer-size 750
   "Maximum length (in lines) of the log buffer.  nil means unlimited.")
@@ -101,11 +103,10 @@
         (goto-char (point-max))
         (insert
          (format
-          (concat "[" (propertize "%s" 'face 'elfeed-score-date-face) "] "
-                  "[" (propertize "%s" 'face log-level-face) "]: "
-                  "%s\n")
-          (format-time-string "%F %T")
-          level
+          "[%s] [%s]: %s\n"
+          (propertize (format "%s" (format-time-string "%F %T")) 'face
+                      'elfeed-score-date-face)
+          (propertize (format "%s" level) 'face log-level-face)
           (apply #'format fmt objects)))
         (if (and elfeed-score-log-max-buffer-size
                  (> (line-number-at-pos)

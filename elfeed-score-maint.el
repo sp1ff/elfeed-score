@@ -208,7 +208,7 @@ categories will be displayed."
 (defcustom elfeed-score-maint-default-match-type 's
   "Default match type for interactively added rules.
 
-Must be one of 's, 'S, 'r, 'R, 'w or 'W, for case-insensitive or
+Must be one of \='s, \='S, \='r, \='R, \='w or \='W, for case-insensitive or
 case-sensitive substring, regexp or whole-word match,
 respectively."
   :group 'elfeed-score
@@ -217,21 +217,21 @@ respectively."
 (defcustom elfeed-score-maint-default-scope-to-feed 'no
   "Control whether intreractively added rules are scoped to the current feed.
 
-Must  be one of 'yes, 'no, or 'ask."
+Must  be one of \='yes, \='no, or \='ask."
   :group 'elfeed-score
   :type '(choice (const yes) (const no) (const ask)))
 
 (defcustom elfeed-score-maint-default-scope-to-tags 'no
   "Control whether intreractively added rules are scoped to the current tag set.
 
-Must  be one of 'yes, 'no, or 'ask."
+Must  be one of \='yes, \='no, or \='ask."
   :group 'elfeed-score
   :type '(choice (const yes) (const no) (const ask)))
 
 (defcustom elfeed-score-maint-default-feed-attribute 'u
   "Default attribute against which to score feeds.
 
-Must be one of 't, 'u or 'a for title, URL or author,
+Must be one of \='t, \='u or \='a for title, URL or author,
 respectively."
   :group 'elfeed-score
   :type '(choice (const t) (const u) (const a)))
@@ -255,7 +255,7 @@ interactively in a few ways:
     gathered according to their corresponding \"default\" user
     options (on which more below).
 
-    With a numeric prefix argument: the prefix argument's value
+    With a numeric prefix argument: the prefix argument\='s value
     will be used as match value.  The match text must still be
     entered interactively.  Other rule attributes will be
     gathered according to their corresponding \"default\" user
@@ -266,7 +266,7 @@ interactively in a few ways:
     and the other rule attributes can be entered interactively.
 
 When called non-interactively, defaults will be respected, except
-that any option set to 'ask will be interepreted as 'no.
+that any option set to \='ask will be interepreted as \='no.
 Consider calling `elfeed-score-serde-add-rule' directly, in the
 non-interactive case." name)))
 
@@ -603,7 +603,7 @@ interactively in a few ways:
     gathered according to their corresponding \"default\" user
     options (on which more below).
 
-    With a numeric prefix argument: the prefix argument's value
+    With a numeric prefix argument: the prefix argument\='s value
     will be used as both the title & content match values.  The
     match text must still be entered interactively.  Other rule
     attributes will be gathered according to their corresponding
@@ -614,7 +614,7 @@ interactively in a few ways:
     and the other rule attributes can be entered interactively.
 
 When called non-interactively, defaults will be respected, except
-that any option set to 'ask will be interepreted as 'no.
+that any option set to \='ask will be interepreted as \='no.
 Consider calling `elfeed-score-serde-add-rule' directly, in the
 non-interactive case."
   
