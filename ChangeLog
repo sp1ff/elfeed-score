@@ -1,3 +1,24 @@
+2025-02-16  Michael Herstine  <sp1ff@pobox.com>
+
+	Prepare merge
+
+	Update copyrights
+
+	Fix byte-compilation & melpazoid warnings.
+	There are still a few left; can't get rid of them trivially.
+	Also, try to get this workflow to run against the current branch.
+
+	Fix melpazoid.
+	Melpazoid has been broken for some time. This patch fixes only
+	the fatal melpazoid complaint. I'll look at all the warnings
+	in a subsequent commit.
+
+	Restore the unit tests to working order.
+	Somewhere along the way, the printed representation
+	"<anonymous closure>" was changed to "<anonymous function>".
+	This happened after Emacs 29.4, but at or before the
+	development build of Emacs I'm running locally.
+
 2024-07-10  Michael Herstine  <sp1ff@pobox.com>
 
 	Cut release 1.2.8.
