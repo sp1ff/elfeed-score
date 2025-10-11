@@ -1,4 +1,20 @@
+2025-10-11  Michael Herstine  <sp1ff@pobox.com>
+
+	prep merge
+
+2025-10-07  Michael Herstine  <sp1ff@pobox.com>
+
+	Fix CI
+
+2025-02-17  Michael Herstine  <sp1ff@pobox.com>
+
+	Fix README typo
+
 2025-02-16  Michael Herstine  <sp1ff@pobox.com>
+
+	Update release workflow -- update Github action download-artifact
+
+	Update release workflow
 
 	Prepare merge
 

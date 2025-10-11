@@ -43,7 +43,7 @@ mkdir elfeed-score
 cd elfeed-score
 
 # test the VPATH build, test building & testing the Autotools distro...
-export EMACSLOADPATH=${here}:${here}/elfeed:${here}/elfeed/tests:$(ls -d /usr/share/emacs/2*)/lisp
+export EMACSLOADPATH=${here}:${here}/elfeed:${here}/elfeed/tests:$(ls -d /usr/share/emacs/3*)/lisp
 $here/configure
 make all check distcheck
 

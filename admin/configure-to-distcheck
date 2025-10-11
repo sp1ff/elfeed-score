@@ -19,7 +19,7 @@ fi
 # Configure the source tree, build it, test it, and test the distribution tarballs
 make distclean
 
-export EMACSLOADPATH=$(pwd):$(pwd)/elfeed:$(pwd)/elfeed/tests:$(ls -d /usr/share/emacs/2*)/lisp
+export EMACSLOADPATH=$(pwd):$(pwd)/elfeed:$(pwd)/elfeed/tests:$(ls -d /usr/share/emacs/3*)/lisp
 
 ./bootstrap || exit 1
 ./configure || exit 1
