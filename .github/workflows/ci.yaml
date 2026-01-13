@@ -62,12 +62,36 @@ jobs:
           echo "EMACSLOADPATH=$(pwd):$(pwd)/elfeed:$(pwd)/elfeed/tests:$(ls -d /usr/local/share/emacs/26.1)/lisp" >> $GITHUB_ENV
           echo "Will now use the emacs at $(type -p emacs): $(emacs --version|head -n1)"
 
+      - name: Seed the mirror list
+        shell: bash
+        run: |
+          echo "MIRROR_IDX=0" >> "$GITHUB_ENV"
+
+      - name: Download a modern version of automake
+        uses: nick-fields/retry@v3
+        with:
+          timeout_seconds: 75
+          max_attempts: 3
+          command: |
+            mirrors=("https://mirrors.ocf.berkeley.edu/gnu/"  # California
+                     "ftp://mirror.keystealth.org/gnu/"       # California
+                     "https://ftp.gnu.org/gnu"
+                     "https://mirror2.evolution-host.com/gnu" # Canada
+                     "https://mirror.freedif.org/GNU/"        # Singapore
+                     "https://mirror.ossplanet.net/gnu/")     # Taiwan
+            if curl -L --connect-timeout 60 -o /tmp/automake-1.16.4.tar.xz ${mirrors[$MIRROR_IDX]}/automake/automake-1.16.4.tar.xz; then
+                echo "Successful automake download"
+                exit 0
+            fi
+            MIRROR_IDX=$((MIRROR_IDX+1))
+            MIRROR_IDX=$(($MIRROR_IDX % ${#mirrors[@]}))
+            echo "MIRROR_IDX=$MIRROR_IDX" >> "$GITHUB_ENV"
+
       - name: Install a modern version of automake
         shell: bash
         run: |
           set -ex
           cd /tmp
-          curl -L -O https://ftp.gnu.org/gnu/automake/automake-1.16.4.tar.xz
           tar -xf automake-1.16.4.tar.xz
           cd automake-1.16.4
           ./configure && make
